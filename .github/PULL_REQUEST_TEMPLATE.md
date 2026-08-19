@@ -48,9 +48,10 @@
 
 ## 리뷰 체크리스트
 
-- [ ] PR base branch가 올바릅니다. (`feature/*` → `develop`, 배포 시 `develop` 또는 `release/*` → `main`)
+- [ ] PR base branch가 올바릅니다. (`Type/*` → `develop`, 배포 시 `develop` 또는 `release/*` → `main`)
 - [ ] 브랜치명이 `Type/#issue-number/description` 형식을 따릅니다.
-- [ ] 커밋 메시지가 컨벤션을 따릅니다.
+- [ ] 이슈 템플릿으로 이슈를 먼저 생성했고, PR의 관련 이슈에 연결했습니다.
+- [ ] 커밋 메시지가 `[type] 제목 (#이슈번호)` 형식을 따릅니다.
 - [ ] 불필요한 `console.log`, 주석, 임시 코드를 제거했습니다.
 - [ ] 타입 에러와 린트 에러를 확인했습니다.
 - [ ] CodeRabbit 1차 리뷰를 확인했습니다.
