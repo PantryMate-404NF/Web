@@ -19,29 +19,29 @@ PantryMate는 사용자의 식재료 구매 이력을 바탕으로 팬트리를 
 → 부족 재료 장바구니 → 주문·수령 → 다음 팬트리 후보
 ```
 
-MVP에서는 재료의 정확한 잔여 수량을 추정하지 않습니다. 팬트리 상태는 아래 세 가지로 관리합니다.
+MVP에서는 재료의 정확한 잔여 수량을 추정하지 않습니다. 팬트리는 요리 가능 여부, 소비기한 상태, 등록 방식을 분리해 관리합니다.
 
-| 상태             | 의미                                            |
-| ---------------- | ----------------------------------------------- |
-| `AVAILABLE`      | 사용자가 현재 보유 중이라고 확인함              |
-| `UNAVAILABLE`    | 소진했거나 보유하지 않음                        |
-| `CHECK_REQUIRED` | 구매 또는 조리 후 상태가 불확실해 확인이 필요함 |
+| 구분           | 값                                  | 의미                                      |
+| -------------- | ----------------------------------- | ----------------------------------------- |
+| 요리 가능 여부 | `ON` / `OFF`                        | 레시피 추천에 사용할 수 있는지            |
+| 소비기한 상태  | `정상` / `임박` / `경과` / `미등록` | 소비기한 정보를 기준으로 한 표시 상태     |
+| 등록 방식      | `자동` / `수동`                     | 배송 완료 자동 등록 또는 사용자 직접 등록 |
 
 ## 기술 스택
 
-| 영역         | 기술                                    | 적용 목적                                                |
-| ------------ | --------------------------------------- | -------------------------------------------------------- |
-| 프레임워크   | Next.js App Router + React + TypeScript | 라우팅, 렌더링 전략, 타입 안정성                         |
-| 스타일       | Tailwind CSS + shadcn/ui                | 모바일 우선 UI와 재사용 가능한 공통 컴포넌트             |
-| 서버 상태    | TanStack Query                          | API 캐싱, 로딩·오류·재시도 상태 관리                     |
-| 전역 UI 상태 | Zustand                                 | 바텀시트, 토스트, 임시 선택 상태 관리                    |
-| 폼·검증      | React Hook Form + Zod                   | 팬트리 확인·알림 설정 등의 입력 검증                     |
-| API 모킹     | MSW                                     | REST API 명세 기반의 프론트엔드 선개발 및 예외 처리 검증 |
-| PWA          | Web App Manifest + 서비스 워커 등록     | 설치 가능한 모바일 웹 경험 제공                          |
-| 아이콘       | Lucide React                            | 일관된 접근 가능한 UI 아이콘                             |
-| 테스트       | Vitest                                  | 도메인 로직과 컴포넌트 테스트                            |
-| 코드 포맷    | Prettier + Tailwind 플러그인            | 일관된 코드 형식과 Tailwind 클래스 정렬                  |
-| Git 훅       | Husky                                   | 커밋 전 포맷·린트·타입 검사 자동 실행                    |
+| 영역         | 기술 및 버전                                           | 적용 목적                                                |
+| ------------ | ------------------------------------------------------ | -------------------------------------------------------- |
+| 프레임워크   | Next.js `16.3.1` / React `19.2.8` / TypeScript `6.0.3` | 라우팅, 렌더링 전략, 타입 안정성                         |
+| 스타일       | Tailwind CSS `4.3.3` + shadcn/ui                       | 모바일 우선 UI와 재사용 가능한 공통 컴포넌트             |
+| 서버 상태    | TanStack Query `5.101.4`                               | API 캐싱, 로딩·오류·재시도 상태 관리                     |
+| 전역 UI 상태 | Zustand `5.0.15`                                       | 바텀시트, 토스트, 임시 선택 상태 관리                    |
+| 폼·검증      | React Hook Form `7.85.0` + Zod `4.4.3`                 | 팬트리 확인·알림 설정 등의 입력 검증                     |
+| API 모킹     | MSW `2.15.0`                                           | REST API 명세 기반의 프론트엔드 선개발 및 예외 처리 검증 |
+| PWA          | Next.js Manifest + Service Worker                      | 설치 가능한 모바일 웹 경험 제공                          |
+| 아이콘       | Lucide React                                           | 일관된 접근 가능한 UI 아이콘                             |
+| 테스트       | Vitest `4.1.11`                                        | 도메인 로직과 컴포넌트 테스트                            |
+| 코드 포맷    | Prettier + Tailwind 플러그인                           | 일관된 코드 형식과 Tailwind 클래스 정렬                  |
+| Git 훅       | Husky                                                  | 커밋 전 포맷·린트·타입 검사 자동 실행                    |
 
 ## PWA 범위
 
@@ -65,14 +65,15 @@ npm run dev
 
 ### 주요 명령어
 
-| 명령어              | 설명                          |
-| ------------------- | ----------------------------- |
-| `npm run dev`       | Turbopack 기반 개발 서버 실행 |
-| `npm run lint`      | ESLint 검사                   |
-| `npm run typecheck` | TypeScript 타입 검사          |
-| `npm run test`      | Vitest 테스트 실행            |
-| `npm run build`     | webpack 기반 프로덕션 빌드    |
-| `npm run start`     | 프로덕션 서버 실행            |
+| 명령어                   | 설명                          |
+| ------------------------ | ----------------------------- |
+| `npm run dev`            | Turbopack 기반 개발 서버 실행 |
+| `npm run lint`           | ESLint 검사                   |
+| `npm run typecheck`      | TypeScript 타입 검사          |
+| `npm run test`           | Vitest 테스트 실행            |
+| `npm run build`          | webpack 기반 프로덕션 빌드    |
+| `npm run check:workflow` | 브랜치·커밋·작업 트리 점검    |
+| `npm run start`          | 프로덕션 서버 실행            |
 
 > 현재 환경에서는 Next.js 16의 Turbopack 프로덕션 빌드가 불안정할 수 있어, 재현 가능한 검증을 위해 `npm run build`는 webpack을 사용합니다.
 
@@ -118,19 +119,22 @@ npm run format:check → npm run lint → npm run typecheck
 
 검사에 실패하면 커밋이 중단됩니다. 긴 테스트와 프로덕션 빌드는 PR 검증 단계에서 실행합니다.
 
+`.husky/commit-msg`는 `[type] 제목 (#이슈번호)` 형식이 아닌 커밋 메시지를 차단합니다. PR에서는 GitHub Actions가 브랜치·이슈 연결·품질 검사를 다시 실행합니다.
+
 ## 관련 문서
 
-| 문서                                                              | 설명                                       |
-| ----------------------------------------------------------------- | ------------------------------------------ |
-| [AGENTS.md](AGENTS.md)                                            | 사람과 AI 작업자를 위한 프로젝트 작업 규칙 |
-| [SKILLS.md](SKILLS.md)                                            | 화면 구현, API·MSW, 성능·접근성 작업 흐름  |
-| [MVP 범위](docs/product/mvp-scope.md)                             | 팬트리 상태, 핵심 흐름, 화면 우선순위      |
-| [프론트엔드 아키텍처](docs/architecture/frontend-architecture.md) | 상태 소유권, BFF, PWA 기준                 |
-| [REST API·MSW 계약 가이드](docs/api/contract-guidelines.md)       | API 명세와 MSW 운영 원칙                   |
+| 문서                                                                    | 설명                                       |
+| ----------------------------------------------------------------------- | ------------------------------------------ |
+| [AGENTS.md](AGENTS.md)                                                  | 사람과 AI 작업자를 위한 프로젝트 작업 규칙 |
+| [SKILLS.md](SKILLS.md)                                                  | 화면 구현, API·MSW, 성능·접근성 작업 흐름  |
+| [MVP 범위](docs/product/mvp-scope.md)                                   | 팬트리 상태, 핵심 흐름, 화면 우선순위      |
+| [프론트엔드 아키텍처](docs/architecture/frontend-architecture.md)       | 상태 소유권, BFF, PWA 기준                 |
+| [REST API·MSW 계약 가이드](docs/api/contract-guidelines.md)             | API 명세와 MSW 운영 원칙                   |
+| [개발 품질 자동화](docs/architecture/development-quality-automation.md) | Husky, CI, Ruleset 운영 기준               |
 
 ## 브랜치와 풀 리퀘스트
 
-- 브랜치 이름은 `feat/`, `fix/`, `docs/`, `chore/`, `refactor/` 접두사를 사용합니다.
+- 브랜치 이름은 `Type/#issue-number/description` 형식을 사용합니다.
 - 하나의 PR은 하나의 사용자 대면 결과에 집중합니다.
 - UI 변경 시 360px, 390px, 430px에서 확인한 결과를 PR에 포함합니다.
 - `.env`, 토큰, 개인 정보, 민감한 운영 URL은 커밋하지 않습니다.
