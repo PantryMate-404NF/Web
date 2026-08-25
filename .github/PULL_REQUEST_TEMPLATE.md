@@ -54,6 +54,7 @@
 - [ ] 커밋 메시지가 `[type] 제목 (#이슈번호)` 형식을 따릅니다.
 - [ ] 불필요한 `console.log`, 주석, 임시 코드를 제거했습니다.
 - [ ] 타입 에러와 린트 에러를 확인했습니다.
+- [ ] GitHub Actions의 `policy-and-quality` 검사를 통과했습니다.
 - [ ] CodeRabbit 1차 리뷰를 확인했습니다.
 - [ ] CodeRabbit 리뷰 반영 후 Discord에 공유했습니다.
 - [ ] 최소 1명 이상의 approve 후 merge합니다.

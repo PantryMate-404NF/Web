@@ -42,7 +42,8 @@
 ## 제품 규칙
 
 - [ ] 390 × 844 CSS px를 디자인 기준으로 사용하되, 360px·390px·430px에서 가로 스크롤 없이 동작하게 한다.
-- [ ] 팬트리 상태는 `AVAILABLE`, `UNAVAILABLE`, `CHECK_REQUIRED`만 사용한다.
+- [ ] 팬트리의 요리 가능 여부(`ON`/`OFF`), 소비기한 상태(`정상`/`임박`/`경과`/`미등록`), 등록 방식(`자동`/`수동`)은 서로 분리해 관리한다.
+- [ ] 소비기한 경과만으로 팬트리 항목을 자동 삭제하거나 요리 가능 상태를 자동 변경하지 않는다.
 - [ ] MVP에서 수량을 모르는 재료의 정확한 잔여량을 추정하거나 자동 차감하지 않는다.
 - [ ] 자주 구매한 상품은 제안만 하며, 사용자 확인 없이 장바구니에 추가하지 않는다.
 - [ ] REST API 명세를 기준으로 하고, API 타입·요청 함수·MSW handler를 함께 갱신한다.
@@ -93,6 +94,9 @@ npm run lint
 npm run typecheck
 npm run format:check
 npm run check
+npm run check:workflow
+npm run test
+npm run build
 ```
 
 - [ ] 포맷 수정이 필요하면 `npm run format`을 사용한다.
