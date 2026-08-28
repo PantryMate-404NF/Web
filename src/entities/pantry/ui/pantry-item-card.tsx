@@ -1,7 +1,12 @@
-import { MoreHorizontal, Package } from 'lucide-react';
+import { Image as ImageIcon, MoreHorizontal, Package } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 
-import type { ExpirationStatus, PantryItem } from '@/entities/pantry/model/types';
+import type {
+  ExpirationStatus,
+  PantryCardVariant,
+  PantryItem,
+} from '@/entities/pantry/model/types';
 
 const expirationStatusLabels: Record<ExpirationStatus, string> = {
   NORMAL: '정상',
@@ -23,9 +28,56 @@ export function getExpirationStatusLabel(status: ExpirationStatus) {
 
 interface PantryItemCardProps {
   item: PantryItem;
+  variant?: PantryCardVariant;
 }
 
-export function PantryItemCard({ item }: PantryItemCardProps) {
+function ItemOptionsLink({ itemName }: { itemName: string }) {
+  return (
+    <Link
+      aria-label={`${itemName} 옵션`}
+      className="flex size-6 shrink-0 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:outline-none"
+      href="/pantry?state=delete-confirm"
+    >
+      <MoreHorizontal aria-hidden="true" className="size-4" />
+    </Link>
+  );
+}
+
+function PantryImageCard({ item }: { item: PantryItem }) {
+  return (
+    <article className="flex h-[203px] min-w-0 flex-col rounded-2xl bg-[#eff0f4] px-[5px] py-3 text-[#131313]">
+      <div className="flex items-center justify-between">
+        <span
+          className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${expirationStatusStyles[item.expirationStatus]}`}
+        >
+          {getExpirationStatusLabel(item.expirationStatus)}
+        </span>
+        <ItemOptionsLink itemName={item.name} />
+      </div>
+
+      <div className="relative mx-auto mt-1 flex size-[100px] items-center justify-center overflow-hidden rounded-lg bg-[#c5c6c9]">
+        {item.imageUrl ? (
+          <Image
+            alt={item.imageAlt}
+            className="object-cover"
+            fill
+            sizes="100px"
+            src={item.imageUrl}
+          />
+        ) : (
+          <ImageIcon aria-label={item.imageAlt} className="size-6 text-[#949497]" />
+        )}
+      </div>
+
+      <div className="mt-2 px-1">
+        <h2 className="truncate text-sm font-semibold">{item.name}</h2>
+        <p className="mt-1 truncate text-xs text-[#949497]">{item.expirationLabel}</p>
+      </div>
+    </article>
+  );
+}
+
+function PantryIconCard({ item }: { item: PantryItem }) {
   const availabilityLabel = item.availability === 'AVAILABLE' ? '요리 가능' : '확인 필요';
 
   return (
@@ -50,16 +102,16 @@ export function PantryItemCard({ item }: PantryItemCardProps) {
           <h2 className="truncate text-sm font-semibold">{item.name}</h2>
           <p className="mt-1 truncate text-xs text-[#949497]">{item.expirationLabel}</p>
         </div>
-        <Link
-          aria-label={`${item.name} 옵션`}
-          className="flex size-6 shrink-0 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:outline-none"
-          href="/pantry?state=delete-confirm"
-        >
-          <MoreHorizontal aria-hidden="true" className="size-4" />
-        </Link>
+        <ItemOptionsLink itemName={item.name} />
       </div>
 
       <p className="sr-only">{availabilityLabel}</p>
     </article>
   );
+}
+
+export function PantryItemCard({ item, variant = 'icon' }: PantryItemCardProps) {
+  if (variant === 'image') return <PantryImageCard item={item} />;
+
+  return <PantryIconCard item={item} />;
 }

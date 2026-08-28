@@ -8,6 +8,8 @@ export const pantryItems: PantryItem[] = [
     expirationStatus: 'IMMINENT',
     availability: 'AVAILABLE',
     imageAlt: '대파 이미지 자리',
+    imageUrl:
+      'https://images.unsplash.com/photo-1589927986089-35812388d1f4?auto=format&fit=crop&w=300&q=80',
   },
   {
     id: 'egg',
@@ -16,6 +18,8 @@ export const pantryItems: PantryItem[] = [
     expirationStatus: 'NORMAL',
     availability: 'AVAILABLE',
     imageAlt: '계란 이미지 자리',
+    imageUrl:
+      'https://images.unsplash.com/photo-1498654077810-12c0e3a1c1d7?auto=format&fit=crop&w=300&q=80',
   },
   {
     id: 'potato',
@@ -24,6 +28,8 @@ export const pantryItems: PantryItem[] = [
     expirationStatus: 'UNREGISTERED',
     availability: 'AVAILABLE',
     imageAlt: '감자 이미지 자리',
+    imageUrl:
+      'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=300&q=80',
   },
   {
     id: 'milk',
@@ -32,6 +38,8 @@ export const pantryItems: PantryItem[] = [
     expirationStatus: 'EXPIRED',
     availability: 'AVAILABLE',
     imageAlt: '우유 이미지 자리',
+    imageUrl:
+      'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=300&q=80',
   },
   {
     id: 'tofu',
@@ -40,6 +48,8 @@ export const pantryItems: PantryItem[] = [
     expirationStatus: 'NORMAL',
     availability: 'UNAVAILABLE',
     imageAlt: '두부 이미지 자리',
+    imageUrl:
+      'https://images.unsplash.com/photo-1623334044303-241021148842?auto=format&fit=crop&w=300&q=80',
   },
   {
     id: 'pork',
@@ -48,6 +58,8 @@ export const pantryItems: PantryItem[] = [
     expirationStatus: 'IMMINENT',
     availability: 'AVAILABLE',
     imageAlt: '돼지고기 이미지 자리',
+    imageUrl:
+      'https://images.unsplash.com/photo-1602470520998-f4a52199a3d6?auto=format&fit=crop&w=300&q=80',
   },
   {
     id: 'carrot',
@@ -56,6 +68,8 @@ export const pantryItems: PantryItem[] = [
     expirationStatus: 'NORMAL',
     availability: 'AVAILABLE',
     imageAlt: '당근 이미지 자리',
+    imageUrl:
+      'https://images.unsplash.com/photo-1447175008436-054170c2e979?auto=format&fit=crop&w=300&q=80',
   },
   {
     id: 'mushroom',
@@ -64,5 +78,7 @@ export const pantryItems: PantryItem[] = [
     expirationStatus: 'UNREGISTERED',
     availability: 'UNAVAILABLE',
     imageAlt: '버섯 이미지 자리',
+    imageUrl:
+      'https://images.unsplash.com/photo-1504544750208-dc0358e63f7f?auto=format&fit=crop&w=300&q=80',
   },
 ];

@@ -1,7 +1,16 @@
 import Link from 'next/link';
 
 const mockRoutes = [
-  { href: '/pantry?state=full', label: '팬트리 목업', description: '보유 식재료와 등록·삭제 상태' },
+  {
+    href: '/pantry?state=full',
+    label: '팬트리 아이콘형 목업',
+    description: '아이콘으로 식재료를 표시하는 목록',
+  },
+  {
+    href: '/pantry?state=full&view=image',
+    label: '팬트리 이미지형 목업',
+    description: '식재료 이미지가 들어가는 목록',
+  },
   { href: '/recipe', label: '레시피 목업', description: '주재료·소비기한 임박 추천' },
   { href: '/cart?from=recipe', label: '장바구니 목업', description: '부족 재료와 주문 흐름' },
   { href: '/cooking/complete', label: '조리 완료 목업', description: '조리 후 팬트리 확인 흐름' },

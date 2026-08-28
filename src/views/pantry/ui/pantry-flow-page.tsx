@@ -2,12 +2,13 @@ import { CalendarDays, CheckCircle2, PackageCheck, Plus } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
-import { PantryPage } from '@/views/pantry/ui/pantry-page';
+import { getPantryCardVariant, PantryPage } from '@/views/pantry/ui/pantry-page';
 
 export type PantryMockState = 'empty' | 'full' | 'delivery-complete' | 'edit' | 'delete-confirm';
 
 interface PantryFlowPageProps {
   state?: string;
+  view?: string;
 }
 
 export function getPantryMockState(state?: string): PantryMockState {
@@ -166,15 +167,16 @@ function DeleteConfirmSheet() {
   );
 }
 
-export function PantryFlowPage({ state }: PantryFlowPageProps) {
+export function PantryFlowPage({ state, view }: PantryFlowPageProps) {
   const mockState = getPantryMockState(state);
+  const cardVariant = getPantryCardVariant(view);
 
   if (mockState === 'empty') return <PantryEmptyMock />;
   if (mockState === 'edit') return <IngredientFormMock />;
 
   return (
     <>
-      <PantryPage />
+      <PantryPage cardVariant={cardVariant} />
       {mockState === 'delivery-complete' && <DeliveryCompleteDialog />}
       {mockState === 'delete-confirm' && <DeleteConfirmSheet />}
     </>

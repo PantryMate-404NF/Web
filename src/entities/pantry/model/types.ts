@@ -2,6 +2,8 @@ export type PantryAvailability = 'AVAILABLE' | 'UNAVAILABLE';
 
 export type ExpirationStatus = 'NORMAL' | 'IMMINENT' | 'EXPIRED' | 'UNREGISTERED';
 
+export type PantryCardVariant = 'icon' | 'image';
+
 export interface PantryItem {
   id: string;
   name: string;
@@ -9,4 +11,5 @@ export interface PantryItem {
   expirationStatus: ExpirationStatus;
   availability: PantryAvailability;
   imageAlt: string;
+  imageUrl?: string;
 }

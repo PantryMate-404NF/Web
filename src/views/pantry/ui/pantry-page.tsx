@@ -1,4 +1,4 @@
-import type { PantryItem } from '@/entities/pantry/model/types';
+import type { PantryCardVariant, PantryItem } from '@/entities/pantry/model/types';
 import { pantryItems } from '@/entities/pantry/model/mock';
 import { Button } from '@/components/ui/button';
 import { PantryGrid } from '@/widgets/pantry-list/ui/pantry-grid';
@@ -11,6 +11,11 @@ interface PantryPageProps {
   items?: PantryItem[];
   isLoading?: boolean;
   errorMessage?: string;
+  cardVariant?: PantryCardVariant;
+}
+
+export function getPantryCardVariant(view?: string): PantryCardVariant {
+  return view === 'image' ? 'image' : 'icon';
 }
 
 export function getPantryViewState({
@@ -73,6 +78,7 @@ export function PantryPage({
   items = pantryItems,
   isLoading = false,
   errorMessage,
+  cardVariant = 'icon',
 }: PantryPageProps) {
   const viewState = getPantryViewState({ items, isLoading, errorMessage });
 
@@ -86,7 +92,7 @@ export function PantryPage({
       {viewState === 'error' && (
         <PantryErrorState message={errorMessage ?? '잠시 후 다시 시도해 주세요.'} />
       )}
-      {viewState === 'default' && <PantryGrid items={items} />}
+      {viewState === 'default' && <PantryGrid items={items} variant={cardVariant} />}
     </main>
   );
 }
