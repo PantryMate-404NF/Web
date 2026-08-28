@@ -77,7 +77,7 @@ export function PantryPage({
   const viewState = getPantryViewState({ items, isLoading, errorMessage });
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-[430px] px-4 pt-4 pb-10">
+    <main className="mx-auto min-h-dvh w-full max-w-[390px] bg-white pt-2 pb-10">
       <PantryHeader />
       <PantryToolbar itemCount={items.length} />
 

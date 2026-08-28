@@ -1,4 +1,4 @@
-import { CalendarDays, CheckCircle2, PackageCheck, Pencil, Plus, Trash2 } from 'lucide-react';
+import { CalendarDays, CheckCircle2, PackageCheck, Plus } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
@@ -166,25 +166,6 @@ function DeleteConfirmSheet() {
   );
 }
 
-function PantryFullActions() {
-  return (
-    <div className="mx-auto -mt-7 flex max-w-[430px] gap-2 px-4">
-      <Button asChild className="flex-1" variant="outline">
-        <Link href="/pantry?state=edit">
-          <Pencil aria-hidden="true" />
-          식재료 등록/수정
-        </Link>
-      </Button>
-      <Button asChild className="flex-1" variant="outline">
-        <Link href="/pantry?state=delete-confirm">
-          <Trash2 aria-hidden="true" />
-          삭제 확인
-        </Link>
-      </Button>
-    </div>
-  );
-}
-
 export function PantryFlowPage({ state }: PantryFlowPageProps) {
   const mockState = getPantryMockState(state);
 
@@ -194,7 +175,6 @@ export function PantryFlowPage({ state }: PantryFlowPageProps) {
   return (
     <>
       <PantryPage />
-      <PantryFullActions />
       {mockState === 'delivery-complete' && <DeliveryCompleteDialog />}
       {mockState === 'delete-confirm' && <DeleteConfirmSheet />}
     </>
