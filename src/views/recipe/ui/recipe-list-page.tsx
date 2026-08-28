@@ -1,75 +1,125 @@
-import { Sparkles } from 'lucide-react';
+import { Heart, Search } from 'lucide-react';
 import Link from 'next/link';
 
 import { recipeMocks } from '@/entities/recipe/model/mock';
-import type { RecipeTab } from '@/entities/recipe/model/types';
-import { MobileScreen } from '@/widgets/app-shell/ui/mobile-screen';
-import { RecipeCard } from '@/widgets/recipe-list/ui/recipe-card';
 
-interface RecipeListPageProps {
-  tab: RecipeTab;
+interface RecipeRailSection {
+  title: string;
+  recipes: typeof recipeMocks;
 }
 
-export function getRecipeTab(value?: string): RecipeTab {
-  return value === 'imminent' ? 'imminent' : 'main';
+export function getImminentRecipeSections(): RecipeRailSection[] {
+  const expiringRecipes = recipeMocks.filter((recipe) =>
+    recipe.ingredients.some((ingredient) => ingredient.isImminent),
+  );
+
+  return [
+    { title: '기한 임박! 이 레시피는 어떠세요', recipes: expiringRecipes },
+    { title: '이 달의 인기 레시피(임시)', recipes: recipeMocks },
+    { title: '최근 본 레시피(임시)', recipes: recipeMocks.slice(0, 2) },
+  ];
 }
 
-export function RecipeListPage({ tab }: RecipeListPageProps) {
-  const recipes =
-    tab === 'imminent'
-      ? recipeMocks.filter((recipe) => recipe.ingredients.some((item) => item.isImminent))
-      : recipeMocks;
+function ExpiringRecipeCard({ recipe }: { recipe: (typeof recipeMocks)[number] }) {
+  const imminentIngredient = recipe.ingredients.find((ingredient) => ingredient.isImminent);
 
   return (
-    <MobileScreen
-      action={
-        <Link className="text-primary text-sm font-medium" href="/pantry?state=full">
-          팬트리
-        </Link>
-      }
-      title="레시피"
+    <Link
+      className="relative h-[318px] w-[234px] shrink-0 rounded-2xl bg-[#eff0f4] p-3"
+      href={`/recipe/${recipe.id}`}
     >
-      <section className="bg-muted mt-5 rounded-2xl p-4">
-        <div className="flex items-center gap-2">
-          <Sparkles aria-hidden="true" className="text-primary size-4" />
-          <p className="text-sm font-medium">팬트리 재료를 활용한 추천이에요</p>
-        </div>
-        <p className="text-muted-foreground mt-2 text-sm">
-          지금 만들 수 있는 메뉴와 재료 1~2개만 더 있으면 되는 메뉴를 보여드려요.
-        </p>
-      </section>
-      <div
-        aria-label="레시피 분류"
-        className="mt-6 grid grid-cols-2 rounded-xl border p-1"
-        role="tablist"
-      >
-        <Link
-          aria-selected={tab === 'main'}
-          className={`rounded-lg py-2.5 text-center text-sm font-medium ${tab === 'main' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
-          href="/recipe?tab=main"
-          role="tab"
-        >
-          주재료 레시피
-        </Link>
-        <Link
-          aria-selected={tab === 'imminent'}
-          className={`rounded-lg py-2.5 text-center text-sm font-medium ${tab === 'imminent' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
-          href="/recipe?tab=imminent"
-          role="tab"
-        >
-          소비기한 임박
-        </Link>
+      <span className="inline-flex rounded-full bg-[#c5c6c9] px-4 py-1 text-sm font-medium text-[#131313]">
+        {imminentIngredient?.name ?? '식재료'} D-2
+      </span>
+      <div className="absolute top-[62px] left-1/2 flex size-40 -translate-x-1/2 items-center justify-center rounded-2xl bg-[#c5c6c9] text-sm text-[#131313]">
+        레시피 이미지
       </div>
-      <section className="mt-6">
-        <h2 className="text-base font-semibold">
-          {tab === 'imminent' ? '먼저 활용하면 좋은 메뉴' : '지금 추천하는 메뉴'}
-        </h2>
-        <div className="mt-3 grid gap-3">
-          {recipes.map((recipe) => (
-            <RecipeCard key={recipe.id} recipe={recipe} />
+      <p className="absolute right-0 bottom-[62px] left-0 mx-auto h-[22px] w-[142px] rounded-full bg-[#949497] px-3 pt-0.5 text-center text-xs text-[#131313]">
+        {recipe.name}
+      </p>
+      <p className="absolute right-0 bottom-[38px] left-0 mx-auto h-4 w-[156px] rounded-full bg-[#b9b9bc] px-3 text-center text-[10px] leading-4 text-[#131313]">
+        {recipe.cookTime} · 부족 재료 {recipe.missingCount}개
+      </p>
+    </Link>
+  );
+}
+
+function CompactRecipeCard({ recipe }: { recipe: (typeof recipeMocks)[number] }) {
+  return (
+    <Link className="w-[156px] shrink-0" href={`/recipe/${recipe.id}`}>
+      <div className="flex h-24 items-center justify-center rounded-2xl bg-[#c5c6c9] text-xs text-[#131313]">
+        레시피 이미지
+      </div>
+      <p className="mt-1 h-5 w-[142px] truncate rounded-full bg-[#949497] px-2 text-center text-xs leading-5 text-[#131313]">
+        {recipe.name}
+      </p>
+      <p className="mt-1 h-4 w-full truncate rounded-full bg-[#b9b9bc] px-2 text-center text-[10px] leading-4 text-[#131313]">
+        {recipe.category}
+      </p>
+    </Link>
+  );
+}
+
+export function RecipeListPage() {
+  const sections = getImminentRecipeSections();
+
+  return (
+    <main className="mx-auto min-h-dvh w-full max-w-[390px] overflow-hidden bg-white pb-8 text-[#131313]">
+      <nav
+        className="mx-4 flex h-12 items-center justify-between bg-[#eff0f4] p-2"
+        aria-label="레시피 탭"
+      >
+        <div className="flex gap-2" role="tablist">
+          <button
+            className="h-8 rounded-full bg-[#c5c6c9] px-4 text-base font-medium"
+            role="tab"
+            type="button"
+            aria-selected
+          >
+            추천
+          </button>
+          <button
+            className="flex h-8 items-center gap-1 rounded-full bg-[#c5c6c9] px-4 text-base font-medium"
+            role="tab"
+            type="button"
+            aria-selected={false}
+          >
+            <Heart aria-hidden="true" className="size-3.5" />찜
+          </button>
+        </div>
+        <Link
+          aria-label="레시피 검색"
+          className="flex size-10 items-center justify-center"
+          href="/recipe"
+        >
+          <Search aria-hidden="true" className="size-5" />
+        </Link>
+      </nav>
+
+      <section className="mt-7">
+        <h1 className="px-6 text-lg font-semibold">{sections[0].title}</h1>
+        <div className="mt-5 flex [scrollbar-width:none] gap-2 overflow-x-auto px-[calc((100%-234px)/2)] pb-1">
+          {sections[0].recipes.map((recipe) => (
+            <ExpiringRecipeCard key={recipe.id} recipe={recipe} />
           ))}
         </div>
       </section>
-    </MobileScreen>
+
+      <div className="mt-10 flex flex-col gap-4 px-4">
+        {sections.slice(1).map((section) => (
+          <section className="rounded-2xl bg-[#eff0f4] p-2 pb-4" key={section.title}>
+            <div className="flex h-10 items-center justify-between">
+              <h2 className="text-lg font-semibold">{section.title}</h2>
+              <span className="h-4 w-12 rounded-full bg-[#c5c6c9]" aria-hidden="true" />
+            </div>
+            <div className="mt-2 flex [scrollbar-width:none] gap-2 overflow-x-auto">
+              {section.recipes.map((recipe) => (
+                <CompactRecipeCard key={recipe.id} recipe={recipe} />
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    </main>
   );
 }
