@@ -1,0 +1,48 @@
+import type { Recipe } from './types';
+
+export const recipeMocks: Recipe[] = [
+  {
+    id: 'kimchi-stew',
+    name: '대파 듬뿍 김치찌개',
+    category: '한식',
+    cookTime: '20분',
+    description: '남아 있는 대파와 김치를 먼저 활용하는 따뜻한 한 끼예요.',
+    missingCount: 2,
+    ingredients: [
+      { id: 'green-onion', name: '대파', amount: '1/2대', isOwned: true, isImminent: true },
+      { id: 'kimchi', name: '김치', amount: '200g', isOwned: true },
+      { id: 'pork', name: '돼지고기', amount: '150g', isOwned: false },
+      { id: 'tofu', name: '두부', amount: '1/2모', isOwned: false },
+    ],
+  },
+  {
+    id: 'egg-potato-soup',
+    name: '감자 계란국',
+    category: '국·탕',
+    cookTime: '15분',
+    description: '감자와 계란으로 빠르게 만들 수 있는 담백한 국이에요.',
+    missingCount: 0,
+    ingredients: [
+      { id: 'potato', name: '감자', amount: '2개', isOwned: true },
+      { id: 'egg', name: '계란', amount: '2개', isOwned: true },
+      { id: 'green-onion', name: '대파', amount: '1/3대', isOwned: true, isImminent: true },
+    ],
+  },
+  {
+    id: 'pork-vegetable-stir-fry',
+    name: '돼지고기 채소볶음',
+    category: '메인',
+    cookTime: '25분',
+    description: '소비기한이 가까운 돼지고기를 우선 활용하는 볶음 요리예요.',
+    missingCount: 1,
+    ingredients: [
+      { id: 'pork', name: '돼지고기', amount: '200g', isOwned: true, isImminent: true },
+      { id: 'carrot', name: '당근', amount: '1/2개', isOwned: true },
+      { id: 'mushroom', name: '버섯', amount: '100g', isOwned: false },
+    ],
+  },
+];
+
+export function getRecipeById(recipeId: string) {
+  return recipeMocks.find((recipe) => recipe.id === recipeId) ?? recipeMocks[0];
+}

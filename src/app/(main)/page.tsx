@@ -1,3 +1,12 @@
+import Link from 'next/link';
+
+const mockRoutes = [
+  { href: '/pantry?state=full', label: '팬트리 목업', description: '보유 식재료와 등록·삭제 상태' },
+  { href: '/recipe', label: '레시피 목업', description: '주재료·소비기한 임박 추천' },
+  { href: '/cart?from=recipe', label: '장바구니 목업', description: '부족 재료와 주문 흐름' },
+  { href: '/cooking/complete', label: '조리 완료 목업', description: '조리 후 팬트리 확인 흐름' },
+];
+
 export default function HomePage() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-5 py-10">
@@ -8,11 +17,23 @@ export default function HomePage() {
       <p className="text-muted-foreground mt-4 text-base leading-7">
         보유 재료를 확인하고, 지금 만들 수 있는 메뉴와 부족한 재료를 한 번에 확인하세요.
       </p>
-      <section className="bg-card mt-10 rounded-[var(--radius)] border p-5 shadow-sm">
-        <h2 className="text-lg font-semibold">초기 화면 준비 중</h2>
+      <section className="mt-10">
+        <h2 className="text-lg font-semibold">프로토타입 목업</h2>
         <p className="text-muted-foreground mt-2 text-sm leading-6">
-          홈, 팬트리, 레시피, 장바구니 흐름을 API 명세와 함께 구현합니다.
+          와이어프레임의 주요 흐름을 실제 라우트에서 확인할 수 있습니다.
         </p>
+        <div className="mt-4 grid gap-3">
+          {mockRoutes.map((route) => (
+            <Link
+              className="bg-card hover:bg-muted rounded-2xl border p-4 shadow-sm transition-colors"
+              href={route.href}
+              key={route.href}
+            >
+              <h3 className="font-semibold">{route.label}</h3>
+              <p className="text-muted-foreground mt-1 text-sm">{route.description}</p>
+            </Link>
+          ))}
+        </div>
       </section>
     </main>
   );
