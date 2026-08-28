@@ -1,0 +1,68 @@
+import type { PantryItem } from './types';
+
+export const pantryItems: PantryItem[] = [
+  {
+    id: 'green-onion',
+    name: '대파',
+    expirationLabel: '소비기한 3일 남음',
+    expirationStatus: 'IMMINENT',
+    availability: 'AVAILABLE',
+    imageAlt: '대파 이미지 자리',
+  },
+  {
+    id: 'egg',
+    name: '계란',
+    expirationLabel: '소비기한 7일 남음',
+    expirationStatus: 'NORMAL',
+    availability: 'AVAILABLE',
+    imageAlt: '계란 이미지 자리',
+  },
+  {
+    id: 'potato',
+    name: '감자',
+    expirationLabel: '소비기한 확인 필요',
+    expirationStatus: 'UNREGISTERED',
+    availability: 'AVAILABLE',
+    imageAlt: '감자 이미지 자리',
+  },
+  {
+    id: 'milk',
+    name: '우유',
+    expirationLabel: '소비기한 경과',
+    expirationStatus: 'EXPIRED',
+    availability: 'AVAILABLE',
+    imageAlt: '우유 이미지 자리',
+  },
+  {
+    id: 'tofu',
+    name: '두부',
+    expirationLabel: '소비기한 5일 남음',
+    expirationStatus: 'NORMAL',
+    availability: 'UNAVAILABLE',
+    imageAlt: '두부 이미지 자리',
+  },
+  {
+    id: 'pork',
+    name: '돼지고기',
+    expirationLabel: '소비기한 2일 남음',
+    expirationStatus: 'IMMINENT',
+    availability: 'AVAILABLE',
+    imageAlt: '돼지고기 이미지 자리',
+  },
+  {
+    id: 'carrot',
+    name: '당근',
+    expirationLabel: '소비기한 10일 남음',
+    expirationStatus: 'NORMAL',
+    availability: 'AVAILABLE',
+    imageAlt: '당근 이미지 자리',
+  },
+  {
+    id: 'mushroom',
+    name: '버섯',
+    expirationLabel: '소비기한 확인 필요',
+    expirationStatus: 'UNREGISTERED',
+    availability: 'UNAVAILABLE',
+    imageAlt: '버섯 이미지 자리',
+  },
+];
