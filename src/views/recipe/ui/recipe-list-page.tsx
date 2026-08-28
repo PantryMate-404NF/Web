@@ -98,7 +98,7 @@ export function RecipeListPage() {
 
       <section className="mt-7">
         <h1 className="px-6 text-lg font-semibold">{sections[0].title}</h1>
-        <div className="mt-5 flex [scrollbar-width:none] gap-2 overflow-x-auto px-[calc((100%-234px)/2)] pb-1">
+        <div className="mt-5 flex [scrollbar-width:none] gap-2 overflow-x-auto px-6 pb-1">
           {sections[0].recipes.map((recipe) => (
             <ExpiringRecipeCard key={recipe.id} recipe={recipe} />
           ))}
