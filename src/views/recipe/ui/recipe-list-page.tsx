@@ -15,6 +15,14 @@ export function getRecipeTab(tab?: string): RecipeTab {
   return tab === 'imminent' ? 'imminent' : 'main';
 }
 
+export function getRecipeRoute(tab: RecipeTab): string {
+  return tab === 'imminent' ? '/recipe/imminent' : '/recipe';
+}
+
+export function getIngredientSelectionRoute(): string {
+  return '/recipe/ingredients';
+}
+
 export function getRecipeSections(tab: RecipeTab): RecipeRailSection[] {
   const expiringRecipes = recipeMocks.filter((recipe) =>
     recipe.ingredients.some((ingredient) => ingredient.isImminent),
@@ -102,7 +110,7 @@ function RecipeTabNavigation() {
         <Link
           aria-selected
           className="flex h-8 items-center rounded-full bg-[#c5c6c9] px-4 text-base font-medium"
-          href="/recipe?tab=main"
+          href={getRecipeRoute('main')}
           role="tab"
         >
           추천
@@ -119,7 +127,7 @@ function RecipeTabNavigation() {
       <Link
         aria-label="레시피 검색"
         className="flex size-10 items-center justify-center"
-        href="/recipe?tab=main"
+        href={getRecipeRoute('main')}
       >
         <Search aria-hidden="true" className="size-5" />
       </Link>
@@ -136,16 +144,16 @@ function MainIngredientSection({ recipes }: { recipes: typeof recipeMocks }) {
       </div>
       <div className="mt-2 flex [scrollbar-width:none] gap-2 overflow-x-auto">
         {mainIngredients.map((ingredient) => (
-          <button
+          <Link
             className="flex w-[72px] shrink-0 flex-col items-center px-1 py-2"
+            href={getIngredientSelectionRoute()}
             key={ingredient}
-            type="button"
           >
             <div className="flex size-16 items-center justify-center rounded-lg bg-[#c5c6c9] text-[#949497]">
               <ImageIcon aria-hidden="true" className="size-5" />
             </div>
             <span className="mt-1 text-sm font-medium">{ingredient}</span>
-          </button>
+          </Link>
         ))}
       </div>
       <div className="mt-2 grid grid-cols-2 gap-2">

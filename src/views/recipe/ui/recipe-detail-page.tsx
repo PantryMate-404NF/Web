@@ -1,8 +1,6 @@
-import { Check, CircleAlert, Clock3, ShoppingCart } from 'lucide-react';
-import Link from 'next/link';
+import { Check, CircleAlert, Clock3 } from 'lucide-react';
 
 import { getRecipeById } from '@/entities/recipe/model/mock';
-import { Button } from '@/components/ui/button';
 import { MobileScreen } from '@/widgets/app-shell/ui/mobile-screen';
 
 interface RecipeDetailPageProps {
@@ -65,17 +63,6 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
           ))}
         </ul>
       </section>
-      <div className="mt-8 grid gap-2">
-        <Button asChild className="h-12">
-          <Link href={`/cart?from=recipe&recipe=${recipe.id}`}>
-            <ShoppingCart aria-hidden="true" />
-            부족한 재료 장바구니에 담기
-          </Link>
-        </Button>
-        <Button asChild className="h-12" variant="outline">
-          <Link href="/cooking/complete">이 레시피로 조리 완료</Link>
-        </Button>
-      </div>
     </MobileScreen>
   );
 }

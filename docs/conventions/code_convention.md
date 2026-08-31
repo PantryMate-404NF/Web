@@ -70,6 +70,14 @@ interface PantryItemProps {
 - 클릭 가능한 요소는 `button`, `a`, `input` 등 의미에 맞는 HTML 요소를 우선 사용합니다.
 - 키보드 포커스와 색상 외 상태 표현을 제거하지 않습니다.
 
+## 디자인 토큰
+
+- 색상, 여백, 반경, 그림자는 [디자인 시스템](../design/design-system.md)의 토큰을 우선 사용합니다.
+- 화면·위젯·feature 코드에 primitive 색상값(`#[0-9A-Fa-f]{6}`)을 직접 작성하지 않습니다. `bg-primary`, `text-foreground`, `border-border`처럼 semantic 토큰을 사용합니다.
+- 버튼·카드·입력창처럼 반복되는 UI는 component 토큰과 `src/shared/ui` 공용 컴포넌트를 우선 사용합니다.
+- 새 시각적 역할이 필요하면 `primitive → semantic → component` 순서로 토큰을 정의하고, `globals.css`와 디자인 시스템 문서를 함께 갱신합니다.
+- 다크 모드 대응을 위해 화면 컴포넌트에서 라이트·다크 값을 분기해 하드코딩하지 않습니다. semantic 토큰을 통해 테마를 전환합니다.
+
 ## import와 주석
 
 - import는 외부 패키지 → 내부 절대 경로(`@/`) → 상대 경로 순서로 정리합니다.

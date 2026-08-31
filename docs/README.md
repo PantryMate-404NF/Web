@@ -4,6 +4,7 @@
 | --------------- | -------------------------------- |
 | `product/`      | 사용자 흐름, MVP 범위, 화면 명세 |
 | `architecture/` | 프론트엔드 구조와 기술 의사결정  |
+| `design/`       | 디자인 토큰과 공용 UI 사용 기준  |
 | `api/`          | REST API 계약과 MSW 가이드       |
 | `research/`     | 경쟁사, 접근성, 성능 리서치      |
 | `conventions/`  | Git, 코드, 포맷팅 컨벤션         |
@@ -17,3 +18,4 @@
 - [코드 컨벤션](conventions/code_convention.md)
 - [Prettier 컨벤션](conventions/prettier_convention.md)
 - [개발 품질 자동화](architecture/development-quality-automation.md)
+- [디자인 시스템](design/design-system.md)

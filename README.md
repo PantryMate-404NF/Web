@@ -29,7 +29,7 @@ MVP에서는 재료의 정확한 잔여 수량을 추정하지 않습니다. 팬
 
 ## 프로토타입 목업 화면
 
-디자인 토큰과 실제 API가 준비되기 전, Figma 프로토타입의 핵심 흐름을 확인하기 위한 목업 화면입니다. 각 화면은 실제 구현 예정인 FSD 레이어와 App Router 경로에 배치되어 있습니다.
+실제 API가 준비되기 전, Figma 프로토타입의 핵심 흐름을 확인하기 위한 목업 화면입니다. 화면 구조는 실제 구현 예정인 FSD 레이어와 App Router 경로에 배치되어 있으며, 확정 전 와이어프레임에는 디자인 토큰을 아직 적용하지 않습니다.
 
 | 경로                              | 확인할 화면                         |
 | --------------------------------- | ----------------------------------- |
@@ -40,11 +40,10 @@ MVP에서는 재료의 정확한 잔여 수량을 추정하지 않습니다. 팬
 | `/pantry?state=delivery-complete` | 배송 완료 후 자동 등록 팝업         |
 | `/pantry?state=edit`              | 식재료 등록·수정 화면               |
 | `/pantry?state=delete-confirm`    | 식재료 삭제 확인 바텀시트           |
-| `/recipe?tab=main`                | 주재료 기반 레시피 추천             |
-| `/recipe?tab=imminent`            | 소비기한 임박 재료 기반 레시피 추천 |
+| `/recipe`                         | 주재료 기반 레시피 추천             |
+| `/recipe/imminent`                | 소비기한 임박 재료 기반 레시피 추천 |
+| `/recipe/ingredients`             | 주재료 선택용 식재료 그리드         |
 | `/recipe/kimchi-stew`             | 레시피 상세와 부족 재료 확인        |
-| `/cart?from=recipe`               | 레시피 부족 재료 장바구니           |
-| `/cooking/complete`               | 조리 완료 후 팬트리 확인            |
 
 ## 기술 스택
 
@@ -89,15 +88,17 @@ npm run dev
 
 ### 주요 명령어
 
-| 명령어                   | 설명                          |
-| ------------------------ | ----------------------------- |
-| `npm run dev`            | Turbopack 기반 개발 서버 실행 |
-| `npm run lint`           | ESLint 검사                   |
-| `npm run typecheck`      | TypeScript 타입 검사          |
-| `npm run test`           | Vitest 테스트 실행            |
-| `npm run build`          | webpack 기반 프로덕션 빌드    |
-| `npm run check:workflow` | 브랜치·커밋·작업 트리 점검    |
-| `npm run start`          | 프로덕션 서버 실행            |
+| 명령어                        | 설명                                      |
+| ----------------------------- | ----------------------------------------- |
+| `npm run dev`                 | Turbopack 기반 개발 서버 실행             |
+| `npm run lint`                | ESLint 검사                               |
+| `npm run typecheck`           | TypeScript 타입 검사                      |
+| `npm run check:design-tokens` | Pretendard·색상·테마·반응형 토큰 검사     |
+| `npm run check`               | 디자인 토큰·포맷·린트·타입 통합 검사      |
+| `npm run test`                | Vitest 테스트 실행                        |
+| `npm run build`               | 디자인 토큰 검사 후 webpack 프로덕션 빌드 |
+| `npm run check:workflow`      | 브랜치·커밋·작업 트리 점검                |
+| `npm run start`               | 프로덕션 서버 실행                        |
 
 > 현재 환경에서는 Next.js 16의 Turbopack 프로덕션 빌드가 불안정할 수 있어, 재현 가능한 검증을 위해 `npm run build`는 webpack을 사용합니다.
 
@@ -119,26 +120,20 @@ src/
 │   ├── (main)/                        # 사용자 화면 라우트 그룹
 │   │   ├── pantry/page.tsx            # /pantry의 searchParams를 화면에 전달
 │   │   ├── recipe/                    # 레시피 목록·상세 URL
-│   │   ├── cart/                      # 장바구니 URL
-│   │   └── cooking/                   # 조리 완료 URL
 │   ├── layout.tsx                     # 루트 레이아웃
 │   ├── providers.tsx                  # Query Client 등 전역 Provider
 │   ├── globals.css                    # 전역 스타일·디자인 토큰
 │   └── manifest.ts                    # PWA Manifest
 ├── views/                            # 페이지 단위 화면 조합
 │   ├── pantry/ui/                     # 팬트리 목록·빈 상태·등록/삭제 흐름
-│   ├── recipe/ui/                     # 레시피 목록·상세 화면
-│   ├── cart/ui/                       # 장바구니 화면
-│   └── cooking/ui/                    # 조리 완료 화면
+│   └── recipe/ui/                     # 레시피 목록·상세 화면
 ├── widgets/                          # 여러 entity/feature를 묶는 큰 UI 블록
 │   ├── pantry-list/ui/                # 팬트리 헤더·필터·2열 그리드
-│   ├── cart/ui/                       # 장바구니 품목 행
 │   └── app-shell/ui/                  # 모바일 화면 프레임
 ├── features/                         # 사용자의 행동 단위 (현재 초기 폴더)
 ├── entities/                         # 도메인 데이터와 단위 UI
 │   ├── pantry/                        # PantryItem 타입·목업·카드
-│   ├── recipe/                        # Recipe 타입·목업
-│   └── cart/                          # Cart 타입·목업
+│   └── recipe/                        # Recipe 타입·목업
 ├── components/                       # 전환 중인 공용 UI
 │   ├── ui/                            # 현재 shadcn/ui 컴포넌트
 │   └── pwa/                           # 서비스 워커 등록
@@ -238,6 +233,7 @@ npm run format:check → npm run lint → npm run typecheck
 | [프론트엔드 아키텍처](docs/architecture/frontend-architecture.md)       | 상태 소유권, BFF, PWA 기준                 |
 | [REST API·MSW 계약 가이드](docs/api/contract-guidelines.md)             | API 명세와 MSW 운영 원칙                   |
 | [개발 품질 자동화](docs/architecture/development-quality-automation.md) | Husky, CI, Ruleset 운영 기준               |
+| [디자인 시스템](docs/design/design-system.md)                           | 토큰 계층, 테마, 공용 UI 사용 기준         |
 
 ## 브랜치와 풀 리퀘스트
 

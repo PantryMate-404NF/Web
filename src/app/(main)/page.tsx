@@ -11,9 +11,17 @@ const mockRoutes = [
     label: '팬트리 이미지형 목업',
     description: '식재료 이미지가 들어가는 목록',
   },
-  { href: '/recipe', label: '레시피 목업', description: '주재료·소비기한 임박 추천' },
-  { href: '/cart?from=recipe', label: '장바구니 목업', description: '부족 재료와 주문 흐름' },
-  { href: '/cooking/complete', label: '조리 완료 목업', description: '조리 후 팬트리 확인 흐름' },
+  { href: '/recipe', label: '주재료 레시피 목업', description: '보유 주재료 기반 레시피 추천' },
+  {
+    href: '/recipe/imminent',
+    label: '기한 임박 레시피 목업',
+    description: '소비기한 임박 식재료 기반 레시피 추천',
+  },
+  {
+    href: '/recipe/ingredients',
+    label: '주재료 선택 목업',
+    description: '주재료 레시피에서 이어지는 식재료 선택 흐름',
+  },
 ];
 
 export default function HomePage() {
