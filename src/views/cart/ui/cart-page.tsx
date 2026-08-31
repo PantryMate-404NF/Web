@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import { getCartItemCount, getCartTotal, useCartStore } from '@/entities/cart/model/cart-store';
 
-export function CartView() {
+export function CartPage() {
   const router = useRouter();
   const items = useCartStore((state) => state.items);
   const removeProduct = useCartStore((state) => state.removeProduct);
