@@ -1,11 +1,23 @@
-import { readFileSync } from 'node:fs';
-import { globSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync, readdirSync } from 'node:fs';
+import { relative, resolve } from 'node:path';
 
-const uiFiles = globSync('src/**/*.{ts,tsx}', {
-  cwd: process.cwd(),
-  exclude: ['**/*.test.ts', '**/*.test.tsx'],
-});
+function getUiFiles(directory) {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = resolve(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      return getUiFiles(entryPath);
+    }
+
+    if (!/\.(?:ts|tsx)$/.test(entry.name) || /\.test\.tsx?$/.test(entry.name)) {
+      return [];
+    }
+
+    return [entryPath];
+  });
+}
+
+const uiFiles = getUiFiles(resolve('src'));
 
 const forbiddenPatterns = [
   /\bbg-white\b/g,
@@ -17,11 +29,12 @@ const forbiddenPatterns = [
 ];
 
 const violations = uiFiles.flatMap((file) => {
-  const source = readFileSync(resolve(file), 'utf8');
+  const source = readFileSync(file, 'utf8');
+  const relativePath = relative(process.cwd(), file);
 
   return forbiddenPatterns.flatMap((pattern) => {
     const matches = [...source.matchAll(pattern)];
-    return matches.map((match) => `${file}: ${match[0]}`);
+    return matches.map((match) => `${relativePath}: ${match[0]}`);
   });
 });
 
