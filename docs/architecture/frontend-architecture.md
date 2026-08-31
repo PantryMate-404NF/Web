@@ -10,6 +10,12 @@ app → views → widgets → features → entities → shared
 
 상위 레이어만 하위 레이어를 import할 수 있습니다. 특정 화면의 문맥이 필요한 코드는 `shared`에 두지 않습니다.
 
+## 디자인 시스템 소유권
+
+`src/app/globals.css`는 색상, 타이포그래피, spacing, radius, shadow, 라이트·다크 semantic 토큰의 단일 소스입니다. 화면은 primitive 값을 직접 사용하지 않고 semantic 토큰을 사용합니다. 재사용 가능한 버튼·입력창·카드의 상태 조합은 `src/shared/ui`가 소유하며, 화면 문맥이 필요한 조합은 `widgets`, `features`, `entities`에 둡니다.
+
+토큰 정의와 사용 규칙은 [디자인 시스템](../design/design-system.md)을 기준으로 합니다. 신규 semantic 또는 component 토큰을 추가하면 `globals.css`, 공용 컴포넌트, 해당 문서를 같은 변경 단위로 갱신합니다.
+
 ## 상태 소유권
 
 | 상태         | 위치                  | 예시                                 |
