@@ -14,6 +14,16 @@ export const recipeMocks: Recipe[] = [
       { id: 'pork', name: '돼지고기', amount: '150g', isOwned: false },
       { id: 'tofu', name: '두부', amount: '1/2모', isOwned: false },
     ],
+    linkedProducts: [
+      {
+        id: 'pork',
+        ingredient: '돼지고기',
+        name: '국내산 돼지고기 앞다리살',
+        price: 7980,
+        isShortage: true,
+      },
+      { id: 'tofu', ingredient: '두부', name: '국산 콩두부', price: 2480, isShortage: true },
+    ],
   },
   {
     id: 'egg-potato-soup',
@@ -27,6 +37,7 @@ export const recipeMocks: Recipe[] = [
       { id: 'egg', name: '계란', amount: '2개', isOwned: true },
       { id: 'green-onion', name: '대파', amount: '1/3대', isOwned: true, isImminent: true },
     ],
+    linkedProducts: [],
   },
   {
     id: 'pork-vegetable-stir-fry',
@@ -39,6 +50,15 @@ export const recipeMocks: Recipe[] = [
       { id: 'pork', name: '돼지고기', amount: '200g', isOwned: true, isImminent: true },
       { id: 'carrot', name: '당근', amount: '1/2개', isOwned: true },
       { id: 'mushroom', name: '버섯', amount: '100g', isOwned: false },
+    ],
+    linkedProducts: [
+      {
+        id: 'mushroom',
+        ingredient: '버섯',
+        name: '국내산 새송이버섯',
+        price: 2980,
+        isShortage: true,
+      },
     ],
   },
 ];
