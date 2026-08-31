@@ -64,7 +64,7 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
           ))}
         </ul>
       </section>
-      <RecipeCartActions />
+      <RecipeCartActions linkedProducts={recipe.linkedProducts} />
     </MobileScreen>
   );
 }

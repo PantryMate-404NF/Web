@@ -1,8 +1,7 @@
 import type { CartProduct } from '@/entities/cart/model/cart-store';
+import type { RecipeLinkedProduct } from '@/entities/recipe/model/types';
 
-export type LinkedRecipeProduct = CartProduct & {
-  isShortage: boolean;
-};
+export type LinkedRecipeProduct = RecipeLinkedProduct;
 
 export function selectPurchasableProducts(products: LinkedRecipeProduct[]): CartProduct[] {
   return products

@@ -8,6 +8,14 @@ export interface RecipeIngredient {
   isImminent?: boolean;
 }
 
+export interface RecipeLinkedProduct {
+  id: string;
+  ingredient: string;
+  name: string;
+  price: number;
+  isShortage: boolean;
+}
+
 export interface Recipe {
   id: string;
   name: string;
@@ -16,4 +24,5 @@ export interface Recipe {
   description: string;
   missingCount: number;
   ingredients: RecipeIngredient[];
+  linkedProducts: RecipeLinkedProduct[];
 }

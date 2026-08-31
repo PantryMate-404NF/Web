@@ -11,23 +11,13 @@ import {
   selectPurchasableProducts,
 } from '@/features/recipe-cart/model/select-purchasable-products';
 
-const linkedProducts: LinkedRecipeProduct[] = [
-  { id: 'rice-cake', ingredient: '떡볶이 떡', name: '쫄깃한 밀떡', price: 2980, isShortage: false },
-  {
-    id: 'cheese',
-    ingredient: '모짜렐라 치즈',
-    name: '자연치즈 모짜렐라',
-    price: 4980,
-    isShortage: true,
-  },
-  { id: 'green-onion', ingredient: '대파', name: '국내산 대파', price: 1990, isShortage: false },
-  { id: 'fish-cake', ingredient: '어묵', name: '부산 사각어묵', price: 3480, isShortage: true },
-];
+interface RecipeCartActionsProps {
+  linkedProducts: LinkedRecipeProduct[];
+}
 
-const purchasableProducts = selectPurchasableProducts(linkedProducts);
-
-export function RecipeCartActions() {
+export function RecipeCartActions({ linkedProducts }: RecipeCartActionsProps) {
   const addProducts = useCartStore((state) => state.addProducts);
+  const purchasableProducts = selectPurchasableProducts(linkedProducts);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [addedMessage, setAddedMessage] = useState<string | null>(null);
   const dialogRef = useRef<HTMLElement>(null);
@@ -58,7 +48,7 @@ export function RecipeCartActions() {
     showAddedMessage(message);
   }
 
-  function handleSelectAdd() {
+  function handleAdd(message: string) {
     const action = resolveAddToCartAction(purchasableProducts.length);
 
     if (action === 'unavailable') {
@@ -67,7 +57,7 @@ export function RecipeCartActions() {
     }
 
     if (action === 'direct-add') {
-      addToCart(purchasableProducts, '상품을 장바구니에 담았어요.');
+      addToCart(purchasableProducts, message);
       return;
     }
 
@@ -119,14 +109,14 @@ export function RecipeCartActions() {
       <div className="fixed right-0 bottom-0 left-0 z-10 mx-auto flex w-full max-w-[430px] gap-2 border-t border-[#e9e9eb] bg-white px-4 py-3">
         <button
           className="h-11 flex-1 rounded-2xl bg-[#dddee2] text-sm font-semibold text-[#131313]"
-          onClick={() => addToCart(purchasableProducts, '부족 식재료를 장바구니에 담았어요.')}
+          onClick={() => handleAdd('부족 식재료를 장바구니에 담았어요.')}
           type="button"
         >
           전체 담기
         </button>
         <button
           className="h-11 flex-1 rounded-2xl bg-[#6baa62] text-sm font-semibold text-white"
-          onClick={handleSelectAdd}
+          onClick={() => handleAdd('상품을 장바구니에 담았어요.')}
           ref={selectButtonRef}
           type="button"
         >
