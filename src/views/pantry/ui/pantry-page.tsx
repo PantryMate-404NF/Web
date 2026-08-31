@@ -49,8 +49,8 @@ function PantryGridSkeleton() {
 function PantryEmptyState() {
   return (
     <section className="bg-card flex min-h-72 flex-col items-center justify-center rounded-2xl border px-6 text-center">
-      <p className="text-lg font-semibold">팬트리가 비어 있어요</p>
-      <p className="text-muted-foreground mt-2 text-sm leading-6">
+      <p className="text-title-3 font-semibold">팬트리가 비어 있어요</p>
+      <p className="text-body-4 text-muted-foreground mt-2">
         보유한 식재료를 등록하면
         <br />
         활용할 수 있는 레시피를 추천해 드릴게요.
@@ -65,8 +65,8 @@ function PantryEmptyState() {
 function PantryErrorState({ message }: { message: string }) {
   return (
     <section className="bg-card flex min-h-72 flex-col items-center justify-center rounded-2xl border px-6 text-center">
-      <p className="text-lg font-semibold">팬트리를 불러오지 못했어요</p>
-      <p className="text-muted-foreground mt-2 text-sm leading-6">{message}</p>
+      <p className="text-title-3 font-semibold">팬트리를 불러오지 못했어요</p>
+      <p className="text-body-4 text-muted-foreground mt-2">{message}</p>
       <Button className="mt-5" type="button" variant="outline">
         다시 시도
       </Button>
@@ -83,7 +83,7 @@ export function PantryPage({
   const viewState = getPantryViewState({ items, isLoading, errorMessage });
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-[390px] bg-white pt-2 pb-10">
+    <main className="bg-background mx-auto min-h-dvh w-full max-w-[390px] pt-2 pb-10">
       <PantryHeader />
       <PantryToolbar itemCount={items.length} />
 

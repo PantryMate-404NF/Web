@@ -28,7 +28,7 @@ export function IngredientSelectionPage() {
   }
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-[390px] bg-white pb-8 text-[#131313]">
+    <main className="bg-background text-foreground mx-auto min-h-dvh w-full max-w-[390px] pb-8">
       <header className="flex h-12 items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <Link
@@ -52,7 +52,7 @@ export function IngredientSelectionPage() {
       <div className="mt-6 flex [scrollbar-width:none] gap-1 overflow-x-auto px-4">
         {['카테고리', '팬트리 재료', '유형 구분'].map((filter) => (
           <button
-            className="h-[34px] shrink-0 rounded-full bg-[#c5c6c9] px-6 text-sm font-medium"
+            className="text-label-3 h-[34px] shrink-0 rounded-full bg-[#c5c6c9] px-6 font-medium"
             key={filter}
             type="button"
           >
@@ -69,7 +69,7 @@ export function IngredientSelectionPage() {
             <button
               aria-pressed={isSelected}
               className={`relative flex h-[136px] flex-col items-center justify-center rounded-lg p-2 text-center transition-colors ${
-                isSelected ? 'bg-[#eff0f4] ring-2 ring-[#949497]' : 'bg-white'
+                isSelected ? 'bg-[#eff0f4] ring-2 ring-[#949497]' : 'bg-card'
               }`}
               key={ingredient.id}
               onClick={() => toggleIngredient(ingredient.id)}
@@ -87,8 +87,8 @@ export function IngredientSelectionPage() {
               <span className="flex size-20 items-center justify-center rounded-lg bg-[#c5c6c9] text-[#949497]">
                 <ImageIcon aria-hidden="true" className="size-5" />
               </span>
-              <strong className="mt-1 text-sm font-medium">{ingredient.name}</strong>
-              <span className="mt-1 flex gap-1 text-[10px] text-[#131313]">
+              <strong className="text-body-4 mt-1 font-medium">{ingredient.name}</strong>
+              <span className="text-label-4 mt-1 flex gap-1">
                 <span className="rounded-full bg-[#c5c6c9] px-2 py-0.5">{ingredient.category}</span>
                 <span className="rounded-full bg-[#c5c6c9] px-2 py-0.5">{ingredient.quantity}</span>
               </span>

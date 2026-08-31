@@ -108,7 +108,9 @@ Tablet·Desktop의 Grid 열 수, 간격, 세부 layout은 화면 구조와 콘�
 1. 피그마에서 원본 색상·상태·접근성 의도를 확인합니다.
 2. primitive → semantic → component 순서로 토큰을 추가합니다.
 3. 해당 토큰을 소비하는 공용 컴포넌트 또는 화면을 구현합니다.
-4. `npm run check:design-tokens`, `npm run format:check`를 실행합니다.
+4. `npm run check:design-tokens`, `npm run check:token-usage`, `npm run format:check`를 실행합니다.
 5. UI 변경이면 360px, 390px, 430px와 라이트·다크 테마를 사람이 확인합니다.
 
-`check:design-tokens`는 핵심 폰트·색상·테마·반응형 토큰의 존재를 검사합니다. 화면에서 primitive 값을 직접 사용하지 않았는지, 대비와 실제 사용성은 코드 리뷰와 시각 검수로 확인합니다.
+`check:design-tokens`는 핵심 폰트·색상·테마·반응형 토큰의 존재를 검사합니다. `check:token-usage`는 실제 UI 역할에 `bg-white`, `text-white`, 직접 브랜드색·일반 텍스트색을 다시 쓰지 않는지 검사합니다.
+
+Low-fi 단계의 이미지·카드·스켈레톤 placeholder 회색은 와이어프레임 표현을 위해 예외로 남길 수 있습니다. 다만 placeholder가 아닌 페이지 배경, 텍스트, 버튼, 경계선, 오버레이는 semantic token을 사용해야 합니다.

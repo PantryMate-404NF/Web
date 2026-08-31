@@ -21,7 +21,7 @@ export function MobileScreen({ title, children, backHref = '/', action }: Mobile
               <ChevronLeft aria-hidden="true" className="size-5" />
             </Link>
           </Button>
-          <h1 className="truncate text-xl font-semibold tracking-tight">{title}</h1>
+          <h1 className="text-title-2 truncate font-semibold tracking-tight">{title}</h1>
         </div>
         {action}
       </header>
