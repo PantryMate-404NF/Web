@@ -1,5 +1,7 @@
+'use client';
+
 import type { PantryCardVariant, PantryItem } from '@/entities/pantry/model/types';
-import { pantryItems } from '@/entities/pantry/model/mock';
+import { usePantryStore } from '@/entities/pantry/model/pantry-store';
 import { Button } from '@/components/ui/button';
 import { PantryGrid } from '@/widgets/pantry-list/ui/pantry-grid';
 import { PantryHeader } from '@/widgets/pantry-list/ui/pantry-header';
@@ -75,24 +77,26 @@ function PantryErrorState({ message }: { message: string }) {
 }
 
 export function PantryPage({
-  items = pantryItems,
+  items,
   isLoading = false,
   errorMessage,
   cardVariant = 'icon',
 }: PantryPageProps) {
-  const viewState = getPantryViewState({ items, isLoading, errorMessage });
+  const storedItems = usePantryStore((state) => state.items);
+  const currentItems = items ?? storedItems;
+  const viewState = getPantryViewState({ items: currentItems, isLoading, errorMessage });
 
   return (
     <main className="mx-auto min-h-dvh w-full max-w-[390px] bg-white pt-2 pb-10">
       <PantryHeader />
-      <PantryToolbar itemCount={items.length} />
+      <PantryToolbar itemCount={currentItems.length} />
 
       {viewState === 'loading' && <PantryGridSkeleton />}
       {viewState === 'empty' && <PantryEmptyState />}
       {viewState === 'error' && (
         <PantryErrorState message={errorMessage ?? '잠시 후 다시 시도해 주세요.'} />
       )}
-      {viewState === 'default' && <PantryGrid items={items} variant={cardVariant} />}
+      {viewState === 'default' && <PantryGrid items={currentItems} variant={cardVariant} />}
     </main>
   );
 }
