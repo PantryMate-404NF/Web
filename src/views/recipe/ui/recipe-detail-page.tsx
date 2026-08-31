@@ -1,6 +1,7 @@
 import { Check, CircleAlert, Clock3 } from 'lucide-react';
 
 import { getRecipeById } from '@/entities/recipe/model/mock';
+import { RecipeCartActions } from '@/features/recipe-cart/ui/recipe-cart-actions';
 import { MobileScreen } from '@/widgets/app-shell/ui/mobile-screen';
 
 interface RecipeDetailPageProps {
@@ -63,6 +64,7 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
           ))}
         </ul>
       </section>
+      <RecipeCartActions />
     </MobileScreen>
   );
 }
