@@ -12,11 +12,11 @@ export function PantryToolbar({ itemCount }: PantryToolbarProps) {
       aria-label="팬트리 목록 도구"
       className="flex items-center justify-between px-4 pt-4 pb-4"
     >
-      <p className="text-foreground text-label-4 rounded-full bg-[#c5c6c9] px-3 py-1 font-medium">
+      <p className="bg-muted text-foreground text-label-4 rounded-full px-3 py-1 font-medium">
         {itemCount}개
       </p>
       <Button
-        className="text-foreground text-label-4 h-[25px] rounded-full bg-[#c5c6c9] px-3 hover:bg-[#949497]"
+        className="bg-muted text-foreground hover:bg-accent text-label-4 h-[25px] rounded-full px-3"
         type="button"
         variant="ghost"
       >

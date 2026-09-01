@@ -12,13 +12,13 @@ export function PantryHeader() {
             <ChevronLeft aria-hidden="true" className="size-5" />
           </Link>
         </Button>
-        <h1 className="text-foreground text-label-3 w-[104px] truncate rounded-full bg-[#949497] px-4 py-1.5 text-center font-semibold">
+        <h1 className="bg-muted text-foreground text-label-3 w-[104px] truncate rounded-full px-4 py-1.5 text-center font-semibold">
           나의 팬트리
         </h1>
       </div>
       <Button
         asChild
-        className="text-foreground text-label-4 h-8 shrink-0 rounded-lg bg-[#eff0f4] px-3 hover:bg-[#c5c6c9]"
+        className="bg-muted text-foreground hover:bg-accent text-label-4 h-8 shrink-0 rounded-lg px-3"
         variant="ghost"
       >
         <Link href="/pantry?state=edit">식재료 추가</Link>

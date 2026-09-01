@@ -108,7 +108,7 @@ export function RecipeCartActions({ linkedProducts }: RecipeCartActionsProps) {
     <>
       <div className="bg-background border-border fixed right-0 bottom-0 left-0 z-10 mx-auto flex w-full max-w-[430px] gap-2 border-t px-4 py-3">
         <button
-          className="text-foreground text-label-3 h-11 flex-1 rounded-2xl bg-[#dddee2] font-semibold"
+          className="bg-muted text-foreground text-label-3 h-11 flex-1 rounded-2xl font-semibold"
           onClick={() => handleAdd('부족 식재료를 장바구니에 담았어요.')}
           type="button"
         >
@@ -151,10 +151,7 @@ export function RecipeCartActions({ linkedProducts }: RecipeCartActionsProps) {
             <div className="mx-auto h-1.5 w-20 rounded-full bg-[#949497]" />
             <ul className="mt-4 space-y-2">
               {purchasableProducts.map((product) => (
-                <li
-                  key={product.id}
-                  className="flex min-h-20 items-center rounded-lg bg-[#dddee2] p-3"
-                >
+                <li key={product.id} className="bg-muted flex min-h-20 items-center rounded-lg p-3">
                   <div className="grid size-[52px] shrink-0 place-items-center rounded-lg bg-[#c5c6c9] text-[#8e9094]">
                     <ShoppingCart className="size-5" aria-hidden="true" strokeWidth={1.5} />
                   </div>
@@ -194,14 +191,14 @@ export function RecipeCartActions({ linkedProducts }: RecipeCartActionsProps) {
             </ul>
             <div className="mt-4 flex gap-2">
               <button
-                className="text-foreground text-label-3 h-11 flex-1 rounded-2xl bg-[#c5c6c9] font-semibold"
+                className="bg-muted text-foreground text-label-3 h-11 flex-1 rounded-2xl font-semibold"
                 onClick={closeSheet}
                 type="button"
               >
                 닫기
               </button>
               <button
-                className="text-foreground text-label-3 h-11 flex-1 rounded-2xl bg-[#949497] font-semibold"
+                className="bg-primary text-primary-foreground text-label-3 h-11 flex-1 rounded-2xl font-semibold"
                 onClick={() =>
                   addToCart(
                     purchasableProducts.flatMap((product) =>

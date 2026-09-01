@@ -30,7 +30,7 @@ export function CartPage() {
 
       {items.length === 0 ? (
         <section className="flex min-h-[480px] flex-col items-center justify-center px-4 text-center">
-          <div className="bg-muted grid size-20 place-items-center rounded-full text-[#949497]">
+          <div className="bg-muted text-muted-foreground grid size-20 place-items-center rounded-full">
             <ChefHat className="size-9" aria-hidden="true" strokeWidth={1.5} />
           </div>
           <h2 className="text-title-3 mt-5 font-bold">장바구니가 비어 있어요</h2>
@@ -53,7 +53,7 @@ export function CartPage() {
             {items.map((item) => (
               <li
                 key={item.id}
-                className="relative flex min-h-24 items-center rounded-lg bg-[#dddee2] p-3"
+                className="bg-muted relative flex min-h-24 items-center rounded-lg p-3"
               >
                 <div className="grid size-[72px] shrink-0 place-items-center rounded-lg bg-[#c5c6c9] text-[#8e9094]">
                   <ChefHat className="size-7" aria-hidden="true" strokeWidth={1.5} />

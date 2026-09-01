@@ -109,7 +109,7 @@ function RecipeTabNavigation() {
       <div className="flex gap-2" role="tablist">
         <Link
           aria-selected
-          className="text-title-4 flex h-8 items-center rounded-full bg-[#c5c6c9] px-4 font-medium"
+          className="bg-accent text-title-4 flex h-8 items-center rounded-full px-4 font-medium"
           href={getRecipeRoute('main')}
           role="tab"
         >
@@ -117,7 +117,7 @@ function RecipeTabNavigation() {
         </Link>
         <button
           aria-selected={false}
-          className="text-title-4 flex h-8 items-center gap-1 rounded-full bg-[#c5c6c9] px-4 font-medium"
+          className="bg-accent text-title-4 flex h-8 items-center gap-1 rounded-full px-4 font-medium"
           role="tab"
           type="button"
         >

@@ -52,7 +52,7 @@ export function IngredientSelectionPage() {
       <div className="mt-6 flex [scrollbar-width:none] gap-1 overflow-x-auto px-4">
         {['카테고리', '팬트리 재료', '유형 구분'].map((filter) => (
           <button
-            className="text-label-3 h-[34px] shrink-0 rounded-full bg-[#c5c6c9] px-6 font-medium"
+            className="bg-muted text-label-3 h-[34px] shrink-0 rounded-full px-6 font-medium"
             key={filter}
             type="button"
           >
@@ -69,7 +69,7 @@ export function IngredientSelectionPage() {
             <button
               aria-pressed={isSelected}
               className={`relative flex h-[136px] flex-col items-center justify-center rounded-lg p-2 text-center transition-colors ${
-                isSelected ? 'bg-[#eff0f4] ring-2 ring-[#949497]' : 'bg-card'
+                isSelected ? 'bg-accent ring-ring ring-2' : 'bg-card'
               }`}
               key={ingredient.id}
               onClick={() => toggleIngredient(ingredient.id)}
@@ -89,8 +89,8 @@ export function IngredientSelectionPage() {
               </span>
               <strong className="text-body-4 mt-1 font-medium">{ingredient.name}</strong>
               <span className="text-label-4 mt-1 flex gap-1">
-                <span className="rounded-full bg-[#c5c6c9] px-2 py-0.5">{ingredient.category}</span>
-                <span className="rounded-full bg-[#c5c6c9] px-2 py-0.5">{ingredient.quantity}</span>
+                <span className="bg-muted rounded-full px-2 py-0.5">{ingredient.category}</span>
+                <span className="bg-muted rounded-full px-2 py-0.5">{ingredient.quantity}</span>
               </span>
             </button>
           );
