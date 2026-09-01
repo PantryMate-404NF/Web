@@ -12,7 +12,7 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
   const recipe = getRecipeById(recipeId);
   const owned = recipe.ingredients.filter((ingredient) => ingredient.isOwned);
   const missing = recipe.ingredients.filter((ingredient) => !ingredient.isOwned);
-  const visibleIngredients = recipe.ingredients.slice(0, 3);
+  const visibleIngredients = owned.slice(0, 3);
   const statusChips = [
     owned.length === recipe.ingredients.length ? '전체 보유' : '일부 보유',
     owned.some((ingredient) => ingredient.isImminent) ? '기한 임박' : null,
