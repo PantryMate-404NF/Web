@@ -49,6 +49,10 @@ Primitive 팔레트의 실제 CSS 변수명은 `globals.css`를 기준으로 합
 
 `Blue`는 팔레트만 등록되어 있으며 아직 확정된 정보 상태 컴포넌트가 없습니다. 정보 배너나 안내 UI가 확정되면 `--status-info`, `--status-info-hover` 같은 semantic 토큰을 추가한 뒤 사용합니다.
 
+### Loading skeleton
+
+공용 `Skeleton`은 `--skeleton-start`, `--skeleton-middle`, `--skeleton-end` component token으로 피그마의 대각 그라데이션을 표현합니다. `skeleton-shimmer`는 1.4초 주기로 이동하며, `prefers-reduced-motion: reduce`에서는 정지합니다. 화면은 `Skeleton`을 조합하고, 개별 회색·애니메이션 값을 직접 작성하지 않습니다.
+
 ## 테마
 
 - 기본 테마는 라이트입니다.

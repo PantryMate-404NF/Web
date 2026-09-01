@@ -11,6 +11,16 @@ const mockRoutes = [
     label: '팬트리 이미지형 목업',
     description: '식재료 이미지가 들어가는 목록',
   },
+  {
+    href: '/pantry?state=loading',
+    label: '팬트리 아이콘형 스켈레톤',
+    description: '식재료 아이콘 목록을 불러오는 상태',
+  },
+  {
+    href: '/pantry?state=loading&view=image',
+    label: '팬트리 이미지형 스켈레톤',
+    description: '식재료 이미지 목록을 불러오는 상태',
+  },
   { href: '/recipe', label: '주재료 레시피 목업', description: '보유 주재료 기반 레시피 추천' },
   {
     href: '/recipe/imminent',

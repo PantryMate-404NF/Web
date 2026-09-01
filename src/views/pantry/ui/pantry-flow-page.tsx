@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { getPantryCardVariant, PantryPage } from '@/views/pantry/ui/pantry-page';
 
-export type PantryMockState = 'empty' | 'full' | 'delivery-complete' | 'edit' | 'delete-confirm';
+export type PantryMockState =
+  'empty' | 'full' | 'loading' | 'delivery-complete' | 'edit' | 'delete-confirm';
 
 interface PantryFlowPageProps {
   state?: string;
@@ -14,6 +15,7 @@ interface PantryFlowPageProps {
 export function getPantryMockState(state?: string): PantryMockState {
   if (
     state === 'empty' ||
+    state === 'loading' ||
     state === 'delivery-complete' ||
     state === 'edit' ||
     state === 'delete-confirm'
@@ -176,7 +178,7 @@ export function PantryFlowPage({ state, view }: PantryFlowPageProps) {
 
   return (
     <>
-      <PantryPage cardVariant={cardVariant} />
+      <PantryPage cardVariant={cardVariant} isLoading={mockState === 'loading'} />
       {mockState === 'delivery-complete' && <DeliveryCompleteDialog />}
       {mockState === 'delete-confirm' && <DeleteConfirmSheet />}
     </>

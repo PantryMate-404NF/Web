@@ -168,6 +168,9 @@
   --button-secondary-background: var(--action-secondary);
   --card-background: var(--surface-default);
   --card-border: var(--border-default);
+  --skeleton-start: #f6f6f6;
+  --skeleton-middle: #e0e0e0;
+  --skeleton-end: #cfcfcf;
 }
 
 .dark {
@@ -189,6 +192,9 @@
   --status-danger: var(--primitive-red-400);
   --status-danger-hover: var(--primitive-red-500);
   --focus-ring: var(--primitive-yellow-500);
+  --skeleton-start: var(--primitive-grey-700);
+  --skeleton-middle: var(--primitive-grey-600);
+  --skeleton-end: var(--primitive-grey-500);
 }
 
 @theme inline {
@@ -262,4 +268,31 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Pretendard', sans-serif;
+}
+
+.skeleton-shimmer {
+  background-image: linear-gradient(
+    106deg,
+    var(--skeleton-start) 7%,
+    var(--skeleton-middle) 40%,
+    var(--skeleton-end) 80%
+  );
+  background-size: 250% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -150% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer {
+    animation: none;
+  }
 }
