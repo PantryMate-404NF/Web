@@ -16,10 +16,10 @@ const expirationStatusLabels: Record<ExpirationStatus, string> = {
 };
 
 const expirationStatusStyles: Record<ExpirationStatus, string> = {
-  NORMAL: 'bg-[#c5c6c9] text-[#131313]',
-  IMMINENT: 'bg-[#c5c6c9] text-[#131313]',
-  EXPIRED: 'bg-[#c5c6c9] text-[#131313]',
-  UNREGISTERED: 'bg-[#c5c6c9] text-[#131313]',
+  NORMAL: 'bg-muted text-foreground',
+  IMMINENT: 'bg-muted text-foreground',
+  EXPIRED: 'bg-muted text-foreground',
+  UNREGISTERED: 'bg-muted text-foreground',
 };
 
 export function getExpirationStatusLabel(status: ExpirationStatus) {
@@ -45,10 +45,10 @@ function ItemOptionsLink({ itemName }: { itemName: string }) {
 
 function PantryImageCard({ item }: { item: PantryItem }) {
   return (
-    <article className="flex h-[203px] min-w-0 flex-col rounded-2xl bg-[#eff0f4] px-[5px] py-3 text-[#131313]">
+    <article className="text-foreground bg-muted flex h-[203px] min-w-0 flex-col rounded-2xl px-[5px] py-3">
       <div className="flex items-center justify-between">
         <span
-          className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${expirationStatusStyles[item.expirationStatus]}`}
+          className={`text-label-4 rounded-full px-2 py-0.5 font-medium ${expirationStatusStyles[item.expirationStatus]}`}
         >
           {getExpirationStatusLabel(item.expirationStatus)}
         </span>
@@ -65,13 +65,13 @@ function PantryImageCard({ item }: { item: PantryItem }) {
             src={item.imageUrl}
           />
         ) : (
-          <ImageIcon aria-label={item.imageAlt} className="size-6 text-[#949497]" />
+          <ImageIcon aria-label={item.imageAlt} className="text-muted-foreground size-6" />
         )}
       </div>
 
       <div className="mt-2 px-1">
-        <h2 className="truncate text-sm font-semibold">{item.name}</h2>
-        <p className="mt-1 truncate text-xs text-[#949497]">{item.expirationLabel}</p>
+        <h2 className="text-body-4 truncate font-semibold">{item.name}</h2>
+        <p className="text-label-4 text-muted-foreground mt-1 truncate">{item.expirationLabel}</p>
       </div>
     </article>
   );
@@ -81,7 +81,7 @@ function PantryIconCard({ item }: { item: PantryItem }) {
   const availabilityLabel = item.availability === 'AVAILABLE' ? '요리 가능' : '확인 필요';
 
   return (
-    <article className="flex h-[104px] min-w-0 flex-col rounded-2xl bg-[#eff0f4] px-2.5 py-3 text-[#131313]">
+    <article className="text-foreground bg-muted flex h-[104px] min-w-0 flex-col rounded-2xl px-2.5 py-3">
       <div className="flex items-start justify-between gap-2">
         <div
           aria-label={item.imageAlt}
@@ -91,7 +91,7 @@ function PantryIconCard({ item }: { item: PantryItem }) {
           <Package aria-hidden="true" className="size-4" />
         </div>
         <span
-          className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${expirationStatusStyles[item.expirationStatus]}`}
+          className={`text-label-4 rounded-full px-2 py-0.5 font-medium ${expirationStatusStyles[item.expirationStatus]}`}
         >
           {getExpirationStatusLabel(item.expirationStatus)}
         </span>
@@ -99,8 +99,8 @@ function PantryIconCard({ item }: { item: PantryItem }) {
 
       <div className="mt-1 flex items-end justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="truncate text-sm font-semibold">{item.name}</h2>
-          <p className="mt-1 truncate text-xs text-[#949497]">{item.expirationLabel}</p>
+          <h2 className="text-body-4 truncate font-semibold">{item.name}</h2>
+          <p className="text-label-4 text-muted-foreground mt-1 truncate">{item.expirationLabel}</p>
         </div>
         <ItemOptionsLink itemName={item.name} />
       </div>

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { recipeMocks } from '@/entities/recipe/model/mock';
+
 import { getIngredientSelectionRoute, getRecipeRoute, getRecipeSections } from './recipe-list-page';
 
 describe('getRecipeSections', () => {
@@ -17,6 +19,10 @@ describe('getRecipeSections', () => {
       '이 달의 인기 레시피(임시)',
       '최근 본 레시피(임시)',
     ]);
+  });
+
+  it('keeps all mock recipes in the main-ingredient rail so users can slide through them', () => {
+    expect(getRecipeSections('main')[0].recipes).toHaveLength(recipeMocks.length);
   });
 
   it('places the expiration-imminent recommendation before popular and recent recipes', () => {
