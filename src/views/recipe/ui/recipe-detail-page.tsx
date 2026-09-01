@@ -1,4 +1,5 @@
 import { Check, CircleAlert, Clock3 } from 'lucide-react';
+import Link from 'next/link';
 
 import { getRecipeById } from '@/entities/recipe/model/mock';
 import { RecipeCartActions } from '@/features/recipe-cart/ui/recipe-cart-actions';
@@ -64,6 +65,12 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
           ))}
         </ul>
       </section>
+      <Link
+        className="bg-primary text-primary-foreground mt-8 flex h-12 items-center justify-center rounded-xl text-sm font-semibold"
+        href={`/recipe/${recipe.id}/complete`}
+      >
+        조리 완료
+      </Link>
       <RecipeCartActions linkedProducts={recipe.linkedProducts} />
     </MobileScreen>
   );
