@@ -31,4 +31,11 @@ describe('getRecipeById', () => {
       },
     ]);
   });
+
+  it('provides ordered cooking steps for the recipe detail', () => {
+    expect(getRecipeById('kimchi-stew').cookingSteps).toEqual([
+      '냄비에 김치와 돼지고기를 넣고 볶아 주세요.',
+      '물과 양념을 넣고 끓인 뒤 두부와 대파를 넣어 마무리해요.',
+    ]);
+  });
 });

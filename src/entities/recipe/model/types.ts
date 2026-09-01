@@ -22,6 +22,7 @@ export interface Recipe {
   category: string;
   cookTime: string;
   description: string;
+  cookingSteps: string[];
   missingCount: number;
   ingredients: RecipeIngredient[];
   linkedProducts: RecipeLinkedProduct[];
