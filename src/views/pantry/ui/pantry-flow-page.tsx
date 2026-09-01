@@ -28,7 +28,7 @@ function PantryEmptyMock() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-4 pt-4 pb-10">
       <header className="flex h-12 items-center justify-between">
-        <h1 className="text-xl font-semibold">나의 팬트리</h1>
+        <h1 className="text-title-2 font-semibold">나의 팬트리</h1>
         <Button asChild size="sm">
           <Link href="/pantry?state=edit">
             <Plus aria-hidden="true" />
@@ -38,8 +38,8 @@ function PantryEmptyMock() {
       </header>
       <section className="bg-card mt-24 flex min-h-80 flex-col items-center justify-center rounded-3xl border px-6 text-center">
         <PackageCheck aria-hidden="true" className="text-primary size-12" />
-        <h2 className="mt-5 text-lg font-semibold">아직 등록된 식재료가 없어요</h2>
-        <p className="text-muted-foreground mt-2 text-sm leading-6">
+        <h2 className="text-title-3 mt-5 font-semibold">아직 등록된 식재료가 없어요</h2>
+        <p className="text-body-4 text-muted-foreground mt-2">
           식재료를 등록하거나 배송이 완료되면
           <br />
           나의 팬트리에 자동으로 담겨요.
@@ -56,14 +56,14 @@ function IngredientFormMock() {
   return (
     <main className="mx-auto min-h-dvh w-full max-w-[430px] px-4 pt-4 pb-10">
       <header className="flex h-12 items-center justify-between">
-        <h1 className="text-xl font-semibold">식재료 등록</h1>
-        <Link className="text-muted-foreground text-sm" href="/pantry?state=full">
+        <h1 className="text-title-2 font-semibold">식재료 등록</h1>
+        <Link className="text-label-3 text-muted-foreground" href="/pantry?state=full">
           취소
         </Link>
       </header>
       <form className="mt-8 space-y-6">
         <label className="block">
-          <span className="text-sm font-medium">식재료 이름</span>
+          <span className="text-label-3 font-medium">식재료 이름</span>
           <input
             className="bg-card mt-2 h-12 w-full rounded-xl border px-4"
             defaultValue="대파"
@@ -71,35 +71,35 @@ function IngredientFormMock() {
           />
         </label>
         <label className="block">
-          <span className="text-sm font-medium">소비기한</span>
-          <span className="bg-card mt-2 flex h-12 items-center justify-between rounded-xl border px-4 text-sm">
+          <span className="text-label-3 font-medium">소비기한</span>
+          <span className="bg-card text-body-4 mt-2 flex h-12 items-center justify-between rounded-xl border px-4">
             <span>2026.09.01</span>
             <CalendarDays aria-hidden="true" className="text-muted-foreground size-4" />
           </span>
         </label>
         <fieldset>
-          <legend className="text-sm font-medium">보관 방법</legend>
+          <legend className="text-label-3 font-medium">보관 방법</legend>
           <div className="mt-2 grid grid-cols-3 gap-2">
             <button
-              className="bg-primary text-primary-foreground rounded-xl py-3 text-sm"
+              className="bg-primary text-primary-foreground text-label-3 rounded-xl py-3"
               type="button"
             >
               냉장
             </button>
-            <button className="bg-card rounded-xl border py-3 text-sm" type="button">
+            <button className="bg-card text-label-3 rounded-xl border py-3" type="button">
               냉동
             </button>
-            <button className="bg-card rounded-xl border py-3 text-sm" type="button">
+            <button className="bg-card text-label-3 rounded-xl border py-3" type="button">
               실온
             </button>
           </div>
         </fieldset>
         <label className="block">
-          <span className="text-sm font-medium">
+          <span className="text-label-3 font-medium">
             메모 <span className="text-muted-foreground font-normal">선택</span>
           </span>
           <textarea
-            className="bg-card mt-2 min-h-24 w-full rounded-xl border p-4 text-sm"
+            className="bg-card text-body-4 mt-2 min-h-24 w-full rounded-xl border p-4"
             placeholder="구입량이나 보관 위치를 적어주세요."
           />
         </label>
@@ -116,13 +116,13 @@ function DeliveryCompleteDialog() {
     <div
       aria-label="배송 완료 식재료 등록"
       aria-modal="true"
-      className="fixed inset-0 z-10 flex items-end bg-black/40 p-4"
+      className="bg-overlay/40 fixed inset-0 z-10 flex items-end p-4"
       role="dialog"
     >
       <section className="bg-card mx-auto w-full max-w-[398px] rounded-3xl p-6">
         <CheckCircle2 aria-hidden="true" className="text-primary size-10" />
-        <h2 className="mt-4 text-lg font-semibold">배송이 완료됐어요</h2>
-        <p className="text-muted-foreground mt-2 text-sm leading-6">
+        <h2 className="text-title-3 mt-4 font-semibold">배송이 완료됐어요</h2>
+        <p className="text-body-4 text-muted-foreground mt-2">
           주문한 식재료를 팬트리에 자동 등록할까요?
           <br />
           소비기한은 나중에 수정할 수 있어요.
@@ -145,13 +145,13 @@ function DeleteConfirmSheet() {
     <div
       aria-label="식재료 삭제 확인"
       aria-modal="true"
-      className="fixed inset-0 z-10 flex items-end bg-black/40"
+      className="bg-overlay/40 fixed inset-0 z-10 flex items-end"
       role="dialog"
     >
       <section className="bg-card w-full rounded-t-3xl p-6 pb-8">
         <div className="bg-muted mx-auto h-1.5 w-12 rounded-full" />
-        <h2 className="mt-6 text-lg font-semibold">대파를 팬트리에서 삭제할까요?</h2>
-        <p className="text-muted-foreground mt-2 text-sm">
+        <h2 className="text-title-3 mt-6 font-semibold">대파를 팬트리에서 삭제할까요?</h2>
+        <p className="text-body-4 text-muted-foreground mt-2">
           삭제한 식재료는 레시피 추천에 반영되지 않아요.
         </p>
         <div className="mt-6 grid grid-cols-2 gap-2">

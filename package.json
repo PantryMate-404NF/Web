@@ -12,9 +12,10 @@
     "test": "vitest run --passWithNoTests",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "check": "npm run check:design-tokens && npm run format:check && npm run lint && npm run typecheck",
+    "check": "npm run check:design-tokens && npm run check:token-usage && npm run format:check && npm run lint && npm run typecheck",
     "check:workflow": "node scripts/check-workflow.mjs",
     "check:design-tokens": "node scripts/check-design-tokens.mjs",
+    "check:token-usage": "node scripts/check-token-usage.mjs",
     "prepare": "husky"
   },
   "dependencies": {

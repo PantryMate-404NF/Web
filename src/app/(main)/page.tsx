@@ -27,16 +27,16 @@ const mockRoutes = [
 export default function HomePage() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-5 py-10">
-      <p className="text-primary text-sm font-medium">AI PANTRY</p>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight">
+      <p className="text-primary text-label-3 font-medium">AI PANTRY</p>
+      <h1 className="text-hero mt-3 font-semibold tracking-tight">
         구매 이력으로 시작하는 나만의 팬트리
       </h1>
-      <p className="text-muted-foreground mt-4 text-base leading-7">
+      <p className="text-body-3 text-muted-foreground mt-4">
         보유 재료를 확인하고, 지금 만들 수 있는 메뉴와 부족한 재료를 한 번에 확인하세요.
       </p>
       <section className="mt-10">
-        <h2 className="text-lg font-semibold">프로토타입 목업</h2>
-        <p className="text-muted-foreground mt-2 text-sm leading-6">
+        <h2 className="text-title-3 font-semibold">프로토타입 목업</h2>
+        <p className="text-body-4 text-muted-foreground mt-2">
           와이어프레임의 주요 흐름을 실제 라우트에서 확인할 수 있습니다.
         </p>
         <div className="mt-4 grid gap-3">
@@ -47,7 +47,7 @@ export default function HomePage() {
               key={route.href}
             >
               <h3 className="font-semibold">{route.label}</h3>
-              <p className="text-muted-foreground mt-1 text-sm">{route.description}</p>
+              <p className="text-body-4 text-muted-foreground mt-1">{route.description}</p>
             </Link>
           ))}
         </div>
