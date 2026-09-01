@@ -3,7 +3,7 @@
 import { Check, ChevronLeft, CircleAlert, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { usePantryStore } from '@/entities/pantry/model/pantry-store';
 import { getRecipeById } from '@/entities/recipe/model/mock';
@@ -23,6 +23,8 @@ export function CookingCompletePage({ recipeId }: CookingCompletePageProps) {
   const removeItems = usePantryStore((state) => state.removeItems);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const dialogRef = useRef<HTMLElement>(null);
+  const deleteButtonRef = useRef<HTMLButtonElement>(null);
   const recipeIngredientIds = new Set(
     recipe.ingredients
       .filter((ingredient) => ingredient.isOwned)
@@ -37,6 +39,51 @@ export function CookingCompletePage({ recipeId }: CookingCompletePageProps) {
     removeItems(selectedIds);
     router.push('/pantry');
   }
+
+  function closeConfirmDialog() {
+    setIsConfirmOpen(false);
+    deleteButtonRef.current?.focus();
+  }
+
+  useEffect(() => {
+    if (!isConfirmOpen) {
+      return;
+    }
+
+    const dialog = dialogRef.current;
+    const focusableSelector =
+      'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    const focusableElements = dialog
+      ? Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector))
+      : [];
+
+    focusableElements[0]?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        closeConfirmDialog();
+        return;
+      }
+
+      if (event.key !== 'Tab' || focusableElements.length === 0) {
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements.at(-1);
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement?.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isConfirmOpen]);
 
   return (
     <main className="bg-background text-foreground mx-auto min-h-dvh w-full max-w-[430px] px-4 pt-4 pb-10">
@@ -109,6 +156,7 @@ export function CookingCompletePage({ recipeId }: CookingCompletePageProps) {
         className="bg-destructive text-destructive-foreground disabled:bg-muted disabled:text-muted-foreground mt-8 h-12 w-full rounded-xl text-sm font-semibold"
         disabled={selectedIds.length === 0}
         onClick={() => setIsConfirmOpen(true)}
+        ref={deleteButtonRef}
         type="button"
       >
         선택한 식재료 삭제
@@ -123,6 +171,7 @@ export function CookingCompletePage({ recipeId }: CookingCompletePageProps) {
             aria-label="식재료 삭제 확인"
             aria-modal="true"
             className="bg-card w-full max-w-[360px] rounded-3xl p-5"
+            ref={dialogRef}
             role="dialog"
           >
             <div className="flex items-start justify-between gap-4">
@@ -135,7 +184,7 @@ export function CookingCompletePage({ recipeId }: CookingCompletePageProps) {
               <button
                 aria-label="삭제 확인 닫기"
                 className="grid size-10 place-items-center rounded-full"
-                onClick={() => setIsConfirmOpen(false)}
+                onClick={closeConfirmDialog}
                 type="button"
               >
                 <X aria-hidden="true" className="size-5" />
@@ -156,7 +205,7 @@ export function CookingCompletePage({ recipeId }: CookingCompletePageProps) {
             <div className="mt-5 grid grid-cols-2 gap-2">
               <button
                 className="border-border h-11 rounded-xl border text-sm font-semibold"
-                onClick={() => setIsConfirmOpen(false)}
+                onClick={closeConfirmDialog}
                 type="button"
               >
                 취소
