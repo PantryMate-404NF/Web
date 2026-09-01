@@ -39,7 +39,7 @@ export function CookingCompletePage({ recipeId }: CookingCompletePageProps) {
   }
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-[430px] bg-white px-4 pt-4 pb-10 text-[#131313]">
+    <main className="bg-background text-foreground mx-auto min-h-dvh w-full max-w-[430px] px-4 pt-4 pb-10">
       <header className="flex h-12 items-center gap-2">
         <Link
           aria-label="레시피 상세로 돌아가기"
@@ -53,7 +53,7 @@ export function CookingCompletePage({ recipeId }: CookingCompletePageProps) {
 
       <section className="mt-8">
         <p className="text-lg font-semibold">사용한 식재료를 선택해 주세요</p>
-        <p className="mt-2 text-sm leading-6 text-[#68696d]">
+        <p className="text-muted-foreground mt-2 text-sm leading-6">
           선택한 식재료만 팬트리에서 삭제합니다. 정확한 수량은 자동으로 차감하지 않아요.
         </p>
       </section>
@@ -61,7 +61,7 @@ export function CookingCompletePage({ recipeId }: CookingCompletePageProps) {
       <div className="mt-8 flex items-center justify-between">
         <h2 className="text-base font-semibold">보유 식재료 {ingredients.length}개</h2>
         <button
-          className="text-sm font-semibold text-[#397b32]"
+          className="text-secondary-foreground text-sm font-semibold"
           onClick={() => setSelectedIds(toggleAllIngredients(ingredientIds, selectedIds))}
           type="button"
         >
@@ -70,8 +70,8 @@ export function CookingCompletePage({ recipeId }: CookingCompletePageProps) {
       </div>
 
       {ingredients.length === 0 ? (
-        <section className="mt-4 flex min-h-48 flex-col items-center justify-center rounded-2xl bg-[#f3f4f5] px-6 text-center">
-          <CircleAlert aria-hidden="true" className="size-8 text-[#949497]" />
+        <section className="bg-muted mt-4 flex min-h-48 flex-col items-center justify-center rounded-2xl px-6 text-center">
+          <CircleAlert aria-hidden="true" className="text-muted-foreground size-8" />
           <p className="mt-3 text-sm font-medium">삭제할 보유 식재료가 없어요.</p>
         </section>
       ) : (
@@ -83,19 +83,21 @@ export function CookingCompletePage({ recipeId }: CookingCompletePageProps) {
               <li key={ingredient.id}>
                 <button
                   aria-pressed={isSelected}
-                  className={`relative flex min-h-40 w-full flex-col rounded-2xl border p-4 text-left ${isSelected ? 'border-[#6baa62] bg-[#edf7e9]' : 'border-[#e9e9eb] bg-white'}`}
+                  className={`relative flex min-h-40 w-full flex-col rounded-2xl border p-4 text-left ${isSelected ? 'border-secondary bg-accent' : 'border-border bg-card'}`}
                   onClick={() =>
                     setSelectedIds(toggleSelectedIngredient(selectedIds, ingredient.id))
                   }
                   type="button"
                 >
                   <span
-                    className={`grid size-6 place-items-center self-end rounded-full ${isSelected ? 'bg-[#6baa62] text-white' : 'border border-[#c5c6c9] text-transparent'}`}
+                    className={`grid size-6 place-items-center self-end rounded-full ${isSelected ? 'bg-secondary text-secondary-foreground' : 'border-border border text-transparent'}`}
                   >
                     <Check aria-hidden="true" className="size-4" />
                   </span>
                   <span className="mt-4 text-base font-semibold">{ingredient.name}</span>
-                  <span className="mt-2 text-xs text-[#68696d]">{ingredient.expirationLabel}</span>
+                  <span className="text-muted-foreground mt-2 text-xs">
+                    {ingredient.expirationLabel}
+                  </span>
                 </button>
               </li>
             );
@@ -104,7 +106,7 @@ export function CookingCompletePage({ recipeId }: CookingCompletePageProps) {
       )}
 
       <button
-        className="mt-8 h-12 w-full rounded-xl bg-[#6f6f71] text-sm font-semibold text-white disabled:bg-[#dddee2] disabled:text-[#949497]"
+        className="bg-destructive text-destructive-foreground disabled:bg-muted disabled:text-muted-foreground mt-8 h-12 w-full rounded-xl text-sm font-semibold"
         disabled={selectedIds.length === 0}
         onClick={() => setIsConfirmOpen(true)}
         type="button"
@@ -114,19 +116,19 @@ export function CookingCompletePage({ recipeId }: CookingCompletePageProps) {
 
       {isConfirmOpen && (
         <div
-          className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-4"
+          className="bg-overlay/40 fixed inset-0 z-30 flex items-center justify-center px-4"
           role="presentation"
         >
           <section
             aria-label="식재료 삭제 확인"
             aria-modal="true"
-            className="w-full max-w-[360px] rounded-3xl bg-white p-5"
+            className="bg-card w-full max-w-[360px] rounded-3xl p-5"
             role="dialog"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-lg font-semibold">정말 삭제할까요?</h2>
-                <p className="mt-2 text-sm leading-5 text-[#68696d]">
+                <p className="text-muted-foreground mt-2 text-sm leading-5">
                   삭제한 식재료는 팬트리에서 사라집니다.
                 </p>
               </div>
@@ -144,7 +146,7 @@ export function CookingCompletePage({ recipeId }: CookingCompletePageProps) {
                 .filter((ingredient) => selectedIds.includes(ingredient.id))
                 .map((ingredient) => (
                   <li
-                    className="rounded-xl bg-[#f3f4f5] px-4 py-3 text-sm font-medium"
+                    className="bg-muted rounded-xl px-4 py-3 text-sm font-medium"
                     key={ingredient.id}
                   >
                     {ingredient.name}
@@ -153,14 +155,14 @@ export function CookingCompletePage({ recipeId }: CookingCompletePageProps) {
             </ul>
             <div className="mt-5 grid grid-cols-2 gap-2">
               <button
-                className="h-11 rounded-xl border border-[#dddee2] text-sm font-semibold"
+                className="border-border h-11 rounded-xl border text-sm font-semibold"
                 onClick={() => setIsConfirmOpen(false)}
                 type="button"
               >
                 취소
               </button>
               <button
-                className="h-11 rounded-xl bg-[#6f6f71] text-sm font-semibold text-white"
+                className="bg-destructive text-destructive-foreground h-11 rounded-xl text-sm font-semibold"
                 onClick={handleConfirmDelete}
                 type="button"
               >
