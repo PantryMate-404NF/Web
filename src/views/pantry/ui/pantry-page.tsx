@@ -16,10 +16,6 @@ interface PantryPageProps {
   cardVariant?: PantryCardVariant;
 }
 
-export function getPantryCardVariant(view?: string): PantryCardVariant {
-  return view === 'image' ? 'image' : 'icon';
-}
-
 export function getPantryViewState({
   items,
   isLoading,

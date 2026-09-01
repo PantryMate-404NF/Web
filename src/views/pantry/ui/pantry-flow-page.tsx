@@ -2,7 +2,8 @@ import { CalendarDays, CheckCircle2, PackageCheck, Plus } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
-import { getPantryCardVariant, PantryPage } from '@/views/pantry/ui/pantry-page';
+import { getPantryCardVariant } from '@/entities/pantry/model/types';
+import { PantryPage } from '@/views/pantry/ui/pantry-page';
 
 export type PantryMockState = 'empty' | 'full' | 'delivery-complete' | 'edit' | 'delete-confirm';
 

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { getPantryCardVariant, getPantryViewState } from './pantry-page';
+import { getPantryCardVariant } from '@/entities/pantry/model/types';
+
+import { getPantryViewState } from './pantry-page';
 
 describe('getPantryViewState', () => {
   it('returns empty when no item is available', () => {
