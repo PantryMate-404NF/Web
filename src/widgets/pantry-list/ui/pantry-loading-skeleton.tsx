@@ -1,5 +1,5 @@
-import { Skeleton } from '@/components/ui/skeleton';
 import type { PantryCardVariant } from '@/entities/pantry/model/types';
+import { Skeleton } from '@/shared/ui/skeleton';
 
 interface PantryLoadingSkeletonProps {
   variant: PantryCardVariant;
