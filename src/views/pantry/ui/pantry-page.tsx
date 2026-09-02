@@ -5,43 +5,29 @@ import { usePantryStore } from '@/entities/pantry/model/pantry-store';
 import { Button } from '@/components/ui/button';
 import { PantryGrid } from '@/widgets/pantry-list/ui/pantry-grid';
 import { PantryHeader } from '@/widgets/pantry-list/ui/pantry-header';
+import { PantryLoadingSkeleton } from '@/widgets/pantry-list/ui/pantry-loading-skeleton';
 import { PantryToolbar } from '@/widgets/pantry-list/ui/pantry-toolbar';
 
-type PantryViewState = 'default' | 'loading' | 'empty' | 'error';
+type PantryViewState = 'default' | 'empty' | 'error' | 'loading';
 
 interface PantryPageProps {
   items?: PantryItem[];
-  isLoading?: boolean;
   errorMessage?: string;
   cardVariant?: PantryCardVariant;
+  isLoading?: boolean;
 }
 
 export function getPantryViewState({
   items,
-  isLoading,
   errorMessage,
-}: Required<Pick<PantryPageProps, 'items' | 'isLoading'>> &
-  Pick<PantryPageProps, 'errorMessage'>): PantryViewState {
+  isLoading = false,
+}: Required<Pick<PantryPageProps, 'items'>> &
+  Pick<PantryPageProps, 'errorMessage' | 'isLoading'>): PantryViewState {
   if (errorMessage) return 'error';
   if (isLoading) return 'loading';
   if (items.length === 0) return 'empty';
 
   return 'default';
-}
-
-function PantryGridSkeleton() {
-  return (
-    <div aria-label="팬트리 목록을 불러오는 중" className="grid grid-cols-2 gap-3" role="status">
-      {Array.from({ length: 8 }, (_, index) => (
-        <div className="bg-card h-40 animate-pulse rounded-2xl border p-3" key={index}>
-          <div className="bg-muted size-10 rounded-lg" />
-          <div className="bg-muted mt-8 h-4 w-2/3 rounded-full" />
-          <div className="bg-muted mt-2 h-3 w-full rounded-full" />
-        </div>
-      ))}
-      <span className="sr-only">팬트리 목록을 불러오고 있습니다.</span>
-    </div>
-  );
 }
 
 function PantryEmptyState() {
@@ -74,20 +60,21 @@ function PantryErrorState({ message }: { message: string }) {
 
 export function PantryPage({
   items,
-  isLoading = false,
   errorMessage,
   cardVariant = 'icon',
+  isLoading = false,
 }: PantryPageProps) {
   const storedItems = usePantryStore((state) => state.items);
   const currentItems = items ?? storedItems;
-  const viewState = getPantryViewState({ items: currentItems, isLoading, errorMessage });
+  const viewState = getPantryViewState({ items: currentItems, errorMessage, isLoading });
+
+  if (viewState === 'loading') return <PantryLoadingSkeleton variant={cardVariant} />;
 
   return (
     <main className="bg-background mx-auto min-h-dvh w-full max-w-[390px] pt-2 pb-10">
       <PantryHeader />
       <PantryToolbar itemCount={currentItems.length} />
 
-      {viewState === 'loading' && <PantryGridSkeleton />}
       {viewState === 'empty' && <PantryEmptyState />}
       {viewState === 'error' && (
         <PantryErrorState message={errorMessage ?? '잠시 후 다시 시도해 주세요.'} />

@@ -55,6 +55,15 @@ const requiredTokens = [
   "--font-sans: 'Pretendard', sans-serif;",
   '--breakpoint-tablet: 48rem;',
   '--breakpoint-desktop: 64rem;',
+  '--skeleton-container: #eff0f4;',
+  '@keyframes skeleton-sweep {',
+  '.skeleton--animated {',
+  'background: #e0e0e0;',
+  'transparent 20%,',
+  'transform: translate3d(-65%, -65%, 0);',
+  'transform: translate3d(65%, 65%, 0);',
+  'animation: skeleton-sweep 1.6s ease-in-out infinite;',
+  '@media (prefers-reduced-motion: reduce) {',
 ];
 
 const missingTokens = requiredTokens.filter((token) => !globals.includes(token));
