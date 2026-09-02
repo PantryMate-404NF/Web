@@ -10,7 +10,7 @@ import {
   X,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { getPantryCardVariant } from '@/entities/pantry/model/types';
@@ -69,7 +69,48 @@ function PantryEmptyMock() {
 function IngredientFormMock({ mode }: { mode: 'register' | 'edit' }) {
   const [storageType, setStorageType] = useState('냉장');
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const calendarDialogRef = useRef<HTMLElement>(null);
+  const expirationButtonRef = useRef<HTMLButtonElement>(null);
   const isEdit = mode === 'edit';
+
+  function closeCalendar() {
+    setIsCalendarOpen(false);
+    expirationButtonRef.current?.focus();
+  }
+
+  useEffect(() => {
+    if (!isCalendarOpen) return;
+
+    const dialog = calendarDialogRef.current;
+    const focusableElements = dialog
+      ? Array.from(dialog.querySelectorAll<HTMLElement>('button:not([disabled]), [href]'))
+      : [];
+
+    focusableElements[0]?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        closeCalendar();
+        return;
+      }
+
+      if (event.key !== 'Tab' || focusableElements.length === 0) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements.at(-1);
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement?.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCalendarOpen]);
 
   return (
     <main className="bg-background mx-auto min-h-dvh w-full max-w-[390px] px-4 pt-4 pb-10">
@@ -90,6 +131,7 @@ function IngredientFormMock({ mode }: { mode: 'register' | 'edit' }) {
         <div>
           <p className="text-label-3 font-medium">식재료 이미지</p>
           <button
+            aria-label="식재료 이미지 추가"
             className="bg-muted text-muted-foreground mt-2 grid size-24 place-items-center rounded-xl"
             type="button"
           >
@@ -110,6 +152,7 @@ function IngredientFormMock({ mode }: { mode: 'register' | 'edit' }) {
           <button
             className="bg-card text-body-4 mt-2 flex h-12 w-full items-center justify-between rounded-xl border px-4"
             onClick={() => setIsCalendarOpen(true)}
+            ref={expirationButtonRef}
             type="button"
           >
             <span>2026.09.01</span>
@@ -128,6 +171,7 @@ function IngredientFormMock({ mode }: { mode: 'register' | 'edit' }) {
                 }
                 key={type}
                 onClick={() => setStorageType(type)}
+                aria-pressed={storageType === type}
                 type="button"
               >
                 {type}
@@ -154,6 +198,7 @@ function IngredientFormMock({ mode }: { mode: 'register' | 'edit' }) {
             aria-label="소비기한 선택"
             aria-modal="true"
             className="bg-card mx-auto w-full max-w-[390px] rounded-t-3xl p-5"
+            ref={calendarDialogRef}
             role="dialog"
           >
             <div className="flex items-center justify-between">
@@ -161,27 +206,31 @@ function IngredientFormMock({ mode }: { mode: 'register' | 'edit' }) {
               <button
                 aria-label="날짜 선택 닫기"
                 className="grid size-10 place-items-center"
-                onClick={() => setIsCalendarOpen(false)}
+                onClick={closeCalendar}
                 type="button"
               >
                 <X aria-hidden="true" className="size-5" />
               </button>
             </div>
             <div className="mt-4 grid grid-cols-7 gap-2 text-center text-sm">
-              {Array.from({ length: 35 }, (_, index) => (
-                <button
-                  className={
-                    index === 17
-                      ? 'bg-primary text-primary-foreground aspect-square rounded-full'
-                      : 'aspect-square rounded-full'
-                  }
-                  key={index}
-                  onClick={() => setIsCalendarOpen(false)}
-                  type="button"
-                >
-                  {index + 1 <= 30 ? index + 1 : ''}
-                </button>
-              ))}
+              {Array.from({ length: 35 }, (_, index) =>
+                index < 30 ? (
+                  <button
+                    className={
+                      index === 17
+                        ? 'bg-primary text-primary-foreground aspect-square rounded-full'
+                        : 'aspect-square rounded-full'
+                    }
+                    key={index}
+                    onClick={closeCalendar}
+                    type="button"
+                  >
+                    {index + 1}
+                  </button>
+                ) : (
+                  <span aria-hidden="true" className="aspect-square" key={index} />
+                ),
+              )}
             </div>
           </section>
         </div>
