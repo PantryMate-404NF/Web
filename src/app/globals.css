@@ -156,6 +156,15 @@
   --status-danger-hover: var(--primitive-red-500);
   --focus-ring: var(--primitive-yellow-500);
 
+  /* Loading component tokens: matches the approved skeleton gradient. */
+  --skeleton-container: #eff0f4;
+  --skeleton-gradient: linear-gradient(
+    106.039943deg,
+    #f6f6f6 7.2573%,
+    #e0e0e0 40.408%,
+    #cfcfcf 80.027%
+  );
+
   --typography-hero-font-size: var(--typography-hero-size);
   --typography-heading-1-font-size: var(--typography-h1-size);
   --typography-heading-2-font-size: var(--typography-h2-size);
@@ -189,6 +198,13 @@
   --status-danger: var(--primitive-red-400);
   --status-danger-hover: var(--primitive-red-500);
   --focus-ring: var(--primitive-yellow-500);
+  --skeleton-container: var(--primitive-grey-700);
+  --skeleton-gradient: linear-gradient(
+    106.039943deg,
+    var(--primitive-grey-700) 7.2573%,
+    var(--primitive-grey-600) 40.408%,
+    var(--primitive-grey-500) 80.027%
+  );
 }
 
 @theme inline {
@@ -213,6 +229,7 @@
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-overlay: var(--overlay);
+  --color-skeleton-container: var(--skeleton-container);
   --text-hero: var(--typography-hero-size);
   --text-heading-1: var(--typography-h1-size);
   --text-heading-2: var(--typography-h2-size);
@@ -262,4 +279,47 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Pretendard', sans-serif;
+}
+
+.skeleton {
+  background: #e0e0e0;
+}
+
+.skeleton--animated {
+  position: relative;
+  overflow: hidden;
+  background: #e0e0e0;
+}
+
+.skeleton--animated::after {
+  position: absolute;
+  inset: -50%;
+  content: '';
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(
+    106deg,
+    transparent 20%,
+    rgb(246 246 246 / 82%) 44%,
+    rgb(224 224 224 / 52%) 58%,
+    transparent 80%
+  );
+  animation: skeleton-sweep 1.6s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes skeleton-sweep {
+  from {
+    transform: translate3d(-65%, -65%, 0);
+  }
+
+  to {
+    transform: translate3d(65%, 65%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton--animated::after {
+    animation: none;
+  }
 }

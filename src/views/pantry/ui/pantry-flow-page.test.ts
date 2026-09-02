@@ -9,6 +9,7 @@ describe('getPantryMockState', () => {
     expect(getPantryMockState('edit')).toBe('edit');
     expect(getPantryMockState('register')).toBe('register');
     expect(getPantryMockState('delete-confirm')).toBe('delete-confirm');
+    expect(getPantryMockState('loading')).toBe('loading');
   });
 
   it('uses the full pantry state for unsupported values', () => {

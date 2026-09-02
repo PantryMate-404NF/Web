@@ -17,7 +17,7 @@ import { getPantryCardVariant } from '@/entities/pantry/model/types';
 import { PantryPage } from '@/views/pantry/ui/pantry-page';
 
 export type PantryMockState =
-  'empty' | 'full' | 'delivery-complete' | 'register' | 'edit' | 'delete-confirm';
+  'empty' | 'full' | 'loading' | 'delivery-complete' | 'register' | 'edit' | 'delete-confirm';
 
 interface PantryFlowPageProps {
   state?: string;
@@ -27,6 +27,7 @@ interface PantryFlowPageProps {
 export function getPantryMockState(state?: string): PantryMockState {
   if (
     state === 'empty' ||
+    state === 'loading' ||
     state === 'delivery-complete' ||
     state === 'register' ||
     state === 'edit' ||
@@ -302,6 +303,8 @@ export function PantryFlowPage({ state, view }: PantryFlowPageProps) {
   if (mockState === 'empty') return <PantryEmptyMock />;
   if (mockState === 'register' || mockState === 'edit')
     return <IngredientFormMock mode={mockState} />;
+
+  if (mockState === 'loading') return <PantryPage cardVariant={cardVariant} isLoading />;
 
   return (
     <>
