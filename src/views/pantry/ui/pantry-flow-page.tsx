@@ -1,11 +1,23 @@
-import { CalendarDays, CheckCircle2, PackageCheck, Plus } from 'lucide-react';
+'use client';
+
+import {
+  CalendarDays,
+  CheckCircle2,
+  ChevronLeft,
+  ImagePlus,
+  PackageCheck,
+  Plus,
+  X,
+} from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { getPantryCardVariant } from '@/entities/pantry/model/types';
 import { PantryPage } from '@/views/pantry/ui/pantry-page';
 
-export type PantryMockState = 'empty' | 'full' | 'delivery-complete' | 'edit' | 'delete-confirm';
+export type PantryMockState =
+  'empty' | 'full' | 'delivery-complete' | 'register' | 'edit' | 'delete-confirm';
 
 interface PantryFlowPageProps {
   state?: string;
@@ -16,6 +28,7 @@ export function getPantryMockState(state?: string): PantryMockState {
   if (
     state === 'empty' ||
     state === 'delivery-complete' ||
+    state === 'register' ||
     state === 'edit' ||
     state === 'delete-confirm'
   ) {
@@ -31,7 +44,7 @@ function PantryEmptyMock() {
       <header className="flex h-12 items-center justify-between">
         <h1 className="text-title-2 font-semibold">나의 팬트리</h1>
         <Button asChild size="sm">
-          <Link href="/pantry?state=edit">
+          <Link href="/pantry?state=register">
             <Plus aria-hidden="true" />
             식재료 추가
           </Link>
@@ -46,53 +59,80 @@ function PantryEmptyMock() {
           나의 팬트리에 자동으로 담겨요.
         </p>
         <Button asChild className="mt-6">
-          <Link href="/pantry?state=edit">식재료 등록하기</Link>
+          <Link href="/pantry?state=register">식재료 등록하기</Link>
         </Button>
       </section>
     </main>
   );
 }
 
-function IngredientFormMock() {
+function IngredientFormMock({ mode }: { mode: 'register' | 'edit' }) {
+  const [storageType, setStorageType] = useState('냉장');
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const isEdit = mode === 'edit';
+
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-[430px] px-4 pt-4 pb-10">
+    <main className="bg-background mx-auto min-h-dvh w-full max-w-[390px] px-4 pt-4 pb-10">
       <header className="flex h-12 items-center justify-between">
-        <h1 className="text-title-2 font-semibold">식재료 등록</h1>
-        <Link className="text-label-3 text-muted-foreground" href="/pantry?state=full">
+        <Link
+          aria-label="이전 페이지"
+          className="grid size-10 place-items-center rounded-full"
+          href="/pantry"
+        >
+          <ChevronLeft aria-hidden="true" className="size-5" />
+        </Link>
+        <h1 className="text-title-2 font-semibold">식재료 {isEdit ? '수정' : '등록'}</h1>
+        <Link className="text-label-3 text-muted-foreground" href="/pantry">
           취소
         </Link>
       </header>
-      <form className="mt-8 space-y-6">
+      <form className="mt-6 space-y-5">
+        <div>
+          <p className="text-label-3 font-medium">식재료 이미지</p>
+          <button
+            className="bg-muted text-muted-foreground mt-2 grid size-24 place-items-center rounded-xl"
+            type="button"
+          >
+            <ImagePlus aria-hidden="true" className="size-7" />
+          </button>
+        </div>
         <label className="block">
           <span className="text-label-3 font-medium">식재료 이름</span>
           <input
             className="bg-card mt-2 h-12 w-full rounded-xl border px-4"
-            defaultValue="대파"
+            defaultValue={isEdit ? '대파' : ''}
             name="ingredientName"
+            placeholder="예: 대파"
           />
         </label>
         <label className="block">
           <span className="text-label-3 font-medium">소비기한</span>
-          <span className="bg-card text-body-4 mt-2 flex h-12 items-center justify-between rounded-xl border px-4">
+          <button
+            className="bg-card text-body-4 mt-2 flex h-12 w-full items-center justify-between rounded-xl border px-4"
+            onClick={() => setIsCalendarOpen(true)}
+            type="button"
+          >
             <span>2026.09.01</span>
             <CalendarDays aria-hidden="true" className="text-muted-foreground size-4" />
-          </span>
+          </button>
         </label>
         <fieldset>
           <legend className="text-label-3 font-medium">보관 방법</legend>
           <div className="mt-2 grid grid-cols-3 gap-2">
-            <button
-              className="bg-primary text-primary-foreground text-label-3 rounded-xl py-3"
-              type="button"
-            >
-              냉장
-            </button>
-            <button className="bg-card text-label-3 rounded-xl border py-3" type="button">
-              냉동
-            </button>
-            <button className="bg-card text-label-3 rounded-xl border py-3" type="button">
-              실온
-            </button>
+            {['냉장', '냉동', '실온'].map((type) => (
+              <button
+                className={
+                  storageType === type
+                    ? 'bg-primary text-primary-foreground text-label-3 rounded-xl py-3'
+                    : 'bg-card text-label-3 rounded-xl border py-3'
+                }
+                key={type}
+                onClick={() => setStorageType(type)}
+                type="button"
+              >
+                {type}
+              </button>
+            ))}
           </div>
         </fieldset>
         <label className="block">
@@ -105,9 +145,47 @@ function IngredientFormMock() {
           />
         </label>
         <Button asChild className="h-12 w-full">
-          <Link href="/pantry?state=full">등록 완료</Link>
+          <Link href="/pantry">{isEdit ? '수정 완료' : '등록 완료'}</Link>
         </Button>
       </form>
+      {isCalendarOpen && (
+        <div className="bg-overlay/40 fixed inset-0 z-20 flex items-end" role="presentation">
+          <section
+            aria-label="소비기한 선택"
+            aria-modal="true"
+            className="bg-card mx-auto w-full max-w-[390px] rounded-t-3xl p-5"
+            role="dialog"
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-title-3 font-semibold">소비기한 선택</h2>
+              <button
+                aria-label="날짜 선택 닫기"
+                className="grid size-10 place-items-center"
+                onClick={() => setIsCalendarOpen(false)}
+                type="button"
+              >
+                <X aria-hidden="true" className="size-5" />
+              </button>
+            </div>
+            <div className="mt-4 grid grid-cols-7 gap-2 text-center text-sm">
+              {Array.from({ length: 35 }, (_, index) => (
+                <button
+                  className={
+                    index === 17
+                      ? 'bg-primary text-primary-foreground aspect-square rounded-full'
+                      : 'aspect-square rounded-full'
+                  }
+                  key={index}
+                  onClick={() => setIsCalendarOpen(false)}
+                  type="button"
+                >
+                  {index + 1 <= 30 ? index + 1 : ''}
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
@@ -173,7 +251,8 @@ export function PantryFlowPage({ state, view }: PantryFlowPageProps) {
   const cardVariant = getPantryCardVariant(view);
 
   if (mockState === 'empty') return <PantryEmptyMock />;
-  if (mockState === 'edit') return <IngredientFormMock />;
+  if (mockState === 'register' || mockState === 'edit')
+    return <IngredientFormMock mode={mockState} />;
 
   return (
     <>
