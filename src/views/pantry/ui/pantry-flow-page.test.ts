@@ -7,6 +7,7 @@ describe('getPantryMockState', () => {
     expect(getPantryMockState('empty')).toBe('empty');
     expect(getPantryMockState('delivery-complete')).toBe('delivery-complete');
     expect(getPantryMockState('edit')).toBe('edit');
+    expect(getPantryMockState('register')).toBe('register');
     expect(getPantryMockState('delete-confirm')).toBe('delete-confirm');
   });
 
