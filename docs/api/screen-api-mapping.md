@@ -6,6 +6,8 @@
 - 확인일: 2026-09-03
 - 이 문서는 화면과 API 계약을 연결하기 위한 협의용 문서다.
 - Swagger 안내에 따라 현재 모든 API는 실제 호출 대상이 아닌 계획 명세다. API 타입, 요청 함수, MSW handler는 백엔드 계약 확정 후 함께 갱신한다.
+- 화면 상태와 공용 UI 적용 기준은 [FE·PD 핸드오프 적용 기준](../design/fe-pd-handoff.md)을 따른다.
+- 현재 Error 화면은 기존 Retry CTA와 선택적 `onRetry` 콜백 연결까지만 제공한다. 실제 API 재요청과 Toast는 후속 API 계약 범위다.
 
 ## 표기
 
