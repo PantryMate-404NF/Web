@@ -48,10 +48,9 @@ function PantryEmptyState() {
   );
 }
 
-function PantryErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+export function PantryErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
     <section
-      aria-live="polite"
       className="bg-card flex min-h-72 flex-col items-center justify-center rounded-2xl border px-6 text-center"
       role="alert"
     >

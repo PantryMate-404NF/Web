@@ -4,7 +4,7 @@
 
 **Goal:** PD·FE 핸드오프에서 확정된 상태 기준을 공용 UI와 팬트리 화면에 안전하게 적용한다.
 
-**Architecture:** 공용 상태는 `src/shared/model`에 타입으로만 제공한다. 기존 Button의 `disabled`와 Skeleton의 접근성 처리를 재사용하고, Pantry는 이미 가진 Loading·Empty·Error 분기를 유지하면서 재시도 콜백을 선택적으로 받는다.
+**Architecture:** 공용 상태는 `src/shared/model`에 타입으로만 제공한다. 기존 Button의 `disabled`와 Skeleton의 접근성 처리를 재사용하고, Pantry는 기존 Error Retry CTA를 유지하면서 재시도 콜백을 선택적으로 받는다. 실제 API 재요청은 이후 API 계약에 연결한다.
 
 **Tech Stack:** Next.js, React, TypeScript, Vitest, Tailwind CSS, shadcn/ui Button
 
@@ -14,7 +14,7 @@
 
 - Low-fi 화면의 시각 디자인, Toast, Spinner, 실제 API 연결은 추가하지 않는다.
 - 중복 요청은 기존 Button의 `disabled` prop으로 막는다.
-- PD 미확정 Retry CTA는 렌더링하지 않고 인터페이스만 제공한다.
+- 기존 Error Retry CTA는 유지하고, `onRetry`가 전달되면 해당 콜백을 실행한다. Retry CTA의 신규 시각 디자인은 추가하지 않는다.
 - 모든 신규 동작은 테스트를 먼저 실패시킨 뒤 구현한다.
 
 ---
@@ -69,15 +69,19 @@ Run: `npm run test -- src/shared/model/ui-state.test.ts`
 - Consumes: `DataViewState`
 - Produces: `PantryPageProps.onRetry?: () => void`
 
-- [ ] **Step 1: Pantry retry 콜백 테스트를 작성한다.**
+- [ ] **Step 1: Pantry 오류 영역의 접근성과 retry 콜백 테스트를 작성한다.**
 
 ```tsx
-render(<PantryPage errorMessage="오류" onRetry={onRetry} />);
-await user.click(screen.getByRole('button', { name: '다시 시도' }));
+const errorState = PantryErrorState({ message: '오류', onRetry });
+expect(errorState.props.role).toBe('alert');
+expect(errorState.props['aria-live']).toBeUndefined();
+
+const retryButton = Children.toArray(errorState.props.children).at(-1);
+retryButton.props.onClick?.();
 expect(onRetry).toHaveBeenCalledOnce();
 ```
 
-- [ ] **Step 2: retry 인터페이스 부재로 테스트가 실패하는지 확인한다.**
+- [ ] **Step 2: 오류 영역 컴포넌트와 접근성 속성 부재로 테스트가 실패하는지 확인한다.**
 
 Run: `npm run test -- src/views/pantry/ui/pantry-page.test.ts`
 
@@ -96,11 +100,10 @@ interface PantryPageProps {
 - [ ] **Step 4: Error 상태에 접근성 속성을 추가한다.**
 
 ```tsx
-<main aria-busy={viewState === 'loading'}>
 <section role="alert">
 ```
 
-- [ ] **Step 5: 관련 테스트를 통과시킨다.**
+- [ ] **Step 5: 오류 영역의 `role="alert"`와 Retry CTA의 `onRetry` 연결을 테스트한다.**
 
 Run: `npm run test -- src/views/pantry/ui/pantry-page.test.ts`
 
