@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { getPantryCardVariant } from '@/entities/pantry/model/types';
+import { pantryItems } from '@/entities/pantry/model/mock';
 
 import { getPantryViewState } from './pantry-page';
 
@@ -20,6 +21,10 @@ describe('getPantryViewState', () => {
 
   it('returns loading while pantry data is being requested', () => {
     expect(getPantryViewState({ items: [], isLoading: true })).toBe('loading');
+  });
+
+  it('returns content when pantry items are available', () => {
+    expect(getPantryViewState({ items: pantryItems })).toBe('content');
   });
 });
 
