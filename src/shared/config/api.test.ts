@@ -10,32 +10,31 @@ async function loadApiConfig() {
   return import('./api');
 }
 
-describe('API_BASE_URL', () => {
+describe('getApiBaseUrl', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
   });
 
   it('주소가 없으면 명시적으로 실패한다', async () => {
     vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', '');
+    const { getApiBaseUrl } = await loadApiConfig();
 
-    await expect(loadApiConfig()).rejects.toThrow(
-      'NEXT_PUBLIC_API_BASE_URL 환경 변수가 필요합니다.',
-    );
+    expect(() => getApiBaseUrl()).toThrow('NEXT_PUBLIC_API_BASE_URL 환경 변수가 필요합니다.');
   });
 
   it('운영 환경에서 HTTP 주소를 거부한다', async () => {
     vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', 'http://api.example.com');
     vi.stubEnv('NODE_ENV', 'production');
+    const { getApiBaseUrl } = await loadApiConfig();
 
-    await expect(loadApiConfig()).rejects.toThrow('운영 환경의 API 주소는 HTTPS여야 합니다.');
+    expect(() => getApiBaseUrl()).toThrow('운영 환경의 API 주소는 HTTPS여야 합니다.');
   });
 
   it('로컬 개발 서버 주소는 production 빌드에서도 허용한다', async () => {
     vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', 'http://localhost:8080');
     vi.stubEnv('NODE_ENV', 'production');
+    const { getApiBaseUrl } = await loadApiConfig();
 
-    await expect(loadApiConfig()).resolves.toMatchObject({
-      API_BASE_URL: 'http://localhost:8080',
-    });
+    expect(getApiBaseUrl()).toBe('http://localhost:8080');
   });
 });

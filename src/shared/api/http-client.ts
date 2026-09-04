@@ -3,7 +3,7 @@
  * Access Token 첨부, JSON 요청·응답 처리, 서버 오류 변환을 담당.
  */
 
-import { API_BASE_URL } from '@/shared/config/api';
+import { getApiBaseUrl } from '@/shared/config/api';
 import { getAccessToken } from '@/shared/model/access-token-store';
 
 import { ApiError } from './api-error';
@@ -53,7 +53,7 @@ export async function request<T>(
     requestHeaders.set('Authorization', `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${getApiBaseUrl()}${path}`, {
     ...options,
     headers: requestHeaders,
     body: body === undefined ? undefined : JSON.stringify(body),
