@@ -1,12 +1,21 @@
 /**
- * 백엔드의 공통 API 응답 형식을 정의하는 코드.
- * API 호출 후 화면에는 data 값만 전달하는 것을 원칙.
+ * 백엔드 API의 성공·실패 응답을 구분하는 공통 계약입니다.
+ * 성공 응답의 data는 호출자가 정한 T이며, null이 필요하면 T에 null을 명시합니다.
  */
-
-export interface ApiResponse<T> {
-  status: 'SUCCESS' | 'ERROR';
+export interface ApiSuccessResponse<T> {
+  status: 'SUCCESS';
   message: string;
-  data: T | null;
+  data: T;
+  error: null;
+  timestamp: string;
+}
+
+export interface ApiErrorResponse {
+  status: 'ERROR';
+  message: string;
+  data: null;
   error: string | null;
   timestamp: string;
 }
+
+export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;

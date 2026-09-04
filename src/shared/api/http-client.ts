@@ -13,10 +13,35 @@ interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
   auth?: boolean;
 }
+
+interface JsonRequestOptions extends RequestOptions {
+  responseType?: 'json';
+}
+
+interface NoContentRequestOptions extends RequestOptions {
+  responseType: 'none';
+}
+
+/**
+ * JSON 응답을 반환하는 공통 API 요청입니다.
+ */
+export function request<T>(path: string, options?: JsonRequestOptions): Promise<T>;
+
+/**
+ * 204 No Content 응답을 반환하는 공통 API 요청입니다.
+ */
+export function request(path: string, options: NoContentRequestOptions): Promise<void>;
+
 export async function request<T>(
   path: string,
-  { body, auth = true, headers, ...options }: RequestOptions = {},
-): Promise<T> {
+  {
+    body,
+    auth = true,
+    headers,
+    responseType = 'json',
+    ...options
+  }: JsonRequestOptions | NoContentRequestOptions = {},
+): Promise<T | void> {
   const requestHeaders = new Headers(headers);
   const token = getAccessToken();
 
@@ -35,14 +60,28 @@ export async function request<T>(
   });
 
   if (response.status === 204) {
-    return undefined as T;
+    if (responseType === 'none') {
+      return;
+    }
+
+    throw new ApiError(response.status, null, '응답 데이터가 없습니다.');
   }
 
-  const result = (await response.json()) as ApiResponse<T>;
+  let result: ApiResponse<T>;
+
+  try {
+    result = (await response.json()) as ApiResponse<T>;
+  } catch {
+    throw new ApiError(response.status, null, '서버 응답을 해석하지 못했습니다.');
+  }
 
   if (!response.ok || result.status === 'ERROR') {
     throw new ApiError(response.status, result.error, result.message);
   }
 
-  return result.data as T;
+  if (responseType === 'none') {
+    return;
+  }
+
+  return result.data;
 }

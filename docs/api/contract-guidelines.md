@@ -14,6 +14,13 @@
 - 로그인 완료 응답에는 최소한 서비스 사용자 식별자와 `provider`를 포함한다.
 - 동일 이메일의 제공자 간 계정 자동 통합은 MVP에서 지원하지 않는다.
 
+## API 주소·CORS·쿠키 정책
+
+- 프론트엔드는 `.env.local`의 `NEXT_PUBLIC_API_BASE_URL`로 백엔드 주소를 명시한다. 로컬 개발은 `http://localhost:8080`을 허용하고, 배포 환경은 `https://` 주소만 허용한다.
+- FE와 API가 다른 origin이면 BE는 허용 origin을 와일드카드(`*`)가 아닌 실제 FE 도메인 목록으로 설정하고, `Access-Control-Allow-Credentials: true`를 반환한다.
+- Refresh Token 재발급 요청은 `credentials: 'include'`로 호출한다. 배포 환경의 Refresh Token 쿠키는 `HttpOnly`, `Secure`를 설정해야 하며, `SameSite` 값은 FE·API 배포 도메인 관계에 맞춰 BE·인프라와 확정한다.
+- Refresh Token 쿠키의 실제 발급 속성은 백엔드 책임이다. FE는 API 주소 검증과 쿠키 포함 요청까지만 담당한다.
+
 ## MSW 흐름
 
 1. 합의된 API 명세를 기준으로 도메인별 핸들러를 작성한다.
