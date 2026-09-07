@@ -52,7 +52,7 @@
 
 - [ ] 프로젝트는 FSD(Feature-Sliced Design) 구조를 따른다.
 - [ ] Next.js App Router 라우팅 파일은 `src/app`에 둔다.
-- [ ] 페이지 단위 조합은 `src/views`에 둔다.
+- [ ] 페이지 단위 조합은 `src/views`에 둔다. `src/pages`는 Next.js Pages Router의 예약 경로이므로 FSD 레이어로 사용하지 않는다.
 - [ ] 재사용 가능한 큰 UI 블록은 `src/widgets`에 둔다.
 - [ ] 기능 단위 사용자 행동은 `src/features`에 둔다.
 - [ ] 도메인 모델과 도메인 단위 UI는 `src/entities`에 둔다.

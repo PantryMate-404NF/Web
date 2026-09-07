@@ -16,7 +16,7 @@ export function AuthCallbackContent() {
 
   useEffect(() => {
     async function restoreSession() {
-      if (searchParams.get('result') !== 'success') {
+      if (searchParams?.get('result') !== 'success') {
         router.replace('/?login=failed');
         return;
       }

@@ -31,19 +31,15 @@ MVP에서는 재료의 정확한 잔여 수량을 추정하지 않습니다. 팬
 
 실제 API가 준비되기 전, Figma 프로토타입의 핵심 흐름을 확인하기 위한 목업 화면입니다. 화면 구조는 실제 구현 예정인 FSD 레이어와 App Router 경로에 배치되어 있으며, 확정 전 와이어프레임에는 디자인 토큰을 아직 적용하지 않습니다.
 
-| 경로                              | 확인할 화면                         |
-| --------------------------------- | ----------------------------------- |
-| `/`                               | 목업 화면 진입 목록                 |
-| `/pantry`                         | 팬트리 아이콘형 보유 식재료 목록    |
-| `/pantry?view=image`              | 팬트리 이미지형 보유 식재료 목록    |
-| `/pantry?state=empty`             | 팬트리 빈 상태                      |
-| `/pantry?state=delivery-complete` | 배송 완료 후 자동 등록 팝업         |
-| `/pantry?state=edit`              | 식재료 등록·수정 화면               |
-| `/pantry?state=delete-confirm`    | 식재료 삭제 확인 바텀시트           |
-| `/recipe`                         | 주재료 기반 레시피 추천             |
-| `/recipe/imminent`                | 소비기한 임박 재료 기반 레시피 추천 |
-| `/recipe/ingredients`             | 주재료 선택용 식재료 그리드         |
-| `/recipe/kimchi-stew`             | 레시피 상세와 부족 재료 확인        |
+| 경로                  | 확인할 화면                         |
+| --------------------- | ----------------------------------- |
+| `/`                   | 목업 화면 진입 목록                 |
+| `/pantry`             | API·MSW 기반 팬트리 아이콘형 목록   |
+| `/pantry?view=image`  | API·MSW 기반 팬트리 이미지형 목록   |
+| `/recipe`             | 주재료 기반 레시피 추천             |
+| `/recipe/imminent`    | 소비기한 임박 재료 기반 레시피 추천 |
+| `/recipe/ingredients` | 주재료 선택용 식재료 그리드         |
+| `/recipe/kimchi-stew` | 레시피 상세와 부족 재료 확인        |
 
 ## 기술 스택
 
@@ -110,7 +106,7 @@ npm run dev
 app → views → widgets → features → entities → shared
 ```
 
-상위 레이어는 하위 레이어를 가져올 수 있지만, 반대 방향 import는 금지합니다. 예를 들어 `entities/pantry`는 `views/pantry`를 import할 수 없습니다.
+상위 레이어는 하위 레이어를 가져올 수 있지만, 반대 방향 import는 금지합니다. 예를 들어 `entities/pantry`는 `views/pantry`를 import할 수 없습니다. FSD 표준의 `pages`는 Next.js가 Pages Router로 해석하므로, 이 App Router 프로젝트에서는 같은 역할을 `views`라는 이름으로 둡니다.
 
 ### 현재 폴더 구조
 
@@ -118,13 +114,13 @@ app → views → widgets → features → entities → shared
 src/
 ├── app/                              # Next.js App Router: URL과 전역 설정
 │   ├── (main)/                        # 사용자 화면 라우트 그룹
-│   │   ├── pantry/page.tsx            # /pantry의 searchParams를 화면에 전달
+│   │   ├── pantry/page.tsx            # /pantry의 query를 FSD 페이지에 전달
 │   │   ├── recipe/                    # 레시피 목록·상세 URL
 │   ├── layout.tsx                     # 루트 레이아웃
 │   ├── providers.tsx                  # Query Client 등 전역 Provider
 │   ├── globals.css                    # 전역 스타일·디자인 토큰
 │   └── manifest.ts                    # PWA Manifest
-├── views/                            # 페이지 단위 화면 조합
+├── views/                            # FSD 페이지 단위 화면 조합 (pages 예약 경로 충돌 방지)
 │   ├── pantry/ui/                     # 팬트리 목록·빈 상태·등록/삭제 흐름
 │   └── recipe/ui/                     # 레시피 목록·상세 화면
 ├── widgets/                          # 여러 entity/feature를 묶는 큰 UI 블록
@@ -159,7 +155,7 @@ src/shared/
 
 | 만들 대상                                          | 둘 위치                 | 예시                                                                | 두면 안 되는 곳                      |
 | -------------------------------------------------- | ----------------------- | ------------------------------------------------------------------- | ------------------------------------ |
-| URL, 페이지 메타데이터, `searchParams` 해석        | `src/app`               | `/pantry?view=image`를 `PantryFlowPage`에 전달                      | `entities`, `widgets`                |
+| URL, 페이지 메타데이터, `searchParams` 해석        | `src/app`               | `/pantry?view=image`를 `PantryRouteContent`에 전달                  | `entities`, `widgets`                |
 | 한 URL을 완성하는 화면 조합                        | `src/views/<domain>/ui` | `pantry-page.tsx`, `recipe-list-page.tsx`                           | `app/page.tsx`에 모든 마크업 작성    |
 | 여러 화면에서 조합해 쓰는 큰 UI                    | `src/widgets/<name>/ui` | 팬트리 헤더·필터·그리드                                             | `shared`에 페이지 맥락 UI 배치       |
 | 클릭·제출·선택 같은 사용자 행동                    | `src/features/<action>` | `add-pantry-item`, `toggle-recipe-save`, `add-recipe-items-to-cart` | `entities`에 API 호출과 폼 상태 혼합 |
@@ -173,12 +169,13 @@ src/shared/
 ```text
 /pantry, /pantry?view=image
   └─ src/app/(main)/pantry/page.tsx
-      └─ PantryFlowPage: state/full·empty·edit 같은 목업 흐름 선택
-          └─ PantryPage: 화면 상태와 카드 표현 방식 선택
-              ├─ PantryHeader / PantryToolbar / PantryGrid (widgets)
-              └─ PantryItemCard (entities)
-                  ├─ icon: 아이콘형 카드, 173 × 104px
-                  └─ image: 이미지형 카드, 175 × 203px
+      └─ PantryRouteContent: URL 카드 표시 방식과 Query 결과 연결
+          └─ usePantryQuery: GET /api/pantries → DTO → PantryItem 변환
+              └─ PantryPage: Loading·Content·Empty·Error 상태와 카드 표현 방식 선택
+                  ├─ PantryHeader / PantryToolbar / PantryGrid (widgets)
+                  └─ PantryItemCard (entities)
+                      ├─ icon: 아이콘형 카드, 173 × 104px
+                      └─ image: 이미지형 카드, 175 × 203px
 ```
 
 현재는 두 목업을 비교하기 위해 `view` query parameter를 사용합니다.
