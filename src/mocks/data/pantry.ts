@@ -2,7 +2,10 @@
  * 개발·테스트 환경에서 GET /api/pantries 응답으로 사용하는 팬트리 목업 데이터.
  */
 
-export const pantryListResponse = {
+import type { PantryDto } from '@/entities/pantry/api/pantry.dto';
+import type { ApiSuccessResponse } from '@/shared/api/api-response';
+
+export const pantryListResponse: ApiSuccessResponse<PantryDto[]> = {
   status: 'SUCCESS' as const,
   message: '팬트리 목록을 조회했습니다.',
   data: [

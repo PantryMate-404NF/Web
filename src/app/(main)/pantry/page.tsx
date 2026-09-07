@@ -4,13 +4,16 @@
  */
 
 import { PantryRouteContent } from '@/views/pantry/ui/pantry-route-content';
+import { PantryFlowPage } from '@/views/pantry/ui/pantry-flow-page';
 
 interface PantryRouteProps {
-  searchParams: Promise<{ view?: string }>;
+  searchParams: Promise<{ state?: string; view?: string }>;
 }
 
 export default async function PantryRoute({ searchParams }: PantryRouteProps) {
-  const { view } = await searchParams;
+  const { state, view } = await searchParams;
+
+  if (state) return <PantryFlowPage state={state} view={view} />;
 
   return <PantryRouteContent view={view} />;
 }

@@ -11,14 +11,34 @@ const isMockingEnabled =
 
 export function MockProvider({ children }: { children: ReactNode }) {
   const [isReady, setIsReady] = useState(!isMockingEnabled);
+  const [hasInitializationError, setHasInitializationError] = useState(false);
 
   useEffect(() => {
     if (!isMockingEnabled) return;
 
-    void import('./browser').then(({ worker }) =>
-      worker.start({ onUnhandledRequest: 'bypass' }).then(() => setIsReady(true)),
-    );
+    async function initializeMockWorker() {
+      try {
+        const { worker } = await import('./browser');
+        await worker.start({ onUnhandledRequest: 'bypass' });
+        setIsReady(true);
+      } catch {
+        setHasInitializationError(true);
+      }
+    }
+
+    void initializeMockWorker();
   }, []);
+
+  if (hasInitializationError) {
+    return (
+      <main
+        className="bg-background text-foreground grid min-h-dvh place-items-center p-6 text-center"
+        role="alert"
+      >
+        개발용 API 목업을 시작하지 못했습니다. 새로고침하거나 MSW 설정을 확인해 주세요.
+      </main>
+    );
+  }
 
   if (!isReady) return null;
 

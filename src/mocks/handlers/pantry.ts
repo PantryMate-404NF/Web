@@ -4,7 +4,18 @@
  */
 
 import { http, HttpResponse } from 'msw';
+
+import type { ApiErrorResponse } from '@/shared/api/api-response';
+
 import { pantryListResponse } from '../data/pantry';
+
+const pantryUnauthorizedResponse: ApiErrorResponse = {
+  status: 'ERROR',
+  message: '인증 정보가 유효하지 않습니다.',
+  data: null,
+  error: 'UNAUTHORIZED',
+  timestamp: '2026-09-07T00:00:00Z',
+};
 
 export const pantryHandlers = [
   http.get('*/api/pantries', ({ request }) => {
@@ -12,6 +23,10 @@ export const pantryHandlers = [
 
     if (mock === 'empty') {
       return HttpResponse.json({ ...pantryListResponse, data: [] });
+    }
+
+    if (mock === 'unauthorized') {
+      return HttpResponse.json(pantryUnauthorizedResponse, { status: 401 });
     }
 
     if (mock === 'error') {
