@@ -1,4 +1,4 @@
-import { ChevronRight, MessageCircle } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -31,7 +31,13 @@ function LoginHome() {
           className="text-label-2 flex h-13 items-center justify-center rounded-lg bg-[#fee500] font-semibold"
           href="/?state=onboarding"
         >
-          <MessageCircle aria-hidden="true" className="mr-auto ml-5 size-5 fill-current" />
+          <Image
+            alt=""
+            className="mr-auto ml-5 size-5"
+            height={20}
+            src="/images/auth/kakao-logo.svg"
+            width={20}
+          />
           <span className="mr-auto">카카오 로그인</span>
         </Link>
         <Link
@@ -86,7 +92,7 @@ function RecipeRail() {
 
 function HomeContent({ hasCompletedOnboarding }: { hasCompletedOnboarding: boolean }) {
   return (
-    <main className="bg-background mx-auto flex min-h-dvh w-full max-w-[390px] flex-col overflow-hidden">
+    <main className="bg-background mx-auto flex min-h-dvh w-full max-w-[390px] flex-col">
       <HomeHeader />
       <div className="text-label-4 flex [scrollbar-width:none] gap-3 overflow-x-auto px-4 py-2 font-medium">
         {['오늘의 채소', '베스트', '간편식', '계란·유제품', '빵·과일', '건강식'].map((category) => (
