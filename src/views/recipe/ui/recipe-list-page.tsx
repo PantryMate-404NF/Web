@@ -169,13 +169,13 @@ export function RecipeListPage({ tab = 'main' }: { tab?: RecipeTab }) {
   const sections = getRecipeSections(tab);
 
   return (
-    <main className="bg-background text-foreground mx-auto min-h-dvh w-full max-w-[390px] overflow-hidden pb-8">
+    <main className="mobile-page bg-background text-foreground overflow-hidden pb-8">
       <RecipeTabNavigation />
 
       {tab === 'imminent' ? (
         <section className="mt-7">
-          <h1 className="text-title-3 px-6 font-semibold">{sections[0].title}</h1>
-          <div className="mt-5 flex [scrollbar-width:none] gap-2 overflow-x-auto px-6 pb-1">
+          <h1 className="text-title-3 px-4 font-semibold">{sections[0].title}</h1>
+          <div className="mt-5 flex [scrollbar-width:none] gap-2 overflow-x-auto px-4 pb-1">
             {sections[0].recipes.map((recipe) => (
               <ExpiringRecipeCard key={recipe.id} recipe={recipe} />
             ))}

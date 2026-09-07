@@ -15,7 +15,7 @@ export function CartPage() {
   const total = getCartTotal(items);
 
   return (
-    <main className="bg-background text-foreground mx-auto min-h-dvh w-full max-w-[430px] pb-28">
+    <main className="mobile-page bg-background text-foreground pb-28">
       <header className="flex h-20 items-center gap-1 px-4">
         <button
           aria-label="이전 페이지로 이동"

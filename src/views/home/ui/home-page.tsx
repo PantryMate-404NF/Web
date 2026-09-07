@@ -1,86 +1,46 @@
 import { ChevronRight } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 
-import { HomeBottomNavigation } from '@/widgets/home/ui/home-bottom-navigation';
+import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
 import { HomeHeader } from '@/widgets/home/ui/home-header';
 import { HomeProductRail } from '@/widgets/home/ui/home-product-rail';
 
-export type HomeMockState = 'login' | 'onboarding' | 'complete';
+export const HOME_CATEGORIES = [
+  '오늘의 채소',
+  '베스트',
+  '간편식',
+  '계란 · 알류',
+  '쌀 · 잡곡 · 견과',
+  '돼지고기 · 소고기',
+] as const;
 
+export type HomeMockState = 'onboarding' | 'complete';
+
+/** 목업에서 로그인·온보딩 완료 여부에 따라 홈 화면을 구분합니다. */
 export function getHomeMockState(state?: string): HomeMockState {
-  if (state === 'login' || state === 'onboarding' || state === 'complete') return state;
-
-  return 'complete';
-}
-
-function LoginHome() {
-  return (
-    <main className="bg-background mx-auto flex min-h-dvh w-full max-w-[390px] flex-col px-4 pt-16 pb-16">
-      <div
-        aria-label="서비스 대표 이미지 영역"
-        className="bg-muted text-label-2 mx-auto mt-24 grid size-[180px] place-items-center text-center font-semibold"
-        role="img"
-      >
-        이미지 영역
-        <br />
-        사이즈는 임시
-      </div>
-      <div className="mt-auto space-y-2">
-        <Link
-          className="text-label-2 flex h-13 items-center justify-center rounded-lg bg-[#fee500] font-semibold"
-          href="/?state=onboarding"
-        >
-          <Image
-            alt=""
-            className="mr-auto ml-5 size-5"
-            height={20}
-            src="/images/auth/kakao-logo.svg"
-            width={20}
-          />
-          <span className="mr-auto">카카오 로그인</span>
-        </Link>
-        <Link
-          className="text-label-2 flex h-13 items-center justify-center rounded-lg bg-[#03a94d] font-semibold text-[var(--primitive-white)]"
-          href="/?state=onboarding"
-        >
-          <Image
-            alt=""
-            className="mr-auto ml-5 size-5"
-            height={20}
-            src="/images/auth/naver-logo.svg"
-            width={20}
-          />
-          <span className="mr-auto">네이버 로그인</span>
-        </Link>
-      </div>
-      <Link
-        className="text-label-2 text-muted-foreground mt-20 text-center"
-        href="/?state=complete"
-      >
-        홈 둘러보기
-      </Link>
-    </main>
-  );
+  return state === 'complete' ? 'complete' : 'onboarding';
 }
 
 function RecipeRail() {
   const recipes = ['간장 불고기', '채소 두부 찜', '닭가슴살 샐러드'];
 
   return (
-    <section className="px-4">
-      <div className="flex items-center justify-between">
+    <section className="bg-muted mx-4 pt-3 pb-8">
+      <div className="flex items-baseline justify-between">
         <h2 className="text-label-3 font-semibold">나를 위한 레시피</h2>
-        <Link className="text-label-4 text-muted-foreground flex items-center" href="/recipe">
+        <Link
+          className="text-text-secondary flex items-center text-base font-medium"
+          href="/recipe"
+        >
           더보기 <ChevronRight aria-hidden="true" className="size-3" />
         </Link>
       </div>
       <div className="mt-3 flex [scrollbar-width:none] gap-2 overflow-x-auto pb-1">
         {recipes.map((recipe) => (
-          <Link className="w-[120px] shrink-0" href="/recipe" key={recipe}>
-            <div aria-label={`${recipe} 이미지`} className="bg-muted h-[82px] rounded" role="img" />
-            <p className="mt-1 text-xs font-semibold">{recipe}</p>
-            <p className="text-label-4 text-muted-foreground mt-0.5 truncate">
+          <Link className="w-[156px] shrink-0" href="/recipe" key={recipe}>
+            <div aria-label={`${recipe} 이미지`} className="bg-border h-24 rounded-lg" role="img" />
+            <p className="text-body-4 mt-2 truncate font-semibold">{recipe}</p>
+            <p className="text-label-4 text-muted-foreground mt-1 truncate">
               보유 재료로 맛있게 즐겨보세요.
             </p>
           </Link>
@@ -92,18 +52,28 @@ function RecipeRail() {
 
 function HomeContent({ hasCompletedOnboarding }: { hasCompletedOnboarding: boolean }) {
   return (
-    <main className="bg-background mx-auto flex min-h-dvh w-full max-w-[390px] flex-col">
-      <HomeHeader />
-      <div className="text-label-4 flex [scrollbar-width:none] gap-3 overflow-x-auto px-4 py-2 font-medium">
-        {['오늘의 채소', '베스트', '간편식', '계란·유제품', '빵·과일', '건강식'].map((category) => (
+    <main className="mobile-page bg-background flex flex-col">
+      <HomeHeader isAuthenticated={hasCompletedOnboarding} />
+      <div className="text-title-4 item-center flex h-11 [scrollbar-width:none] gap-4 overflow-x-auto px-4 font-medium">
+        {HOME_CATEGORIES.map((category) => (
           <span className="shrink-0" key={category}>
             {category}
           </span>
         ))}
       </div>
-      <div className="bg-muted mx-4 mt-1 h-[184px]" />
-      <div className="bg-border mx-4 mt-2 h-12" />
-      <div className="flex flex-1 flex-col gap-7 py-6">
+      <div className="relative mx-4">
+        <div aria-label="프로모션 배너" className="h-64 w-89 bg-gray-800" role="img" />
+        {hasCompletedOnboarding ? (
+          <p className="text-label-2 bg-border text-muted-foreground shadow-1 pointer-events-none absolute bottom-[-20px] left-1/2 z-10 -translate-x-1/2 rounded-full px-5 py-2 font-medium whitespace-nowrap">
+            <span
+              aria-hidden="true"
+              className="bg-border absolute top-[26px] left-[14px] z-0 size-4 rotate-45 rounded-[3px]"
+            />
+            <span className="relative z-10">맛 선호도를 반영해 AI가 추천했어요.</span>
+          </p>
+        ) : null}
+      </div>
+      <div className="flex flex-1 flex-col gap-12 pt-4 pb-6">
         {hasCompletedOnboarding ? <RecipeRail /> : null}
         <HomeProductRail description="꼭 먹어야 할 식재료" title="지금 가장 많이 담는 TOP 10" />
         <HomeProductRail
@@ -115,20 +85,13 @@ function HomeContent({ hasCompletedOnboarding }: { hasCompletedOnboarding: boole
           title="요즘 주목받는 재료"
         />
       </div>
-      <HomeBottomNavigation />
-      {hasCompletedOnboarding ? (
-        <p className="text-label-4 bg-muted text-muted-foreground shadow-1 pointer-events-none fixed top-11 left-1/2 z-20 -translate-x-1/2 rounded-full px-4 py-1.5">
-          맛 선호도를 반영해 AI가 추천했어요.
-        </p>
-      ) : null}
+      <BottomNavigation isAuthenticated={hasCompletedOnboarding} />
     </main>
   );
 }
 
 export function HomePage({ state }: { state?: string }) {
   const homeState = getHomeMockState(state);
-
-  if (homeState === 'login') return <LoginHome />;
 
   return <HomeContent hasCompletedOnboarding={homeState === 'complete'} />;
 }

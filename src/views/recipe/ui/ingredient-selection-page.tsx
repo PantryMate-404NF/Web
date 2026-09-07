@@ -28,7 +28,7 @@ export function IngredientSelectionPage() {
   }
 
   return (
-    <main className="bg-background text-foreground mx-auto min-h-dvh w-full max-w-[390px] pb-8">
+    <main className="mobile-page bg-background text-foreground pb-8">
       <header className="flex h-12 items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <Link

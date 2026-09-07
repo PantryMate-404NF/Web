@@ -77,7 +77,7 @@ export function PantryPage({
   if (viewState === 'loading') return <PantryLoadingSkeleton variant={cardVariant} />;
 
   return (
-    <main className="bg-background mx-auto min-h-dvh w-full max-w-[390px] pt-2 pb-10">
+    <main className="mobile-page bg-background pt-2 pb-10">
       <PantryHeader />
       <PantryToolbar itemCount={currentItems.length} />
 

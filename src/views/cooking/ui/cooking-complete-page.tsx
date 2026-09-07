@@ -39,7 +39,7 @@ export function CookingCompletePage({ recipeId }: CookingCompletePageProps) {
   }
 
   return (
-    <main className="bg-background text-foreground mx-auto min-h-dvh w-full max-w-[430px] px-4 pt-4 pb-10">
+    <main className="mobile-page mobile-page--padded bg-background text-foreground pt-4 pb-10">
       <header className="flex h-12 items-center gap-2">
         <Link
           aria-label="레시피 상세로 돌아가기"

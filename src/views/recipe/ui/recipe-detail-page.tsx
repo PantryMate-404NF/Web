@@ -20,7 +20,7 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
   ].filter(Boolean);
 
   return (
-    <main className="bg-background text-foreground mx-auto min-h-dvh w-full max-w-[390px] pb-28">
+    <main className="mobile-page bg-background text-foreground pb-28">
       <section className="bg-muted text-muted-foreground relative flex h-[211px] items-center justify-center">
         <Link
           aria-label="이전 페이지"
