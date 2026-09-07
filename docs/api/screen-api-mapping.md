@@ -7,7 +7,8 @@
 - 이 문서는 화면과 API 계약을 연결하기 위한 협의용 문서다.
 - Swagger 안내에 따라 현재 모든 API는 실제 호출 대상이 아닌 계획 명세다. API 타입, 요청 함수, MSW handler는 백엔드 계약 확정 후 함께 갱신한다.
 - 화면 상태와 공용 UI 적용 기준은 [FE·PD 핸드오프 적용 기준](../design/fe-pd-handoff.md)을 따른다.
-- 현재 Error 화면은 기존 Retry CTA와 선택적 `onRetry` 콜백 연결까지만 제공한다. 실제 API 재요청과 Toast는 후속 API 계약 범위다.
+- 팬트리 목록 Error 화면은 TanStack Query의 `refetch`를 Retry CTA에 연결한다. Toast 정책은 후속 API 계약 범위다.
+- 타입 초안은 [FE API 타입 계약 초안](./frontend-type-contract.md), MSW 시나리오는 [MSW Mock 계약 명세](./msw-mock-spec.md), BE 협의 항목은 [BE API 협의 체크리스트](./backend-alignment-checklist.md)를 기준으로 관리한다.
 
 ## 표기
 

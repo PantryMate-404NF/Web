@@ -2,7 +2,7 @@
 
 ## FSD 구조와 의존 방향
 
-프로젝트는 Feature-Sliced Design을 사용합니다. `src/app`은 라우팅과 전역 설정만 담당하며, 페이지 조합은 `src/views`, 큰 재사용 UI 블록은 `src/widgets`에 둡니다. 사용자 행동은 `src/features`, 도메인 모델은 `src/entities`, 공통 코드는 `src/shared`에 둡니다.
+프로젝트는 Feature-Sliced Design을 사용합니다. `src/app`은 라우팅과 전역 설정만 담당하며, 페이지 조합은 `src/views`, 큰 재사용 UI 블록은 `src/widgets`에 둡니다. 사용자 행동은 `src/features`, 도메인 모델은 `src/entities`, 공통 코드는 `src/shared`에 둡니다. FSD의 표준 명칭은 `pages`지만 Next.js가 `src/pages`를 Pages Router로 인식하므로, 이 프로젝트에서는 충돌을 피하기 위해 `src/views`를 페이지 조합 레이어로 사용합니다.
 
 ```text
 app → views → widgets → features → entities → shared

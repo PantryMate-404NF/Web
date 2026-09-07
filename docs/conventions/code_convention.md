@@ -30,7 +30,7 @@ interface PantryItemProps {
 ## FSD 디렉터리 책임
 
 - `src/app`: Next.js App Router의 라우트, 레이아웃, Provider, 전역 스타일만 둡니다.
-- `src/views`: 페이지 단위 화면 조합을 둡니다.
+- `src/views`: 페이지 단위 화면 조합을 둡니다. FSD의 `pages` 레이어 역할을 하지만 Next.js Pages Router 예약 경로와 충돌하지 않도록 이름을 다르게 사용합니다.
 - `src/widgets`: 여러 feature·entity를 조합한 재사용 가능한 큰 UI 블록을 둡니다.
 - `src/features`: 장바구니 담기, 팬트리 상태 확인처럼 사용자 행동 단위를 둡니다.
 - `src/entities`: 팬트리 재료, 레시피, 상품 등 도메인 모델과 단위 UI를 둡니다.
