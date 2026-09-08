@@ -1,5 +1,7 @@
+export type ProductId = 'organic-broccoli' | 'sweet-banana' | 'fresh-milk' | 'soft-tofu';
+
 export interface ProductDetail {
-  id: string;
+  id: ProductId;
   category: string;
   name: string;
   summary: string;
@@ -18,6 +20,7 @@ export interface ProductDetail {
 
 export interface RelatedProduct {
   id: string;
+  productId?: ProductId;
   name: string;
   price: number;
   unitPrice: string;

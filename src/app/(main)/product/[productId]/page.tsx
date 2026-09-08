@@ -1,5 +1,4 @@
-import { getProductById } from '@/entities/product/model/mock';
-import { ProductDetailPage } from '@/views/product/ui/product-detail-page';
+import { ProductRouteContent } from '@/views/product/ui/product-route-content';
 
 interface ProductDetailRouteProps {
   params: Promise<{ productId: string }>;
@@ -8,5 +7,5 @@ interface ProductDetailRouteProps {
 export default async function ProductDetailRoute({ params }: ProductDetailRouteProps) {
   const { productId } = await params;
 
-  return <ProductDetailPage product={getProductById(productId)} />;
+  return <ProductRouteContent productId={productId} />;
 }

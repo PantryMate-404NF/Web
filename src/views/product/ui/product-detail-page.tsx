@@ -1,9 +1,10 @@
-import { ArrowLeft, ChevronRight, Expand, Heart, ShoppingCart, Star } from 'lucide-react';
+import { ChevronRight, Expand, Heart, ShoppingCart, Star } from 'lucide-react';
 import Link from 'next/link';
 
 import { relatedProductMocks } from '@/entities/product/model/mock';
 import type { ProductDetail } from '@/entities/product/model/types';
 import { ProductCard } from '@/entities/product/ui/product-card';
+import { BackButton } from '@/shared/ui/back-button';
 
 interface ProductDetailPageProps {
   product: ProductDetail;
@@ -80,13 +81,7 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
   return (
     <main className="mobile-page bg-background pb-32">
       <header className="bg-background flex h-14 items-center justify-between px-4">
-        <Link
-          aria-label="이전 페이지로 이동"
-          className="focus-visible:ring-ring grid size-10 place-items-center rounded-full focus-visible:ring-2"
-          href="/"
-        >
-          <ArrowLeft aria-hidden="true" className="size-6" />
-        </Link>
+        <BackButton />
         <Link
           aria-label="장바구니로 이동"
           className="focus-visible:ring-ring grid size-10 place-items-center rounded-full focus-visible:ring-2"

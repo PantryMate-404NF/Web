@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getProductById, productMocks } from './mock';
+import { getProductById, homeProductMocks } from './mock';
 
 describe('getProductById', () => {
   it('상품 ID에 해당하는 상세 목업을 반환한다', () => {
@@ -11,7 +11,11 @@ describe('getProductById', () => {
     });
   });
 
-  it('알 수 없는 상품 ID면 첫 번째 목업을 반환한다', () => {
-    expect(getProductById('unknown-product')).toEqual(productMocks[0]);
+  it('알 수 없는 상품 ID면 undefined를 반환한다', () => {
+    expect(getProductById('unknown-product')).toBeUndefined();
+  });
+
+  it('홈에 표시되는 모든 상품은 상세 목업을 가진다', () => {
+    expect(homeProductMocks.every((product) => getProductById(product.id))).toBe(true);
   });
 });
