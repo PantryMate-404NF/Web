@@ -36,10 +36,10 @@ describe('getBottomNavigationItems', () => {
     });
   });
 
-  it('아직 화면이 없는 검색·라이브러리 탭에는 이동 경로를 연결하지 않는다', () => {
+  it('검색 탭은 검색 화면으로 연결하고, 라이브러리 탭은 비활성 상태로 유지한다', () => {
     const items = getBottomNavigationItems('/');
 
-    expect(items.find((item) => item.id === 'search')?.href).toBeUndefined();
+    expect(items.find((item) => item.id === 'search')?.href).toBe('/search');
     expect(items.find((item) => item.id === 'library')?.href).toBeUndefined();
   });
 

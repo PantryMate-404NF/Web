@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 interface HomeProductRailProps {
   description?: string;
   title: string;
@@ -19,7 +21,12 @@ export function HomeProductRail({ description, title }: HomeProductRailProps) {
       </div>
       <div className="mt-3 flex [scrollbar-width:none] gap-2 overflow-x-auto pb-1">
         {products.map((product) => (
-          <article className="w-[164px] shrink-0" key={product}>
+          <Link
+            aria-label={`${product} 상품 상세 보기`}
+            className="focus-visible:ring-ring w-[164px] shrink-0 rounded-lg focus-visible:ring-2"
+            href="/product/organic-broccoli"
+            key={product}
+          >
             <div
               aria-label={`${product} 이미지`}
               className="bg-muted size-[164px] rounded-lg"
@@ -31,7 +38,7 @@ export function HomeProductRail({ description, title }: HomeProductRailProps) {
             <span className="text-label-4 text-muted-foreground mt-1 inline-flex rounded border px-1.5 py-0.5">
               4만원 이상 무료배송
             </span>
-          </article>
+          </Link>
         ))}
       </div>
     </section>
