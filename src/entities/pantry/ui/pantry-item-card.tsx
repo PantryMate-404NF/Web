@@ -55,7 +55,7 @@ function PantryImageCard({ item }: { item: PantryItem }) {
         <ItemOptionsLink itemName={item.name} />
       </div>
 
-      <div className="relative mx-auto mt-1 flex size-[100px] items-center justify-center overflow-hidden rounded-lg bg-[#c5c6c9]">
+      <div className="bg-placeholder relative mx-auto mt-1 flex size-[100px] items-center justify-center overflow-hidden rounded-lg">
         {item.imageUrl ? (
           <Image
             alt={item.imageAlt}
@@ -85,7 +85,7 @@ function PantryIconCard({ item }: { item: PantryItem }) {
       <div className="flex items-start justify-between gap-2">
         <div
           aria-label={item.imageAlt}
-          className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#c5c6c9]"
+          className="bg-placeholder flex size-10 shrink-0 items-center justify-center rounded-lg"
           role="img"
         >
           <Package aria-hidden="true" className="size-4" />

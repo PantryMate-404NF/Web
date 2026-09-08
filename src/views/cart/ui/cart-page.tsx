@@ -55,7 +55,7 @@ export function CartPage() {
                 key={item.id}
                 className="bg-muted relative flex min-h-24 items-center rounded-lg p-3"
               >
-                <div className="grid size-[72px] shrink-0 place-items-center rounded-lg bg-[#c5c6c9] text-[#8e9094]">
+                <div className="bg-placeholder text-placeholder-icon-subtle grid size-[72px] shrink-0 place-items-center rounded-lg">
                   <ChefHat className="size-7" aria-hidden="true" strokeWidth={1.5} />
                 </div>
                 <div className="min-w-0 flex-1 px-2.5">

@@ -21,7 +21,7 @@ export function SearchPage() {
   }
 
   return (
-    <main className="bg-background mx-auto min-h-dvh w-full max-w-[390px] pt-14">
+    <main className="mobile-page bg-background pt-14">
       <form className="flex items-center gap-3 px-4" onSubmit={preventSearchSubmit} role="search">
         <Link
           aria-label="홈으로 돌아가기"

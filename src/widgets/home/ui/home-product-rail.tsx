@@ -13,7 +13,7 @@ export function HomeProductRail({ description, title }: HomeProductRailProps) {
       <div className="flex items-baseline justify-between">
         <div>
           <h2 className="text-lg leading-7 font-semibold">{title}</h2>
-          {description ? <p className="text-medium mt-0.5 text-[#A1A1AB]">{description}</p> : null}
+          {description ? <p className="text-medium text-disabled mt-0.5">{description}</p> : null}
         </div>
         <a className="text-text-secondary text-base font-medium" href="#more">
           더보기 <span aria-hidden="true">›</span>
@@ -34,7 +34,7 @@ export function HomeProductRail({ description, title }: HomeProductRailProps) {
             />
             <p className="text-muted-foreground mt-2 truncate text-sm">{product.name}</p>
             <p className="mt-0.5 text-lg font-bold">{product.price.toLocaleString()}원</p>
-            <p className="mt-0.5 text-xs text-[#A1A1AB]">{product.summary}</p>
+            <p className="text-disabled mt-0.5 text-xs">{product.summary}</p>
             <span className="text-label-4 text-muted-foreground mt-1 inline-flex rounded border px-1.5 py-0.5">
               4만원 이상 무료배송
             </span>

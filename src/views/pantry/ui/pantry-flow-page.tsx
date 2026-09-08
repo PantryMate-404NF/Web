@@ -198,7 +198,7 @@ function IngredientFormMock({ mode }: { mode: 'register' | 'edit' }) {
           <section
             aria-label="소비기한 선택"
             aria-modal="true"
-            className="bg-card mx-auto w-full max-w-[390px] rounded-t-3xl p-5"
+            className="bg-card mx-auto w-full max-w-[var(--layout-mobile-design-frame)] rounded-t-3xl p-5"
             ref={calendarDialogRef}
             role="dialog"
           >
@@ -248,7 +248,7 @@ function DeliveryCompleteDialog() {
       className="bg-overlay/40 fixed inset-0 z-10 flex items-end p-4"
       role="dialog"
     >
-      <section className="bg-card mx-auto w-full max-w-[398px] rounded-3xl p-6">
+      <section className="bg-card mx-auto w-full max-w-[var(--layout-mobile-design-frame)] rounded-3xl p-6">
         <CheckCircle2 aria-hidden="true" className="text-primary size-10" />
         <h2 className="text-title-3 mt-4 font-semibold">배송이 완료됐어요</h2>
         <p className="text-body-4 text-muted-foreground mt-2">

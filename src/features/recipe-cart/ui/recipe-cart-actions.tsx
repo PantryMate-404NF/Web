@@ -106,7 +106,7 @@ export function RecipeCartActions({ linkedProducts }: RecipeCartActionsProps) {
 
   return (
     <>
-      <div className="bg-background border-border fixed right-0 bottom-0 left-0 z-10 mx-auto flex w-full max-w-[430px] gap-2 border-t px-4 py-3">
+      <div className="bg-background border-border fixed right-0 bottom-0 left-0 z-10 mx-auto flex w-full max-w-[var(--layout-mobile-design-frame)] gap-2 border-t px-4 py-3">
         <button
           className="bg-muted text-foreground text-label-3 h-11 flex-1 rounded-2xl font-semibold"
           onClick={() => handleAdd('부족 식재료를 장바구니에 담았어요.')}
@@ -127,7 +127,7 @@ export function RecipeCartActions({ linkedProducts }: RecipeCartActionsProps) {
       {addedMessage && (
         <div
           aria-live="polite"
-          className="bg-foreground text-background text-label-3 fixed right-4 bottom-24 left-4 z-20 mx-auto max-w-[398px] rounded-xl px-4 py-3 text-center font-medium shadow-lg"
+          className="bg-foreground text-background text-label-3 shadow-floating fixed right-4 bottom-24 left-4 z-20 mx-auto max-w-[var(--layout-mobile-design-frame)] rounded-xl px-4 py-3 text-center font-medium"
         >
           <span className="inline-flex items-center gap-2">
             <Check className="size-4" aria-hidden="true" />
@@ -144,15 +144,15 @@ export function RecipeCartActions({ linkedProducts }: RecipeCartActionsProps) {
           <section
             aria-label="부족 식재료 상품 선택"
             aria-modal="true"
-            className="bg-card mx-auto w-full max-w-[430px] rounded-t-[20px] px-4 pt-3 pb-4 shadow-2xl"
+            className="bg-card shadow-modal mx-auto w-full max-w-[var(--layout-mobile-design-frame)] rounded-t-[20px] px-4 pt-3 pb-4"
             ref={dialogRef}
             role="dialog"
           >
-            <div className="mx-auto h-1.5 w-20 rounded-full bg-[#949497]" />
+            <div className="bg-placeholder-icon mx-auto h-1.5 w-20 rounded-full" />
             <ul className="mt-4 space-y-2">
               {purchasableProducts.map((product) => (
                 <li key={product.id} className="bg-muted flex min-h-20 items-center rounded-lg p-3">
-                  <div className="grid size-[52px] shrink-0 place-items-center rounded-lg bg-[#c5c6c9] text-[#8e9094]">
+                  <div className="bg-placeholder text-placeholder-icon-subtle grid size-[52px] shrink-0 place-items-center rounded-lg">
                     <ShoppingCart className="size-5" aria-hidden="true" strokeWidth={1.5} />
                   </div>
                   <div className="min-w-0 flex-1 px-3">

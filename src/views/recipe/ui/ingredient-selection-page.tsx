@@ -38,7 +38,7 @@ export function IngredientSelectionPage() {
           >
             <ArrowLeft aria-hidden="true" className="size-5" />
           </Link>
-          <div aria-hidden="true" className="h-8 w-[180px] rounded-full bg-[#949497]" />
+          <div aria-hidden="true" className="bg-placeholder-icon h-8 w-[180px] rounded-full" />
         </div>
         <button
           aria-label="재료 검색"
@@ -77,14 +77,14 @@ export function IngredientSelectionPage() {
             >
               <span
                 aria-label={isSelected ? `${ingredient.name} 선택 취소` : `${ingredient.name} 선택`}
-                className="absolute top-0 right-0 flex size-8 items-center justify-center rounded-full bg-[#c5c6c9]"
+                className="bg-placeholder absolute top-0 right-0 flex size-8 items-center justify-center rounded-full"
               >
                 <Plus
                   aria-hidden="true"
                   className={`size-4 transition-transform ${isSelected ? 'rotate-45' : ''}`}
                 />
               </span>
-              <span className="flex size-20 items-center justify-center rounded-lg bg-[#c5c6c9] text-[#949497]">
+              <span className="bg-placeholder text-placeholder-icon flex size-20 items-center justify-center rounded-lg">
                 <ImageIcon aria-hidden="true" className="size-5" />
               </span>
               <strong className="text-body-4 mt-1 font-medium">{ingredient.name}</strong>
