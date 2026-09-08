@@ -15,3 +15,7 @@ export const recommendedSearchKeywords = [
 export function selectRecommendedKeyword(keyword: string) {
   return keyword;
 }
+
+export function preventSearchSubmit(event: { preventDefault: () => void }) {
+  event.preventDefault();
+}
