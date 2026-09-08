@@ -36,17 +36,39 @@ describe('getBottomNavigationItems', () => {
     });
   });
 
-  it('검색 탭은 검색 화면으로 연결하고, 라이브러리 탭은 비활성 상태로 유지한다', () => {
+  it('검색과 마이페이지 탭을 각 화면으로 연결한다', () => {
     const items = getBottomNavigationItems('/');
 
     expect(items.find((item) => item.id === 'search')?.href).toBe('/search');
-    expect(items.find((item) => item.id === 'library')?.href).toBeUndefined();
+    expect(items.find((item) => item.id === 'mypage')?.href).toBe('/mypage');
   });
 
-  it('비회원 홈에서는 팬트리와 라이브러리 탭을 로그인 화면으로 연결한다', () => {
+  it('비회원 홈에서는 팬트리와 마이페이지 탭을 로그인 화면으로 연결한다', () => {
     const items = getBottomNavigationItems('/', { isAuthenticated: false });
 
     expect(items.find((item) => item.id === 'pantry')?.href).toBe('/login');
-    expect(items.find((item) => item.id === 'library')?.href).toBe('/login');
+    expect(items.find((item) => item.id === 'mypage')?.href).toBe('/login');
+  });
+
+  it('마이페이지 경로에서는 filled 마이페이지 아이콘을 선택한다', () => {
+    const mypageItem = getBottomNavigationItems('/mypage').find((item) => item.id === 'mypage');
+
+    expect(mypageItem).toMatchObject({
+      href: '/mypage',
+      iconSrc: '/icons/navigation/mypage-fill.svg',
+      isActive: true,
+      label: '마이페이지',
+    });
+  });
+
+  it('마이페이지 하위 배송조회 경로에서도 마이페이지 탭을 선택 상태로 유지한다', () => {
+    const mypageItem = getBottomNavigationItems('/mypage/delivery').find(
+      (item) => item.id === 'mypage',
+    );
+
+    expect(mypageItem).toMatchObject({
+      iconSrc: '/icons/navigation/mypage-fill.svg',
+      isActive: true,
+    });
   });
 });
