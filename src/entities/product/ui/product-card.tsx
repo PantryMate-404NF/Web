@@ -22,12 +22,12 @@ export function ProductCard({ product }: ProductCardProps) {
   return product.productId ? (
     <Link
       aria-label={`${product.name} 상품 상세 보기`}
-      className="focus-visible:ring-ring w-36 shrink-0 rounded-lg focus-visible:ring-2"
+      className="focus-visible:ring-ring w-[164px] shrink-0 rounded-lg focus-visible:ring-2"
       href={`/product/${product.productId}`}
     >
       {content}
     </Link>
   ) : (
-    <article className="w-36 shrink-0">{content}</article>
+    <article className="w-[164px] shrink-0">{content}</article>
   );
 }
