@@ -1,16 +1,26 @@
 import { describe, expect, it } from 'vitest';
 
-import { getHomeMockState } from './home-page';
+import { getHomeMockState, HOME_CATEGORIES } from './home-page';
+
+describe('HOME_CATEGORIES', () => {
+  it('로그인 완료 홈에서 Figma 순서의 카테고리를 제공한다', () => {
+    expect(HOME_CATEGORIES).toEqual([
+      '오늘의 채소',
+      '베스트',
+      '간편식',
+      '계란 · 알류',
+      '쌀 · 잡곡 · 견과',
+      '돼지고기 · 소고기',
+    ]);
+  });
+});
 
 describe('getHomeMockState', () => {
-  it('supports each documented home wireframe state', () => {
-    expect(getHomeMockState('login')).toBe('login');
-    expect(getHomeMockState('onboarding')).toBe('onboarding');
-    expect(getHomeMockState('complete')).toBe('complete');
+  it('상태값이 없으면 비회원 온보딩 미완료 화면을 사용한다', () => {
+    expect(getHomeMockState()).toBe('onboarding');
   });
 
-  it('uses the completed onboarding home for an unsupported or missing state', () => {
-    expect(getHomeMockState('unknown')).toBe('complete');
-    expect(getHomeMockState()).toBe('complete');
+  it('완료 상태에서만 개인화 홈 화면을 사용한다', () => {
+    expect(getHomeMockState('complete')).toBe('complete');
   });
 });

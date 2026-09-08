@@ -41,7 +41,7 @@ export function getPantryMockState(state?: string): PantryMockState {
 
 function PantryEmptyMock() {
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-4 pt-4 pb-10">
+    <main className="mobile-page mobile-page--padded flex flex-col pt-4 pb-10">
       <header className="flex h-12 items-center justify-between">
         <h1 className="text-title-2 font-semibold">나의 팬트리</h1>
         <Button asChild size="sm">
@@ -114,7 +114,7 @@ function IngredientFormMock({ mode }: { mode: 'register' | 'edit' }) {
   }, [isCalendarOpen]);
 
   return (
-    <main className="bg-background mx-auto min-h-dvh w-full max-w-[390px] px-4 pt-4 pb-10">
+    <main className="mobile-page mobile-page--padded bg-background pt-4 pb-10">
       <header className="flex h-12 items-center justify-between">
         <Link
           aria-label="이전 페이지"

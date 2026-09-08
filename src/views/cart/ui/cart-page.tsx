@@ -15,7 +15,7 @@ export function CartPage() {
   const total = getCartTotal(items);
 
   return (
-    <main className="bg-background text-foreground mx-auto min-h-dvh w-full max-w-[430px] pb-28">
+    <main className="mobile-page bg-background text-foreground pb-28">
       <header className="flex h-20 items-center gap-1 px-4">
         <button
           aria-label="이전 페이지로 이동"
@@ -102,7 +102,7 @@ export function CartPage() {
       )}
 
       {items.length > 0 && (
-        <footer className="bg-background border-border fixed right-0 bottom-0 left-0 mx-auto w-full max-w-[430px] border-t px-4 pt-3 pb-4">
+        <footer className="bg-background border-border fixed right-0 bottom-0 left-0 mx-auto w-full max-w-[var(--layout-mobile-design-frame)] border-t px-4 pt-3 pb-4">
           <div className="text-body-4 flex items-center justify-between px-1">
             <span className="text-muted-foreground">총 {itemCount}개</span>
             <strong className="text-title-3">{total.toLocaleString()}원</strong>

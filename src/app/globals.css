@@ -179,6 +179,17 @@
   --card-border: var(--border-default);
 }
 
+/* 390px 모바일 화면은 콘텐츠 기준 폭과 좌우 16px 여백을 공통으로 사용합니다. */
+.mobile-page {
+  width: min(100%, var(--layout-mobile-design-frame));
+  min-height: 100dvh;
+  margin-inline: auto;
+}
+
+.mobile-page--padded {
+  padding-inline: var(--layout-mobile-inline-padding);
+}
+
 .dark {
   --background-primary: var(--primitive-grey-900);
   --background-secondary: var(--primitive-grey-800);
@@ -219,6 +230,7 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-text-secondary: var(--text-secondary);
   --color-border: var(--border);
   --color-ring: var(--ring);
   --color-input: var(--input);

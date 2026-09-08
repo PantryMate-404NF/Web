@@ -1,0 +1,52 @@
+/**
+ * 하단 네비게이션 항목이 현재 경로에 맞는 outline·filled 아이콘을 선택하는지 검증합니다.
+ */
+import { describe, expect, it } from 'vitest';
+
+import { BOTTOM_NAVIGATION_LAYOUT, getBottomNavigationItems } from './bottom-navigation';
+
+describe('getBottomNavigationItems', () => {
+  it('모든 탭에 아이콘·텍스트 간격 4px과 xs·medium 라벨 기준을 제공한다', () => {
+    expect(BOTTOM_NAVIGATION_LAYOUT).toEqual({
+      itemGapClassName: 'gap-1',
+      itemPaddingClassName: 'py-2',
+      labelClassName: 'text-xs font-medium',
+      navigationPaddingClassName: 'px-4',
+    });
+  });
+
+  it('현재 팬트리 경로에는 filled 아이콘을 선택한다', () => {
+    const pantryItem = getBottomNavigationItems('/pantry').find((item) => item.id === 'pantry');
+
+    expect(pantryItem).toMatchObject({
+      href: '/pantry',
+      iconSrc: '/icons/navigation/pantry-fill.svg',
+      isActive: true,
+      label: '팬트리',
+    });
+  });
+
+  it('선택되지 않은 탭에는 outline 아이콘을 선택한다', () => {
+    const recipeItem = getBottomNavigationItems('/pantry').find((item) => item.id === 'recipe');
+
+    expect(recipeItem).toMatchObject({
+      iconSrc: '/icons/navigation/recipe-line.svg',
+      isActive: false,
+      label: '레시피',
+    });
+  });
+
+  it('아직 화면이 없는 검색·라이브러리 탭에는 이동 경로를 연결하지 않는다', () => {
+    const items = getBottomNavigationItems('/');
+
+    expect(items.find((item) => item.id === 'search')?.href).toBeUndefined();
+    expect(items.find((item) => item.id === 'library')?.href).toBeUndefined();
+  });
+
+  it('비회원 홈에서는 팬트리와 라이브러리 탭을 로그인 화면으로 연결한다', () => {
+    const items = getBottomNavigationItems('/', { isAuthenticated: false });
+
+    expect(items.find((item) => item.id === 'pantry')?.href).toBe('/login');
+    expect(items.find((item) => item.id === 'library')?.href).toBe('/login');
+  });
+});
