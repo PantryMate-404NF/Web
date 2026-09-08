@@ -60,7 +60,11 @@
   --primitive-grey-050: #f3f4f4;
   --primitive-grey-100: #e4e4e7;
   --primitive-grey-200: #d4d4d8;
+  --primitive-grey-300: #c5c6c9;
+  --primitive-grey-350: #b9b9bc;
   --primitive-grey-400: #a1a1ab;
+  --primitive-grey-450: #949497;
+  --primitive-grey-475: #8e9094;
   --primitive-grey-500: #71717b;
   --primitive-grey-600: #52525c;
   --primitive-grey-700: #3f3f48;
@@ -145,6 +149,7 @@
   --text-secondary: var(--primitive-grey-600);
   --text-disabled: var(--primitive-grey-400);
   --border-default: var(--primitive-grey-200);
+  --border-subtle: var(--primitive-grey-100);
   --border-strong: var(--primitive-grey-400);
   --action-primary: var(--primitive-yellow-500);
   --action-primary-hover: var(--primitive-yellow-600);
@@ -155,6 +160,14 @@
   --status-danger: var(--primitive-red-400);
   --status-danger-hover: var(--primitive-red-500);
   --focus-ring: var(--primitive-yellow-500);
+
+  /* Low-fi placeholder and provider-specific colors. */
+  --placeholder-default: var(--primitive-grey-300);
+  --placeholder-subtle: var(--primitive-grey-350);
+  --placeholder-icon: var(--primitive-grey-450);
+  --placeholder-icon-subtle: var(--primitive-grey-475);
+  --provider-kakao: #fee500;
+  --provider-naver: #03a94d;
 
   /* Loading component tokens: matches the approved skeleton gradient. */
   --skeleton-container: #eff0f4;
@@ -219,6 +232,7 @@
 }
 
 @theme inline {
+  --spacing: var(--spacing-4);
   --font-sans: 'Pretendard', sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -232,6 +246,7 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-text-secondary: var(--text-secondary);
   --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-popover: var(--popover);
@@ -242,6 +257,16 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-overlay: var(--overlay);
   --color-skeleton-container: var(--skeleton-container);
+  --color-disabled: var(--text-disabled);
+  --color-placeholder: var(--placeholder-default);
+  --color-placeholder-subtle: var(--placeholder-subtle);
+  --color-placeholder-icon: var(--placeholder-icon);
+  --color-placeholder-icon-subtle: var(--placeholder-icon-subtle);
+  --color-provider-kakao: var(--provider-kakao);
+  --color-provider-naver: var(--provider-naver);
+  --shadow-card: var(--shadow-1);
+  --shadow-floating: var(--shadow-2);
+  --shadow-modal: var(--shadow-3);
   --text-hero: var(--typography-hero-size);
   --text-heading-1: var(--typography-h1-size);
   --text-heading-2: var(--typography-h2-size);
