@@ -26,9 +26,13 @@ function ProductInfoRow({ label, value }: ProductInfoRowProps) {
 }
 
 function ProductImage({ product }: { product: ProductDetail }) {
+  const imageLabel = product.isAvailable
+    ? `${product.name} 상품 이미지`
+    : `${product.name} 상품 이미지, 판매 중인 상품이 아니에요`;
+
   return (
     <section
-      aria-label={`${product.name} 상품 이미지`}
+      aria-label={imageLabel}
       className="bg-muted-foreground relative aspect-square w-full"
       role="img"
     >
@@ -77,19 +81,33 @@ function RelatedProducts({ id, title }: { id: string; title: string }) {
 
 function ProductSectionNavigation() {
   const items = [
-    ['상품안내', '#product-detail'],
-    ['상세정보', '#product-detail'],
-    ['리뷰', '#related-products'],
-    ['문의', '#comparison-products'],
+    { label: '상품안내', href: '#product-detail' },
+    { label: '상세정보', href: '#product-detail' },
+    { label: '리뷰' },
+    { label: '문의' },
   ];
 
   return (
     <nav aria-label="상품 상세 이동" className="flex h-10 justify-around border-b px-2">
-      {items.map(([label, href]) => (
-        <a className="flex items-center text-xs leading-[18px] font-medium" href={href} key={label}>
-          {label}
-        </a>
-      ))}
+      {items.map((item) =>
+        item.href ? (
+          <a
+            className="flex items-center text-xs leading-[18px] font-medium"
+            href={item.href}
+            key={item.label}
+          >
+            {item.label}
+          </a>
+        ) : (
+          <span
+            aria-disabled="true"
+            className="text-muted-foreground flex items-center text-xs leading-[18px] font-medium"
+            key={item.label}
+          >
+            {item.label}
+          </span>
+        ),
+      )}
     </nav>
   );
 }

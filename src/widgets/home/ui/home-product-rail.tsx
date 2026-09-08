@@ -22,7 +22,7 @@ export function HomeProductRail({ description, title }: HomeProductRailProps) {
       <div className="mt-3 flex [scrollbar-width:none] gap-2 overflow-x-auto pb-1">
         {homeProductMocks.map((product) => (
           <Link
-            aria-label={`${product} 상품 상세 보기`}
+            aria-label={`${product.name} 상품 상세 보기`}
             className="focus-visible:ring-ring w-[164px] shrink-0 rounded-lg focus-visible:ring-2"
             href={`/product/${product.id}`}
             key={product.id}

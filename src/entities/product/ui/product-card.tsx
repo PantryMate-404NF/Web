@@ -21,7 +21,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return product.productId ? (
     <Link
-      aria-label={`${product.name} 상품 상세 보기`}
+      aria-label={`${product.name}, ${product.price.toLocaleString()}원, ${product.unitPrice} 상품 상세 보기`}
       className="focus-visible:ring-ring w-[164px] shrink-0 rounded-lg focus-visible:ring-2"
       href={`/product/${product.productId}`}
     >
