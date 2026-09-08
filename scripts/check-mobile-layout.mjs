@@ -17,13 +17,33 @@ const mobileLayoutFiles = [
 ];
 
 export function findMobilePageViolations(source, filePath) {
-  const pageRoots = [...source.matchAll(/<main\s+className="([^"]*)"/g)];
+  const pageRoots = [...source.matchAll(/<main\b(?<attributes>[\s\S]*?)>/g)];
 
-  return pageRoots.flatMap(([, className]) =>
-    className.includes('mobile-page')
+  if (pageRoots.length === 0) {
+    return [`${filePath}: main 화면 루트가 없습니다.`];
+  }
+
+  return pageRoots.flatMap(({ groups }) => {
+    const attributes = groups?.attributes ?? '';
+    const className = getStaticClassName(attributes);
+
+    if (className === undefined) {
+      return [`${filePath}: mobile-page 클래스를 정적으로 확인할 수 없는 화면 루트가 있습니다.`];
+    }
+
+    return className.split(/\s+/).includes('mobile-page')
       ? []
-      : [`${filePath}: mobile-page 클래스가 없는 화면 루트가 있습니다.`],
+      : [`${filePath}: mobile-page 클래스가 없는 화면 루트가 있습니다.`];
+  });
+}
+
+/** 정적 문자열로 작성된 JSX className 속성만 추출합니다. */
+function getStaticClassName(attributes) {
+  const match = attributes.match(
+    /\bclassName\s*=\s*(?:"([^"]*)"|'([^']*)'|\{\s*["']([^"']*)["']\s*\}|\{\s*`([^`$]*)`\s*\})/,
   );
+
+  return match ? (match[1] ?? match[2] ?? match[3] ?? match[4]) : undefined;
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {

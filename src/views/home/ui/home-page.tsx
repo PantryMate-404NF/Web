@@ -54,7 +54,7 @@ function HomeContent({ hasCompletedOnboarding }: { hasCompletedOnboarding: boole
   return (
     <main className="mobile-page bg-background flex flex-col">
       <HomeHeader isAuthenticated={hasCompletedOnboarding} />
-      <div className="text-title-4 item-center flex h-11 [scrollbar-width:none] gap-4 overflow-x-auto px-4 font-medium">
+      <div className="text-title-4 flex h-11 [scrollbar-width:none] items-center gap-4 overflow-x-auto px-4 font-medium">
         {HOME_CATEGORIES.map((category) => (
           <span className="shrink-0" key={category}>
             {category}
