@@ -5,14 +5,37 @@
  */
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 import { BOTTOM_NAVIGATION_LAYOUT, getBottomNavigationItems } from '../model/bottom-navigation';
 
 export function BottomNavigation({ isAuthenticated = true }: { isAuthenticated?: boolean }) {
-  const pathname = usePathname();
-  const navigationItems = getBottomNavigationItems(pathname, { isAuthenticated });
+  const fallbackNavigationItems = getBottomNavigationItems('/', { isAuthenticated });
 
+  return (
+    <Suspense fallback={<BottomNavigationLinks navigationItems={fallbackNavigationItems} />}>
+      <BottomNavigationContent isAuthenticated={isAuthenticated} />
+    </Suspense>
+  );
+}
+
+function BottomNavigationContent({ isAuthenticated }: { isAuthenticated: boolean }) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const navigationItems = getBottomNavigationItems(pathname, {
+    isAuthenticated,
+    state: searchParams.get('state') ?? undefined,
+  });
+
+  return <BottomNavigationLinks navigationItems={navigationItems} />;
+}
+
+function BottomNavigationLinks({
+  navigationItems,
+}: {
+  navigationItems: ReturnType<typeof getBottomNavigationItems>;
+}) {
   return (
     <nav
       aria-label="주요 메뉴"
