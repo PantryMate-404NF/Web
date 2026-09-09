@@ -125,7 +125,7 @@ export function DeliveryTrackingPage() {
   return (
     <main className="mobile-page bg-background flex min-h-dvh flex-col pt-[env(safe-area-inset-top)]">
       <header className="relative flex h-16 items-center justify-center px-4">
-        <h1 className="text-lg font-semibold">배송조회</h1>
+        <h1 className="text-heading-4 font-semibold">배송조회</h1>
         <Image
           alt=""
           aria-hidden="true"
