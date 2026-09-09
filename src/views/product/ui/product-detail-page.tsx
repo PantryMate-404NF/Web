@@ -123,7 +123,7 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
     <main className="mobile-page bg-background pb-32">
       <header className="bg-background flex h-12 items-center justify-between px-4">
         <BackButton />
-        <p className="text-body-4 font-semibold">상품 상세</p>
+        <p className="text-heading-4 font-semibold">상품 상세</p>
         <Link
           aria-label="장바구니로 이동"
           className="focus-visible:ring-ring grid size-10 place-items-center rounded-full focus-visible:ring-2"

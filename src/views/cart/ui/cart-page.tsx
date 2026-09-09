@@ -57,7 +57,9 @@ export function CartPage() {
         >
           <Image alt="" className="size-6" height={24} src="/icons/cart/back.svg" width={24} />
         </button>
-        <h1 className="text-title-3 absolute left-1/2 -translate-x-1/2 font-semibold">장바구니</h1>
+        <h1 className="text-heading-4 absolute left-1/2 -translate-x-1/2 font-semibold">
+          장바구니
+        </h1>
       </header>
 
       {items.length === 0 ? (

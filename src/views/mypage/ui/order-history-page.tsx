@@ -80,7 +80,7 @@ export function OrderHistoryPage() {
     <main className="mobile-page bg-background flex min-h-dvh flex-col">
       <header className="flex h-16 items-center justify-between px-4">
         <div aria-hidden="true" className="bg-border size-10 rounded-full" />
-        <h1 className="text-lg font-semibold">나의 주문 내역</h1>
+        <h1 className="text-heading-4 font-semibold">나의 주문 내역</h1>
         <div aria-hidden="true" className="bg-border size-10 rounded-full" />
       </header>
 
