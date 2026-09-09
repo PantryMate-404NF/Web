@@ -1,7 +1,11 @@
+'use client';
+
 /** Figma 주문 내역 목업을 마이페이지의 첫 화면으로 제공합니다. */
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
+import { useCartStore } from '@/entities/cart/model/cart-store';
 import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
 
 /* 목업 데이터. 실제 연동 후 수정될 부분 */
@@ -9,10 +13,25 @@ const orders = Array.from({ length: 4 }, (_, index) => ({
   id: `20260203${index + 1}`,
   orderedAt: '2026. 02. 03',
   productName: '에콰드르산 달콤 바나나',
-  price: '3,480원',
+  price: 3480,
 }));
 
 function OrderHistoryItem({ order }: { order: (typeof orders)[number] }) {
+  const router = useRouter();
+  const addProducts = useCartStore((state) => state.addProducts);
+
+  function addOrderToCart() {
+    addProducts([
+      {
+        id: `order-product-${order.id}`,
+        ingredient: '1+1',
+        name: order.productName,
+        price: order.price,
+      },
+    ]);
+    router.push('/cart');
+  }
+
   return (
     <li className="flex flex-col gap-3">
       <div className="flex items-end justify-between gap-3">
@@ -26,7 +45,7 @@ function OrderHistoryItem({ order }: { order: (typeof orders)[number] }) {
             <p className="text-disabled text-xs leading-4 font-medium">{order.orderedAt}</p>
             <div>
               <p className="text-sm leading-5 font-medium">{order.productName}</p>
-              <p className="text-lg leading-7 font-bold">{order.price}</p>
+              <p className="text-lg leading-7 font-bold">{order.price.toLocaleString()}원</p>
             </div>
           </div>
         </div>
@@ -46,6 +65,7 @@ function OrderHistoryItem({ order }: { order: (typeof orders)[number] }) {
         </Link>
         <button
           className="border-border text-text-secondary h-9 rounded-sm border px-2 text-xs leading-5 font-medium"
+          onClick={addOrderToCart}
           type="button"
         >
           장바구니 담기
