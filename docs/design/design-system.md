@@ -17,7 +17,7 @@ Primitive token → Semantic token → Component token → 화면 컴포넌트
 | Component | `src/app/globals.css`, `src/shared/ui`     | 버튼, 카드, 입력창의 역할·상태 조합      | 공용 UI 내부에서 사용        |
 | 화면      | `src/views`, `src/widgets`, `src/features` | 도메인별 UI 조합                         | semantic 또는 공용 UI만 사용 |
 
-새 화면에서 `#FFCD55`, `#D4E59E`처럼 색상값을 직접 작성하지 않습니다. 필요한 역할이 없다면 primitive 값을 화면에 넣는 대신, semantic 또는 component 토큰을 먼저 추가하고 이 문서도 함께 갱신합니다.
+새 화면에서 `#FFCD55`, `#C2DB76`처럼 색상값을 직접 작성하지 않습니다. 필요한 역할이 없다면 primitive 값을 화면에 넣는 대신, semantic 또는 component 토큰을 먼저 추가하고 이 문서도 함께 갱신합니다.
 
 ## 색상
 
@@ -26,28 +26,33 @@ Primitive 팔레트의 실제 CSS 변수명은 `globals.css`를 기준으로 합
 | 팔레트            | 용도                            | 대표 색상             |
 | ----------------- | ------------------------------- | --------------------- |
 | Primary / Yellow  | 주요 CTA, 선택, 포커스          | `#FFCD55`             |
-| Secondary / Green | 보조 CTA, 식재료·친환경 맥락    | `#D4E59E`             |
-| Blue              | 정보성 안내·향후 정보 상태      | `#98B7E4`             |
-| Red               | 오류, 삭제, 위험 상태           | `#FFADAE`             |
-| Grey              | 텍스트, 배경, 경계선, 다크 모드 | `#1C1C1E` ~ `#F3F4F4` |
+| Secondary / Green | 보조 CTA, 식재료·친환경 맥락    | `#C2DB76`             |
+| Grey              | 텍스트, 배경, 경계선, 다크 모드 | `#1C1C1E` ~ `#FBFBFB` |
+| Success           | 성공, 완료, 긍정 상태           | `#3A9E5F`             |
+| Warning           | 주의, 임박 상태                 | `#CC7010`             |
+| Error             | 오류, 삭제, 위험 상태           | `#E04840`             |
+| Info              | 정보성 안내                     | `#3A8EC8`             |
 
 ### 현재 semantic 토큰
 
 | 의미            | 토큰                                 | 라이트 테마 값 |
 | --------------- | ------------------------------------ | -------------- |
 | 기본 배경       | `--background`                       | 흰색           |
-| 보조 배경       | `--background-secondary`             | Grey 050       |
+| 보조 배경       | `--background-secondary`             | Grey 50        |
 | 기본 텍스트     | `--foreground` / `--text-primary`    | Grey 900       |
 | 보조 텍스트     | `--text-secondary`                   | Grey 600       |
-| 기본 액션       | `--primary` / `--action-primary`     | Yellow 500     |
-| 기본 액션 hover | `--action-primary-hover`             | Yellow 600     |
-| 보조 액션       | `--secondary` / `--action-secondary` | Green 500      |
-| 보조 액션 hover | `--action-secondary-hover`           | Green 600      |
-| 위험 상태       | `--status-danger`                    | Red 400        |
-| 위험 상태 hover | `--status-danger-hover`              | Red 500        |
-| 포커스 링       | `--ring` / `--focus-ring`            | Yellow 500     |
+| 기본 액션       | `--primary` / `--action-primary`     | Primary 500    |
+| 기본 액션 hover | `--action-primary-hover`             | Primary 600    |
+| 보조 액션       | `--secondary` / `--action-secondary` | Secondary 500  |
+| 보조 액션 hover | `--action-secondary-hover`           | Secondary 600  |
+| 성공 상태       | `--status-success`                   | Success 500    |
+| 주의 상태       | `--status-warning`                   | Warning 500    |
+| 위험 상태       | `--status-danger`                    | Error 500      |
+| 정보 상태       | `--status-info`                      | Info 500       |
+| 위험 상태 hover | `--status-danger-hover`              | Error 600      |
+| 포커스 링       | `--ring` / `--focus-ring`            | Primary 500    |
 
-`Blue`는 팔레트만 등록되어 있으며 아직 확정된 정보 상태 컴포넌트가 없습니다. 정보 배너나 안내 UI가 확정되면 `--status-info`, `--status-info-hover` 같은 semantic 토큰을 추가한 뒤 사용합니다.
+상태 색상은 화면 코드에서 primitive 값을 직접 사용하지 않고 `--status-success`, `--status-warning`, `--status-danger`, `--status-info` semantic 토큰으로 사용합니다. hover 또는 active 상태가 필요한 경우 각 팔레트의 더 높은 scale을 연결합니다.
 
 ## 테마
 
