@@ -1,7 +1,7 @@
 /**
  * 하단 네비게이션의 순서·경로·현재 경로별 Figma 아이콘 상태를 정의합니다.
  */
-export type BottomNavigationItemId = 'recipe' | 'pantry' | 'home' | 'search' | 'library';
+export type BottomNavigationItemId = 'recipe' | 'pantry' | 'home' | 'search' | 'mypage';
 
 interface BottomNavigationDefinition {
   id: BottomNavigationItemId;
@@ -31,10 +31,10 @@ const navigationDefinitions: readonly BottomNavigationDefinition[] = [
   { id: 'pantry', href: '/pantry', label: '팬트리' },
   { id: 'home', href: '/', label: '홈' },
   { id: 'search', href: '/search', label: '검색' },
-  { id: 'library', label: '라이브러리' },
+  { id: 'mypage', href: '/mypage', label: '마이페이지' },
 ];
 
-const loginRequiredItemIds = new Set<BottomNavigationItemId>(['pantry', 'library']);
+const loginRequiredItemIds = new Set<BottomNavigationItemId>(['pantry', 'mypage']);
 
 function isCurrentPath(item: BottomNavigationDefinition, pathname: string): boolean {
   if (!item.href) return false;

@@ -8,7 +8,7 @@ interface RecommendedSearchKeywordsProps {
 
 export function RecommendedSearchKeywords({ onSelect }: RecommendedSearchKeywordsProps) {
   return (
-    <section className="mt-9 px-7">
+    <section className="mt-9 px-4">
       <h1 className="text-title-3 font-semibold">추천 검색어</h1>
       <div className="mt-3 flex flex-wrap gap-2">
         {recommendedSearchKeywords.map((keyword) => (

@@ -9,13 +9,13 @@ const loginProviders = [
     iconSrc: '/images/auth/kakao-logo.svg',
     label: '카카오로 시작하기',
     provider: 'kakao',
-    className: 'bg-[#fee500] text-foreground',
+    className: 'bg-provider-kakao text-foreground',
   },
   {
     iconSrc: '/images/auth/naver-logo.svg',
     label: '네이버로 시작하기',
     provider: 'naver',
-    className: 'bg-[#03a94d] text-[var(--primitive-white)]',
+    className: 'bg-provider-naver text-primary-foreground',
   },
 ] as const;
 

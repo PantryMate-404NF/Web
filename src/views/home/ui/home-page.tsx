@@ -27,7 +27,7 @@ function RecipeRail() {
   return (
     <section className="bg-muted mx-4 pt-3 pb-8">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-label-3 font-semibold">나를 위한 레시피</h2>
+        <h2 className="text-medium font-semibold">나를 위한 레시피</h2>
         <Link
           className="text-text-secondary flex items-center text-base font-medium"
           href="/recipe"
@@ -39,8 +39,8 @@ function RecipeRail() {
         {recipes.map((recipe) => (
           <Link className="w-[156px] shrink-0" href="/recipe" key={recipe}>
             <div aria-label={`${recipe} 이미지`} className="bg-border h-24 rounded-lg" role="img" />
-            <p className="text-body-4 mt-2 truncate font-semibold">{recipe}</p>
-            <p className="text-label-4 text-muted-foreground mt-1 truncate">
+            <p className="text-body-4 mt-2 font-semibold whitespace-normal">{recipe}</p>
+            <p className="text-label-4 text-muted-foreground mt-1 whitespace-normal">
               보유 재료로 맛있게 즐겨보세요.
             </p>
           </Link>
@@ -64,7 +64,7 @@ function HomeContent({ hasCompletedOnboarding }: { hasCompletedOnboarding: boole
       <div className="relative mx-4">
         <div aria-label="프로모션 배너" className="h-64 w-89 bg-gray-800" role="img" />
         {hasCompletedOnboarding ? (
-          <p className="text-label-2 bg-border text-muted-foreground shadow-1 pointer-events-none absolute bottom-[-20px] left-1/2 z-10 -translate-x-1/2 rounded-full px-5 py-2 font-medium whitespace-nowrap">
+          <p className="text-label-2 bg-border text-muted-foreground shadow-card pointer-events-none absolute bottom-[-20px] left-1/2 z-10 -translate-x-1/2 rounded-full px-5 py-2 font-medium whitespace-nowrap">
             <span
               aria-hidden="true"
               className="bg-border absolute top-[26px] left-[14px] z-0 size-4 rotate-45 rounded-[3px]"

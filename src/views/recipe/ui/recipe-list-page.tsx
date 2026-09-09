@@ -42,7 +42,7 @@ function RecipeImagePlaceholder({ className = '' }: { className?: string }) {
   return (
     <div
       aria-label="레시피 이미지 자리"
-      className={`flex items-center justify-center rounded-2xl bg-[#c5c6c9] text-[#949497] ${className}`}
+      className={`bg-placeholder text-placeholder-icon flex items-center justify-center rounded-2xl ${className}`}
       role="img"
     >
       <ImageIcon aria-hidden="true" className="size-6" />
@@ -55,17 +55,17 @@ function ExpiringRecipeCard({ recipe }: { recipe: (typeof recipeMocks)[number] }
 
   return (
     <Link
-      className="relative h-[318px] w-[234px] shrink-0 rounded-2xl bg-[#eff0f4] p-3"
+      className="bg-skeleton-container relative h-[318px] w-[234px] shrink-0 rounded-2xl p-3"
       href={`/recipe/${recipe.id}`}
     >
-      <span className="text-foreground text-label-3 inline-flex rounded-full bg-[#c5c6c9] px-4 py-1 font-medium">
+      <span className="bg-placeholder text-foreground text-label-3 inline-flex rounded-full px-4 py-1 font-medium">
         {imminentIngredient?.name ?? '식재료'} D-2
       </span>
       <RecipeImagePlaceholder className="absolute top-[62px] left-1/2 size-40 -translate-x-1/2" />
-      <p className="text-foreground text-label-4 absolute right-0 bottom-[62px] left-0 mx-auto h-[22px] w-[142px] rounded-full bg-[#949497] px-3 pt-0.5 text-center">
+      <p className="bg-placeholder-icon text-foreground text-label-4 absolute right-0 bottom-[62px] left-0 mx-auto h-[22px] w-[142px] rounded-full px-3 pt-0.5 text-center">
         {recipe.name}
       </p>
-      <p className="text-foreground text-label-4 absolute right-0 bottom-[38px] left-0 mx-auto h-4 w-[156px] rounded-full bg-[#b9b9bc] px-3 text-center">
+      <p className="bg-placeholder-subtle text-foreground text-label-4 absolute right-0 bottom-[38px] left-0 mx-auto h-4 w-[156px] rounded-full px-3 text-center">
         {recipe.cookTime} · 부족 재료 {recipe.missingCount}개
       </p>
     </Link>
@@ -76,10 +76,10 @@ function MainIngredientRecipeCard({ recipe }: { recipe: (typeof recipeMocks)[num
   return (
     <Link className="w-[176px] shrink-0" href={`/recipe/${recipe.id}`}>
       <RecipeImagePlaceholder className="h-[184px] w-full" />
-      <p className="text-foreground text-label-4 mt-1 h-5 w-[142px] max-w-full truncate rounded-full bg-[#949497] px-2 text-center">
+      <p className="bg-placeholder-icon text-foreground text-label-4 mt-1 h-5 w-[142px] max-w-full truncate rounded-full px-2 text-center">
         {recipe.name}
       </p>
-      <p className="text-foreground text-label-4 mt-1 h-4 w-full truncate rounded-full bg-[#b9b9bc] px-2 text-center">
+      <p className="bg-placeholder-subtle text-foreground text-label-4 mt-1 h-4 w-full truncate rounded-full px-2 text-center">
         {recipe.cookTime} · 부족 재료 {recipe.missingCount}개
       </p>
     </Link>
@@ -90,10 +90,10 @@ function CompactRecipeCard({ recipe }: { recipe: (typeof recipeMocks)[number] })
   return (
     <Link className="w-[156px] shrink-0" href={`/recipe/${recipe.id}`}>
       <RecipeImagePlaceholder className="h-24 w-[156px]" />
-      <p className="text-foreground text-label-4 mt-1 h-5 w-[142px] truncate rounded-full bg-[#949497] px-2 text-center">
+      <p className="bg-placeholder-icon text-foreground text-label-4 mt-1 h-5 w-[142px] truncate rounded-full px-2 text-center">
         {recipe.name}
       </p>
-      <p className="text-foreground text-label-4 mt-1 h-4 w-full truncate rounded-full bg-[#b9b9bc] px-2 text-center">
+      <p className="bg-placeholder-subtle text-foreground text-label-4 mt-1 h-4 w-full truncate rounded-full px-2 text-center">
         {recipe.category}
       </p>
     </Link>
@@ -104,7 +104,7 @@ function RecipeTabNavigation() {
   return (
     <nav
       aria-label="레시피 탭"
-      className="mx-4 flex h-12 items-center justify-between bg-[#eff0f4] p-2"
+      className="bg-skeleton-container mx-4 flex h-12 items-center justify-between p-2"
     >
       <div className="flex gap-2" role="tablist">
         <Link
@@ -137,10 +137,10 @@ function RecipeTabNavigation() {
 
 function MainIngredientSection({ recipes }: { recipes: typeof recipeMocks }) {
   return (
-    <section className="rounded-2xl bg-[#eff0f4] p-2 pb-4">
+    <section className="bg-skeleton-container rounded-2xl p-2 pb-4">
       <div className="flex h-10 items-center justify-between">
         <h1 className="text-title-3 font-semibold">주재료 레시피(임시)</h1>
-        <span aria-hidden="true" className="h-4 w-12 rounded-full bg-[#c5c6c9]" />
+        <span aria-hidden="true" className="bg-placeholder h-4 w-12 rounded-full" />
       </div>
       <div className="mt-2 flex [scrollbar-width:none] gap-2 overflow-x-auto">
         {mainIngredients.map((ingredient) => (
@@ -149,7 +149,7 @@ function MainIngredientSection({ recipes }: { recipes: typeof recipeMocks }) {
             href={getIngredientSelectionRoute()}
             key={ingredient}
           >
-            <div className="flex size-16 items-center justify-center rounded-lg bg-[#c5c6c9] text-[#949497]">
+            <div className="bg-placeholder text-placeholder-icon flex size-16 items-center justify-center rounded-lg">
               <ImageIcon aria-hidden="true" className="size-5" />
             </div>
             <span className="text-body-4 mt-1 font-medium">{ingredient}</span>
@@ -189,10 +189,10 @@ export function RecipeListPage({ tab = 'main' }: { tab?: RecipeTab }) {
 
       <div className="mt-4 flex flex-col gap-4 px-4">
         {sections.slice(1).map((section) => (
-          <section className="rounded-2xl bg-[#eff0f4] p-2 pb-4" key={section.title}>
+          <section className="bg-skeleton-container rounded-2xl p-2 pb-4" key={section.title}>
             <div className="flex h-10 items-center justify-between">
               <h2 className="text-title-3 font-semibold">{section.title}</h2>
-              <span aria-hidden="true" className="h-4 w-12 rounded-full bg-[#c5c6c9]" />
+              <span aria-hidden="true" className="bg-placeholder h-4 w-12 rounded-full" />
             </div>
             <div className="mt-2 flex [scrollbar-width:none] gap-2 overflow-x-auto">
               {section.recipes.map((recipe) => (
