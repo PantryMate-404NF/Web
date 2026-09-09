@@ -31,13 +31,7 @@ export function SearchPage() {
           <ArrowLeft aria-hidden="true" className="text-muted-foreground size-4" />
         </Link>
         <label className="bg-muted flex h-10 flex-1 items-center gap-2 rounded-lg px-4">
-          <Image
-            alt=""
-            aria-hidden="true"
-            height={24}
-            src="/images/icons/search-line.svg"
-            width={24}
-          />
+          <Image alt="" aria-hidden="true" height={24} src="/icons/search-line.svg" width={24} />
           <span className="sr-only">상품 검색</span>
           <input
             autoFocus

@@ -1,9 +1,11 @@
+import Link from 'next/link';
+
+import { homeProductMocks } from '@/entities/product/model/mock';
+
 interface HomeProductRailProps {
   description?: string;
   title: string;
 }
-
-const products = ['에버콜드산 달콤 바나나', '신선한 우유', '부드러운 두부'];
 
 export function HomeProductRail({ description, title }: HomeProductRailProps) {
   return (
@@ -18,20 +20,25 @@ export function HomeProductRail({ description, title }: HomeProductRailProps) {
         </a>
       </div>
       <div className="mt-3 flex [scrollbar-width:none] gap-2 overflow-x-auto pb-1">
-        {products.map((product) => (
-          <article className="w-[164px] shrink-0" key={product}>
+        {homeProductMocks.map((product) => (
+          <Link
+            aria-label={`${product.name} 상품 상세 보기`}
+            className="focus-visible:ring-ring w-[164px] shrink-0 rounded-lg focus-visible:ring-2"
+            href={`/product/${product.id}`}
+            key={product.id}
+          >
             <div
-              aria-label={`${product} 이미지`}
+              aria-label={`${product.name} 이미지`}
               className="bg-muted size-[164px] rounded-lg"
               role="img"
             />
-            <p className="text-muted-foreground mt-2 truncate text-sm">{product}</p>
-            <p className="mt-0.5 text-lg font-bold">3,480원</p>
-            <p className="mt-0.5 text-xs text-[#A1A1AB]">(100g당 580원)</p>
+            <p className="text-muted-foreground mt-2 truncate text-sm">{product.name}</p>
+            <p className="mt-0.5 text-lg font-bold">{product.price.toLocaleString()}원</p>
+            <p className="mt-0.5 text-xs text-[#A1A1AB]">{product.summary}</p>
             <span className="text-label-4 text-muted-foreground mt-1 inline-flex rounded border px-1.5 py-0.5">
               4만원 이상 무료배송
             </span>
-          </article>
+          </Link>
         ))}
       </div>
     </section>

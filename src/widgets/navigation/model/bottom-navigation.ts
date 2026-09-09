@@ -30,7 +30,7 @@ const navigationDefinitions: readonly BottomNavigationDefinition[] = [
   { id: 'recipe', href: '/recipe', label: '레시피' },
   { id: 'pantry', href: '/pantry', label: '팬트리' },
   { id: 'home', href: '/', label: '홈' },
-  { id: 'search', label: '검색' },
+  { id: 'search', href: '/search', label: '검색' },
   { id: 'library', label: '라이브러리' },
 ];
 
