@@ -48,3 +48,10 @@ export function getPreviousOnboardingStep(step: OnboardingStep): OnboardingStep 
 export function toggleOnboardingSelection(items: string[], item: string): string[] {
   return items.includes(item) ? items.filter((value) => value !== item) : [...items, item];
 }
+
+export function shouldRedirectCompletedOnboarding(
+  hasCompletedOnboarding: boolean,
+  isPreview: boolean,
+): boolean {
+  return hasCompletedOnboarding && !isPreview;
+}

@@ -2,7 +2,7 @@
 
 import { ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import {
   getNextOnboardingStep,
   getPreviousOnboardingStep,
   initialOnboardingAnswers,
+  shouldRedirectCompletedOnboarding,
   type OnboardingAnswers,
   type OnboardingStep,
   type TastePreference,
@@ -270,14 +271,18 @@ function TastePreferenceSelector({
 
 export function OnboardingFlow() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<OnboardingStep>(1);
   const [answers, setAnswers] = useState<OnboardingAnswers>(initialOnboardingAnswers);
+  const isPreview = searchParams.get('preview') === '1';
 
   useEffect(() => {
-    if (window.localStorage.getItem(ONBOARDING_STORAGE_KEY)) {
+    const hasCompletedOnboarding = Boolean(window.localStorage.getItem(ONBOARDING_STORAGE_KEY));
+
+    if (shouldRedirectCompletedOnboarding(hasCompletedOnboarding, isPreview)) {
       router.replace('/?state=complete');
     }
-  }, [router]);
+  }, [isPreview, router]);
 
   function toggleAnswer(key: 'allergies' | 'foodTypes' | 'favoriteFoods', value: string) {
     setAnswers((current) => ({
