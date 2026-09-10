@@ -1,4 +1,6 @@
 export const ONBOARDING_STEPS = [1, 2, 3, 4, 5] as const;
+export const NO_ALLERGY_OPTION = '없음';
+export const ONBOARDING_COMPLETION_VALUE = 'completed';
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
@@ -47,6 +49,21 @@ export function getPreviousOnboardingStep(step: OnboardingStep): OnboardingStep 
 
 export function toggleOnboardingSelection(items: string[], item: string): string[] {
   return items.includes(item) ? items.filter((value) => value !== item) : [...items, item];
+}
+
+export function toggleAllergySelection(allergies: string[], allergy: string): string[] {
+  if (allergy === NO_ALLERGY_OPTION) {
+    return allergies.includes(NO_ALLERGY_OPTION) ? [] : [NO_ALLERGY_OPTION];
+  }
+
+  return toggleOnboardingSelection(
+    allergies.filter((selectedAllergy) => selectedAllergy !== NO_ALLERGY_OPTION),
+    allergy,
+  );
+}
+
+export function normalizeOnboardingCompletionValue(value: string | null): string | null {
+  return value ? ONBOARDING_COMPLETION_VALUE : null;
 }
 
 export function shouldRedirectCompletedOnboarding(

@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { canAdvanceOnboardingStep, shouldRedirectCompletedOnboarding } from './onboarding-flow';
+import {
+  canAdvanceOnboardingStep,
+  NO_ALLERGY_OPTION,
+  normalizeOnboardingCompletionValue,
+  ONBOARDING_COMPLETION_VALUE,
+  shouldRedirectCompletedOnboarding,
+  toggleAllergySelection,
+} from './onboarding-flow';
 
 describe('canAdvanceOnboardingStep', () => {
   it('requires a household size on the first step', () => {
@@ -8,9 +15,10 @@ describe('canAdvanceOnboardingStep', () => {
     expect(canAdvanceOnboardingStep(1, { householdSize: '2인 가구' })).toBe(true);
   });
 
-  it('requires at least one allergy response on the second step', () => {
+  it('requires an allergy response or a no-allergy response on the second step', () => {
     expect(canAdvanceOnboardingStep(2, { allergies: [] })).toBe(false);
     expect(canAdvanceOnboardingStep(2, { allergies: ['우유'] })).toBe(true);
+    expect(canAdvanceOnboardingStep(2, { allergies: [NO_ALLERGY_OPTION] })).toBe(true);
   });
 
   it('allows the optional food type step to be skipped', () => {
@@ -24,6 +32,30 @@ describe('canAdvanceOnboardingStep', () => {
         favoriteFoods: ['불고기', '김치찌개', '카레라이스'],
       }),
     ).toBe(true);
+  });
+});
+
+describe('toggleAllergySelection', () => {
+  it('clears selected allergies when no allergies is selected', () => {
+    expect(toggleAllergySelection(['우유', '대두'], NO_ALLERGY_OPTION)).toEqual([
+      NO_ALLERGY_OPTION,
+    ]);
+  });
+
+  it('clears the no-allergy response when an allergy is selected', () => {
+    expect(toggleAllergySelection([NO_ALLERGY_OPTION], '우유')).toEqual(['우유']);
+  });
+});
+
+describe('onboarding completion storage', () => {
+  it('uses a non-sensitive completion sentinel value', () => {
+    expect(ONBOARDING_COMPLETION_VALUE).toBe('completed');
+  });
+
+  it('replaces a previously stored response with the completion sentinel', () => {
+    expect(normalizeOnboardingCompletionValue('{"allergies":["우유"]}')).toBe(
+      ONBOARDING_COMPLETION_VALUE,
+    );
   });
 });
 

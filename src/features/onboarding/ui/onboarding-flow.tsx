@@ -12,10 +12,14 @@ import {
   getNextOnboardingStep,
   getPreviousOnboardingStep,
   initialOnboardingAnswers,
+  NO_ALLERGY_OPTION,
+  normalizeOnboardingCompletionValue,
+  ONBOARDING_COMPLETION_VALUE,
   shouldRedirectCompletedOnboarding,
   type OnboardingAnswers,
   type OnboardingStep,
   type TastePreference,
+  toggleAllergySelection,
   toggleOnboardingSelection,
 } from '../model/onboarding-flow';
 
@@ -231,10 +235,10 @@ function TastePreferenceSelector({
   onChange: (value: number) => void;
 }) {
   return (
-    <fieldset>
-      <div className={`flex items-center ${ratingGapClassName}`}>
+    <div>
+      <fieldset className={`flex items-center ${ratingGapClassName}`}>
         <legend className="text-title-4 shrink-0 font-semibold">{name}</legend>
-        <div className="flex gap-6" role="radiogroup">
+        <div className="flex gap-6">
           {[1, 2, 3, 4, 5].map((rating) => (
             <label className="cursor-pointer" key={rating}>
               <input
@@ -259,13 +263,13 @@ function TastePreferenceSelector({
             </label>
           ))}
         </div>
-      </div>
+      </fieldset>
       <div className="mt-2 flex items-center gap-1.5">
         <span className="text-gnb shrink-0">선호하지 않아요</span>
         <Image alt="" height={19} src={scaleSrc} width={212} />
         <span className="text-gnb shrink-0">선호해요</span>
       </div>
-    </fieldset>
+    </div>
   );
 }
 
@@ -277,9 +281,14 @@ export function OnboardingFlow() {
   const isPreview = searchParams.get('preview') === '1';
 
   useEffect(() => {
-    const hasCompletedOnboarding = Boolean(window.localStorage.getItem(ONBOARDING_STORAGE_KEY));
+    const storedCompletionValue = window.localStorage.getItem(ONBOARDING_STORAGE_KEY);
+    const completionValue = normalizeOnboardingCompletionValue(storedCompletionValue);
 
-    if (shouldRedirectCompletedOnboarding(hasCompletedOnboarding, isPreview)) {
+    if (completionValue && completionValue !== storedCompletionValue) {
+      window.localStorage.setItem(ONBOARDING_STORAGE_KEY, completionValue);
+    }
+
+    if (shouldRedirectCompletedOnboarding(Boolean(completionValue), isPreview)) {
       router.replace('/?state=complete');
     }
   }, [isPreview, router]);
@@ -287,7 +296,10 @@ export function OnboardingFlow() {
   function toggleAnswer(key: 'allergies' | 'foodTypes' | 'favoriteFoods', value: string) {
     setAnswers((current) => ({
       ...current,
-      [key]: toggleOnboardingSelection(current[key], value),
+      [key]:
+        key === 'allergies'
+          ? toggleAllergySelection(current.allergies, value)
+          : toggleOnboardingSelection(current[key], value),
     }));
   }
 
@@ -312,7 +324,7 @@ export function OnboardingFlow() {
       return;
     }
 
-    window.localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(answers));
+    window.localStorage.setItem(ONBOARDING_STORAGE_KEY, ONBOARDING_COMPLETION_VALUE);
     router.replace('/?state=complete');
   }
 
@@ -367,6 +379,11 @@ export function OnboardingFlow() {
           <fieldset className="mt-10 px-7">
             <legend className="text-title-4 font-semibold">알레르기 종류</legend>
             <div className="mt-2 flex flex-wrap gap-2">
+              <SelectionChip
+                checked={answers.allergies.includes(NO_ALLERGY_OPTION)}
+                label={NO_ALLERGY_OPTION}
+                onChange={() => toggleAnswer('allergies', NO_ALLERGY_OPTION)}
+              />
               {allergyOptions.map((option) => (
                 <SelectionChip
                   checked={answers.allergies.includes(option)}
