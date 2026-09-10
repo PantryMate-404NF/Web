@@ -187,6 +187,7 @@
   --placeholder-icon-subtle: var(--primitive-placeholder-icon-subtle);
   --provider-kakao: #fee500;
   --provider-naver: #03a94d;
+  --provider-naver-foreground: var(--primitive-white);
 
   /* Loading component tokens: matches the approved skeleton gradient. */
   --skeleton-container: #eff0f4;
@@ -295,6 +296,7 @@
   --color-placeholder-icon-subtle: var(--placeholder-icon-subtle);
   --color-provider-kakao: var(--provider-kakao);
   --color-provider-naver: var(--provider-naver);
+  --color-provider-naver-foreground: var(--provider-naver-foreground);
   --shadow-card: var(--shadow-1);
   --shadow-floating: var(--shadow-2);
   --shadow-modal: var(--shadow-3);
