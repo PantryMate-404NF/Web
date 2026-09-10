@@ -6,24 +6,25 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { getMyPreferences } from '@/entities/user/api/get-my-preferences';
+import { updateMyPreferences } from '@/entities/user/api/update-my-preferences';
+import { ApiError } from '@/shared/api/api-error';
 
 import {
   canAdvanceOnboardingStep,
   getNextOnboardingStep,
   getPreviousOnboardingStep,
+  getTasteScaleGridClassName,
+  getTasteSelectionPosition,
   initialOnboardingAnswers,
   NO_ALLERGY_OPTION,
-  normalizeOnboardingCompletionValue,
-  ONBOARDING_COMPLETION_VALUE,
-  shouldRedirectCompletedOnboarding,
   type OnboardingAnswers,
   type OnboardingStep,
   type TastePreference,
   toggleAllergySelection,
   toggleOnboardingSelection,
 } from '../model/onboarding-flow';
-
-const ONBOARDING_STORAGE_KEY = 'pantrymate:onboarding';
+import { fromUserPreference, toUserPreferenceUpdateRequest } from '../model/onboarding-preference';
 
 const householdOptions = ['1인 가구', '2인 가구', '3인 가구', '5인 이상 가구'];
 
@@ -118,20 +119,20 @@ const favoriteFoodOptions = [
 const tastePreferences = [
   {
     name: '짠맛',
-    ratingGapClassName: 'gap-[46px]',
     scaleSrc: '/images/onboarding/taste-salty-scale.svg',
   },
   {
     name: '단맛',
-    ratingGapClassName: 'gap-[46px]',
     scaleSrc: '/images/onboarding/taste-sweet-scale.svg',
   },
   {
     name: '매운맛',
-    ratingGapClassName: 'gap-8',
     scaleSrc: '/images/onboarding/taste-spicy-scale.svg',
   },
 ] as const;
+
+/** 표정 척도와 오른쪽 끝 라벨 사이의 8px 여백을 유지합니다. */
+export const TASTE_SCALE_END_LABEL_CLASS_NAME = 'text-gnb whitespace-nowrap pl-2';
 
 function SelectionChip({
   checked,
@@ -223,51 +224,72 @@ function StepTitle({
 
 function TastePreferenceSelector({
   name,
-  ratingGapClassName,
   scaleSrc,
   value,
   onChange,
 }: {
   name: TastePreference;
-  ratingGapClassName: string;
   scaleSrc: string;
   value: number;
   onChange: (value: number) => void;
 }) {
+  const tasteScaleGridClassName = getTasteScaleGridClassName();
+
   return (
     <div>
-      <fieldset className={`flex items-center ${ratingGapClassName}`}>
-        <legend className="text-title-4 shrink-0 font-semibold">{name}</legend>
-        <div className="flex gap-6">
-          {[1, 2, 3, 4, 5].map((rating) => (
-            <label className="cursor-pointer" key={rating}>
-              <input
-                checked={value === rating}
-                className="sr-only"
-                name={name}
-                onChange={() => onChange(rating)}
-                type="radio"
-                value={rating}
-              />
-              <Image
-                alt={`${rating}점`}
-                className="size-6"
-                height={24}
-                src={
-                  value === rating
-                    ? '/images/onboarding/taste-selected.svg'
-                    : '/images/onboarding/taste-unselected.svg'
-                }
-                width={24}
-              />
-            </label>
-          ))}
+      <fieldset>
+        <legend className="sr-only">{name}</legend>
+        <div className={`grid ${tasteScaleGridClassName} items-center`}>
+          <span aria-hidden="true" className="text-title-4 font-semibold">
+            {name}
+          </span>
+          <div className="relative h-6 min-w-0">
+            {[1, 2, 3, 4, 5].map((rating) => (
+              <label
+                className="absolute top-0 grid size-6 -translate-x-1/2 cursor-pointer place-items-center"
+                key={rating}
+                style={{ left: getTasteSelectionPosition(rating) }}
+              >
+                <input
+                  checked={value === rating}
+                  className="sr-only"
+                  name={name}
+                  onChange={() => onChange(rating)}
+                  type="radio"
+                  value={rating}
+                />
+                <Image
+                  alt={`${rating}점`}
+                  className="size-6"
+                  height={24}
+                  src={
+                    value === rating
+                      ? '/images/onboarding/taste-selected.svg'
+                      : '/images/onboarding/taste-unselected.svg'
+                  }
+                  width={24}
+                />
+              </label>
+            ))}
+          </div>
         </div>
       </fieldset>
-      <div className="mt-2 flex items-center gap-1.5">
-        <span className="text-gnb shrink-0">선호하지 않아요</span>
-        <Image alt="" height={19} src={scaleSrc} width={212} />
-        <span className="text-gnb shrink-0">선호해요</span>
+      <div className={`mt-2 grid ${tasteScaleGridClassName} items-center`}>
+        <span className="text-gnb whitespace-nowrap">선호하지 않아요</span>
+        <div className="relative aspect-[212/19] min-w-0" aria-hidden="true">
+          <Image
+            alt=""
+            className="h-auto w-full grayscale"
+            height={19}
+            src={scaleSrc}
+            width={212}
+          />
+          <span
+            className="pointer-events-none absolute top-0 z-10 size-[19px] -translate-x-1/2 rounded-full bg-[var(--primitive-primary-400)] opacity-80 mix-blend-multiply"
+            style={{ left: getTasteSelectionPosition(value) }}
+          />
+        </div>
+        <span className={TASTE_SCALE_END_LABEL_CLASS_NAME}>선호해요</span>
       </div>
     </div>
   );
@@ -276,21 +298,47 @@ function TastePreferenceSelector({
 export function OnboardingFlow() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isPreview = searchParams.get('preview') === '1';
   const [step, setStep] = useState<OnboardingStep>(1);
   const [answers, setAnswers] = useState<OnboardingAnswers>(initialOnboardingAnswers);
-  const isPreview = searchParams.get('preview') === '1';
+  const [isLoading, setIsLoading] = useState(!isPreview);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
-    const storedCompletionValue = window.localStorage.getItem(ONBOARDING_STORAGE_KEY);
-    const completionValue = normalizeOnboardingCompletionValue(storedCompletionValue);
-
-    if (completionValue && completionValue !== storedCompletionValue) {
-      window.localStorage.setItem(ONBOARDING_STORAGE_KEY, completionValue);
+    if (isPreview) {
+      return;
     }
 
-    if (shouldRedirectCompletedOnboarding(Boolean(completionValue), isPreview)) {
-      router.replace('/?state=complete');
+    async function restoreOnboarding() {
+      try {
+        const preference = await getMyPreferences();
+
+        if (preference.onboardingCompleted) {
+          router.replace('/?state=complete');
+          return;
+        }
+
+        const restored = fromUserPreference(preference);
+        setAnswers(restored.answers);
+        setStep(restored.step);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) {
+          return;
+        }
+
+        if (error instanceof ApiError && error.status === 401) {
+          router.replace('/login');
+          return;
+        }
+
+        setSaveError('온보딩 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      } finally {
+        setIsLoading(false);
+      }
     }
+
+    void restoreOnboarding();
   }, [isPreview, router]);
 
   function toggleAnswer(key: 'allergies' | 'foodTypes' | 'favoriteFoods', value: string) {
@@ -314,28 +362,52 @@ export function OnboardingFlow() {
     router.push('/');
   }
 
-  function handleNext() {
+  async function saveOnboarding(onboardingStep: OnboardingStep, onboardingCompleted: boolean) {
+    if (isPreview) return true;
+
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      await updateMyPreferences(
+        toUserPreferenceUpdateRequest(answers, onboardingStep, onboardingCompleted),
+      );
+      return true;
+    } catch {
+      setSaveError('온보딩 정보를 저장하지 못했습니다. 다시 시도해 주세요.');
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleNext() {
     if (!canAdvanceOnboardingStep(step, answers)) return;
 
     const nextStep = getNextOnboardingStep(step);
 
     if (nextStep) {
+      if (!(await saveOnboarding(nextStep, false))) return;
       setStep(nextStep);
       return;
     }
 
-    window.localStorage.setItem(ONBOARDING_STORAGE_KEY, ONBOARDING_COMPLETION_VALUE);
+    if (!(await saveOnboarding(step, true))) return;
     router.replace('/?state=complete');
   }
 
-  function handleSkip() {
+  async function handleSkip() {
     const nextStep = getNextOnboardingStep(step);
 
-    if (nextStep) setStep(nextStep);
+    if (nextStep && (await saveOnboarding(nextStep, false))) setStep(nextStep);
   }
 
   const canAdvance = canAdvanceOnboardingStep(step, answers);
   const actionLabel = step === 5 ? '완료' : '다음';
+
+  if (isLoading) {
+    return <main className="mobile-page bg-background min-h-dvh" />;
+  }
 
   return (
     <main className="mobile-page bg-background min-h-dvh pt-[env(safe-area-inset-top)] pb-24">
@@ -462,7 +534,6 @@ export function OnboardingFlow() {
                     tastePreferences: { ...current.tastePreferences, [taste.name]: value },
                   }))
                 }
-                ratingGapClassName={taste.ratingGapClassName}
                 scaleSrc={taste.scaleSrc}
                 value={answers.tastePreferences[taste.name]}
               />
@@ -472,13 +543,18 @@ export function OnboardingFlow() {
       ) : null}
 
       <div className="fixed inset-x-0 bottom-[78px] z-10 mx-auto w-full max-w-[390px] px-4">
+        {saveError ? (
+          <p className="text-body-4 text-destructive mb-2 text-center" role="alert">
+            {saveError}
+          </p>
+        ) : null}
         <Button
           className="text-title-3 h-15 w-full rounded-md font-semibold"
-          disabled={!canAdvance}
+          disabled={!canAdvance || isSaving}
           onClick={handleNext}
           type="button"
         >
-          {actionLabel}
+          {isSaving ? '저장 중...' : actionLabel}
         </Button>
       </div>
     </main>

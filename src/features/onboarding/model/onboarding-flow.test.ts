@@ -2,12 +2,30 @@ import { describe, expect, it } from 'vitest';
 
 import {
   canAdvanceOnboardingStep,
+  getTasteScaleGridClassName,
+  getTasteSelectionPosition,
   NO_ALLERGY_OPTION,
   normalizeOnboardingCompletionValue,
   ONBOARDING_COMPLETION_VALUE,
   shouldRedirectCompletedOnboarding,
   toggleAllergySelection,
 } from './onboarding-flow';
+
+describe('getTasteSelectionPosition', () => {
+  it('maps each taste rating to the center of the shared five-column scale', () => {
+    expect(getTasteSelectionPosition(1)).toBe('4.74%');
+    expect(getTasteSelectionPosition(2)).toBe('27.39%');
+    expect(getTasteSelectionPosition(3)).toBe('49.94%');
+    expect(getTasteSelectionPosition(4)).toBe('72.48%');
+    expect(getTasteSelectionPosition(5)).toBe('95.26%');
+  });
+});
+
+describe('getTasteScaleGridClassName', () => {
+  it('shares one grid definition between the rating and expression rows', () => {
+    expect(getTasteScaleGridClassName()).toBe('grid-cols-[78px_minmax(0,1fr)_48px]');
+  });
+});
 
 describe('canAdvanceOnboardingStep', () => {
   it('requires a household size on the first step', () => {

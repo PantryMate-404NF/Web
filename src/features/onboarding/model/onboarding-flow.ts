@@ -47,6 +47,18 @@ export function getPreviousOnboardingStep(step: OnboardingStep): OnboardingStep 
   return step === 1 ? null : ((step - 1) as OnboardingStep);
 }
 
+/** 5점 척도에서 각 점의 중앙 위치를 백분율로 반환합니다. */
+export function getTasteSelectionPosition(rating: number): string {
+  const facePositions = ['4.74%', '27.39%', '49.94%', '72.48%', '95.26%'];
+
+  return facePositions[rating - 1] ?? '49.94%';
+}
+
+/** 강도 선택과 표정 척도가 공유하는 3열 레이아웃입니다. */
+export function getTasteScaleGridClassName(): string {
+  return 'grid-cols-[78px_minmax(0,1fr)_48px]';
+}
+
 export function toggleOnboardingSelection(items: string[], item: string): string[] {
   return items.includes(item) ? items.filter((value) => value !== item) : [...items, item];
 }
