@@ -4,12 +4,12 @@
  */
 import { Suspense } from 'react';
 
-import { AuthCallbackContent } from '@/features/auth/ui/auth-callback-content';
+import { AuthCallbackContent, AuthCallbackLoading } from '@/features/auth/ui/auth-callback-content';
 
 /** OAuth 콜백 기능 컴포넌트를 Suspense 경계 안에서 렌더링합니다. */
 export default function AuthCallbackPage() {
   return (
-    <Suspense fallback={<main>로그인 정보를 확인하고 있어요.</main>}>
+    <Suspense fallback={<AuthCallbackLoading />}>
       <AuthCallbackContent />
     </Suspense>
   );

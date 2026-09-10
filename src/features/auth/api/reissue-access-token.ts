@@ -1,6 +1,6 @@
 /**
- * Refresh Token 쿠키를 사용해 Access Token을 재발급받습니다.
- * 응답 토큰을 검증한 뒤 브라우저 메모리에만 보관합니다.
+ * Refresh Token 쿠키를 사용해 Access Token을 재발급받음.
+ * 응답 토큰을 검증한 뒤 브라우저 메모리에만 보관.
  */
 
 import { request } from '@/shared/api/http-client';
@@ -10,7 +10,7 @@ interface ReissueAccessTokenResponse {
   accessToken: string;
 }
 
-/** Refresh Token 쿠키로 Access Token을 재발급하고 메모리에 저장합니다. */
+/** Refresh Token 쿠키로 Access Token을 재발급하고 메모리에 저장 */
 export async function reissueAccessToken() {
   const data = await request<ReissueAccessTokenResponse>('/api/auth/reissue', {
     method: 'POST',
