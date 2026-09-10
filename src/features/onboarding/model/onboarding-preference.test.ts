@@ -51,4 +51,18 @@ describe('fromUserPreference', () => {
       step: 4,
     });
   });
+
+  it('4명으로 저장된 가구 구성원을 4인 가구 선택값으로 복원한다', () => {
+    const { answers } = fromUserPreference({
+      allergies: [],
+      familyMemberCount: 4,
+      favoriteFoods: [],
+      onboardingCompleted: false,
+      onboardingStep: 1,
+      preferredFoodTypes: [],
+      tastePreferences: null,
+    });
+
+    expect(answers.householdSize).toBe('4인 가구');
+  });
 });

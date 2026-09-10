@@ -26,7 +26,7 @@ import {
 } from '../model/onboarding-flow';
 import { fromUserPreference, toUserPreferenceUpdateRequest } from '../model/onboarding-preference';
 
-const householdOptions = ['1인 가구', '2인 가구', '3인 가구', '5인 이상 가구'];
+const householdOptions = ['1인 가구', '2인 가구', '3인 가구', '4인 가구', '5인 이상 가구'];
 
 const allergyOptions = [
   '알류(가금류)',
@@ -222,7 +222,7 @@ function StepTitle({
   );
 }
 
-function TastePreferenceSelector({
+export function TastePreferenceSelector({
   name,
   scaleSrc,
   value,
@@ -252,7 +252,7 @@ function TastePreferenceSelector({
               >
                 <input
                   checked={value === rating}
-                  className="sr-only"
+                  className="peer sr-only"
                   name={name}
                   onChange={() => onChange(rating)}
                   type="radio"
@@ -260,7 +260,7 @@ function TastePreferenceSelector({
                 />
                 <Image
                   alt={`${rating}점`}
-                  className="size-6"
+                  className="size-6 rounded-full peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--primitive-primary-700)] peer-focus-visible:ring-offset-2"
                   height={24}
                   src={
                     value === rating
@@ -406,7 +406,15 @@ export function OnboardingFlow() {
   const actionLabel = step === 5 ? '완료' : '다음';
 
   if (isLoading) {
-    return <main className="mobile-page bg-background min-h-dvh" />;
+    return (
+      <main className="mobile-page bg-background flex min-h-dvh items-center justify-center px-7">
+        <div className="w-full animate-pulse" role="status">
+          <p className="text-title-3 font-semibold">온보딩 정보를 불러오는 중입니다.</p>
+          <div className="bg-muted mt-4 h-9 w-3/5 rounded-md" />
+          <div className="bg-muted mt-3 h-28 rounded-md" />
+        </div>
+      </main>
+    );
   }
 
   return (
