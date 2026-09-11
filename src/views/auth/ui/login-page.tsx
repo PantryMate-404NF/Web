@@ -1,8 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { getSocialLoginUrl } from '../model/social-login';
-
 const loginProviders = [
   {
     iconSrc: '/images/auth/kakao-logo.svg',
@@ -43,7 +41,7 @@ export function LoginPage() {
         {loginProviders.map(({ className, iconSrc, label, provider }) => (
           <a
             className={`text-label-2 relative flex h-14 w-full items-center rounded-md px-5 font-semibold ${className}`}
-            href={getSocialLoginUrl(provider)}
+            href={`/api/auth/authorize/${provider}`}
             key={provider}
           >
             <Image alt="" className="size-5" height={20} src={iconSrc} width={20} />
