@@ -2,6 +2,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { DeliveryTrackingCopyButton } from './delivery-tracking-copy-button';
+
 const deliveryDetails = [
   ['배송일자', '2026.09.30'],
   ['택배사', 'CJ대한통운'],
@@ -112,19 +114,7 @@ function DeliveryDetails() {
               {label === '운송장번호' ? (
                 <span className="relative inline-block">
                   {value}
-                  <button
-                    aria-label="운송장번호 복사"
-                    className="absolute top-1/2 left-full ml-2 grid size-6 -translate-y-1/2 place-items-center"
-                    type="button"
-                  >
-                    <Image
-                      alt=""
-                      aria-hidden="true"
-                      height={18}
-                      src="/icons/delivery/copy.svg"
-                      width={18}
-                    />
-                  </button>
+                  <DeliveryTrackingCopyButton trackingNumber={value} />
                 </span>
               ) : (
                 value
