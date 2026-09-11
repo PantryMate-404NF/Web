@@ -1,9 +1,5 @@
-'use client';
-
 import Image from 'next/image';
 import Link from 'next/link';
-
-import { getSocialLoginUrl, type SocialLoginProvider } from '../model/social-login';
 
 const loginProviders = [
   {
@@ -21,14 +17,6 @@ const loginProviders = [
 ] as const;
 
 export function LoginPage() {
-  /**
-   * API Gateway URL은 정적 생성이 아닌 사용자 클릭 시점에 생성
-   * 브라우저 이동을 사용해야 OAuth의 302 리다이렉트와 HttpOnly state 쿠키가 정상 동작
-   */
-  function startSocialLogin(provider: SocialLoginProvider) {
-    window.location.assign(getSocialLoginUrl(provider));
-  }
-
   return (
     <main className="mobile-page mobile-page--padded bg-background min-h-dvh pt-[calc(env(safe-area-inset-top)+12px)]">
       <header className="flex h-10 justify-end">
@@ -51,15 +39,14 @@ export function LoginPage() {
 
       <div className="mt-[143px] space-y-1">
         {loginProviders.map(({ className, iconSrc, label, provider }) => (
-          <button
+          <a
             className={`text-label-2 relative flex h-14 w-full items-center rounded-md px-5 font-semibold ${className}`}
+            href={`/api/auth/authorize/${provider}`}
             key={provider}
-            onClick={() => startSocialLogin(provider)}
-            type="button"
           >
             <Image alt="" className="size-5" height={20} src={iconSrc} width={20} />
             <span className="absolute inset-0 grid place-items-center">{label}</span>
-          </button>
+          </a>
         ))}
       </div>
 
