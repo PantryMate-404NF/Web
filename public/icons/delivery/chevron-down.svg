@@ -1,12 +1,5 @@
-<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="&#236;&#155;&#144;&#236;&#155;&#144;&#236;&#155;&#144;&#236;&#155;&#144;">
-<g clip-path="url(#clip0_0_77)">
-<circle id="Ellipse 16" cx="12" cy="12" r="12" fill="#E4E4E7"/>
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Icon-Line">
+<path id="Vector (Stroke)" d="M18.048 11.048C18.3897 10.7063 18.9436 10.7063 19.2853 11.048C19.627 11.3897 19.627 11.9436 19.2853 12.2853L14.6187 16.952C14.2769 17.2937 13.7231 17.2937 13.3813 16.952L8.71468 12.2853C8.37297 11.9436 8.37297 11.3897 8.71468 11.048C9.05639 10.7063 9.61028 10.7063 9.95199 11.048L14 15.096L18.048 11.048Z" fill="#A1A1AB"/>
 </g>
-</g>
-<defs>
-<clipPath id="clip0_0_77">
-<path d="M0 12C0 5.37258 5.37258 0 12 0V0C18.6274 0 24 5.37258 24 12V12C24 18.6274 18.6274 24 12 24V24C5.37258 24 0 18.6274 0 12V12Z" fill="white"/>
-</clipPath>
-</defs>
 </svg>
