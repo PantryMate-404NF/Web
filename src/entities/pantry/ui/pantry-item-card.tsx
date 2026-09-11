@@ -1,6 +1,5 @@
-import { Image as ImageIcon, MoreHorizontal, Package } from 'lucide-react';
+import { Image as ImageIcon, MoreHorizontal, Package, Snowflake, Sun } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
 
 import type {
   ExpirationStatus,
@@ -26,52 +25,97 @@ export function getExpirationStatusLabel(status: ExpirationStatus) {
   return expirationStatusLabels[status];
 }
 
+export function getExpirationBadgeLabel(label: string, status: ExpirationStatus) {
+  if (status === 'EXPIRED') return '경과';
+  if (status === 'UNREGISTERED') return '미등록';
+  const days = label.match(/(\d+)일/)?.[1];
+  return days ? `D-${days}` : getExpirationStatusLabel(status);
+}
+
 interface PantryItemCardProps {
   item: PantryItem;
   variant?: PantryCardVariant;
+  onOptions?: (trigger: HTMLButtonElement) => void;
 }
 
-function ItemOptionsLink({ itemName }: { itemName: string }) {
+function ItemOptionsLink({
+  itemName,
+  onOptions,
+}: {
+  itemName: string;
+  onOptions?: (trigger: HTMLButtonElement) => void;
+}) {
   return (
-    <Link
+    <button
       aria-label={`${itemName} 옵션`}
-      className="flex size-6 shrink-0 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:outline-none"
-      href="/pantry?state=delete-confirm"
+      className="flex size-10 shrink-0 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:outline-none"
+      onClick={(event) => onOptions?.(event.currentTarget)}
+      type="button"
     >
-      <MoreHorizontal aria-hidden="true" className="size-4" />
-    </Link>
+      <MoreHorizontal aria-hidden="true" className="size-6" />
+    </button>
   );
 }
 
-function PantryImageCard({ item }: { item: PantryItem }) {
+function PantryImageCard({
+  item,
+  onOptions,
+}: {
+  item: PantryItem;
+  onOptions?: (trigger: HTMLButtonElement) => void;
+}) {
+  const storageLabels = { REFRIGERATED: '냉장', FROZEN: '냉동', ROOMTEMP: '실온' } as const;
+  const sourceLabel = item.registrationSource === 'PURCHASED' ? '자사몰 구매' : '사용자 등록';
+  const StorageIcon =
+    item.storageType === 'FROZEN' ? Snowflake : item.storageType === 'ROOMTEMP' ? Sun : Package;
+  const storageIconColor =
+    item.storageType === 'FROZEN'
+      ? 'text-status-info'
+      : item.storageType === 'ROOMTEMP'
+        ? 'text-status-warning'
+        : 'text-status-success';
+
   return (
-    <article className="text-foreground bg-muted flex h-[203px] min-w-0 flex-col rounded-2xl px-[5px] py-3">
-      <div className="flex items-center justify-between">
+    <article className="text-foreground bg-card shadow-card relative flex h-[156px] min-w-0 flex-col rounded-xl p-3">
+      <div className="flex items-start justify-between">
+        <div className="bg-placeholder relative size-20 overflow-hidden rounded-sm">
+          {item.imageUrl ? (
+            <Image
+              alt={item.imageAlt}
+              className="object-cover"
+              fill
+              sizes="80px"
+              src={item.imageUrl}
+            />
+          ) : (
+            <ImageIcon
+              aria-label={item.imageAlt}
+              className="text-muted-foreground absolute inset-0 m-auto size-6"
+            />
+          )}
+        </div>
         <span
-          className={`text-label-4 rounded-full px-2 py-0.5 font-medium ${expirationStatusStyles[item.expirationStatus]}`}
+          className={`flex h-5 items-center rounded-full px-2 text-xs leading-[18px] font-semibold ${item.expirationStatus === 'EXPIRED' ? 'bg-destructive/10 text-destructive' : item.expirationStatus === 'IMMINENT' ? 'bg-primary/20 text-status-warning' : 'bg-muted text-muted-foreground'}`}
         >
-          {getExpirationStatusLabel(item.expirationStatus)}
+          {getExpirationBadgeLabel(item.expirationLabel, item.expirationStatus)}
         </span>
-        <ItemOptionsLink itemName={item.name} />
       </div>
-
-      <div className="bg-placeholder relative mx-auto mt-1 flex size-[100px] items-center justify-center overflow-hidden rounded-lg">
-        {item.imageUrl ? (
-          <Image
-            alt={item.imageAlt}
-            className="object-cover"
-            fill
-            sizes="100px"
-            src={item.imageUrl}
-          />
-        ) : (
-          <ImageIcon aria-label={item.imageAlt} className="text-muted-foreground size-6" />
-        )}
+      <div className="mt-1.5 min-w-0">
+        <h2 className="truncate text-[15px] leading-[22.5px] font-semibold">{item.name}</h2>
+        <p className="text-muted-foreground mt-1 flex items-center gap-0.5 truncate text-xs leading-[18px] font-medium">
+          <span className="flex items-center gap-1.5">
+            <StorageIcon
+              aria-hidden="true"
+              className={`size-[13px] shrink-0 ${storageIconColor}`}
+            />
+            <span>{item.storageType ? storageLabels[item.storageType] : '냉장'}</span>
+          </span>
+          <span className="text-disabled">·</span>
+          <span>{sourceLabel}</span>
+        </p>
       </div>
-
-      <div className="mt-2 px-1">
-        <h2 className="text-body-4 truncate font-semibold">{item.name}</h2>
-        <p className="text-label-4 text-muted-foreground mt-1 truncate">{item.expirationLabel}</p>
+      <div className="absolute right-[-6px] bottom-[5px]">
+        <ItemOptionsLink itemName={item.name} onOptions={onOptions} />
       </div>
     </article>
   );
@@ -110,8 +154,8 @@ function PantryIconCard({ item }: { item: PantryItem }) {
   );
 }
 
-export function PantryItemCard({ item, variant = 'icon' }: PantryItemCardProps) {
-  if (variant === 'image') return <PantryImageCard item={item} />;
+export function PantryItemCard({ item, variant = 'icon', onOptions }: PantryItemCardProps) {
+  if (variant === 'image') return <PantryImageCard item={item} onOptions={onOptions} />;
 
   return <PantryIconCard item={item} />;
 }

@@ -39,6 +39,9 @@ Primitive 팔레트의 실제 CSS 변수명은 `globals.css`를 기준으로 합
 | --------------- | ------------------------------------ | -------------- |
 | 기본 배경       | `--background`                       | 흰색           |
 | 보조 배경       | `--background-secondary`             | Grey 50        |
+| 보조 표면       | `--surface-secondary`                | Grey 100       |
+| 비활성 표면     | `--surface-disabled`                 | Grey 200       |
+| 선택 표면       | `--surface-selected`                 | Primary 300    |
 | 기본 텍스트     | `--foreground` / `--text-primary`    | Grey 900       |
 | 보조 텍스트     | `--text-secondary`                   | Grey 600       |
 | 기본 액션       | `--primary` / `--action-primary`     | Primary 500    |

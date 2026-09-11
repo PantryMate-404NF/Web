@@ -32,5 +32,7 @@ export function toPantryItem(dto: PantryDto): PantryItem {
     availability: 'AVAILABLE',
     imageAlt: `${dto.ingredientName} 이미지`,
     imageUrl: dto.imageUrl ?? undefined,
+    storageType: dto.storageType,
+    createdAt: dto.createdAt,
   };
 }

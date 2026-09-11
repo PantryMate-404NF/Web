@@ -4,7 +4,15 @@ import { describe, expect, it, vi } from 'vitest';
 import { getPantryCardVariant } from '@/entities/pantry/model/types';
 import { pantryItems } from '@/entities/pantry/model/mock';
 
-import { getPantryViewState, PantryErrorState } from './pantry-page';
+import {
+  getDeleteConfirmationTitle,
+  getPantryMenuPosition,
+  getPantryViewState,
+  getVisiblePantryItems,
+  PantryDeleteDialog,
+  PantryEmptyState,
+  PantryErrorState,
+} from './pantry-page';
 
 describe('getPantryViewState', () => {
   it('returns empty when no item is available', () => {
@@ -54,6 +62,41 @@ describe('PantryErrorState', () => {
   });
 });
 
+describe('PantryEmptyState', () => {
+  it('renders the Figma empty-state image and guidance', () => {
+    const emptyState = PantryEmptyState();
+    const content = Children.toArray(emptyState.props.children);
+    const image = content[0];
+
+    expect(isValidElement<{ src?: string; width?: number; height?: number }>(image)).toBe(true);
+
+    if (!isValidElement<{ src?: string; width?: number; height?: number }>(image)) {
+      throw new Error('빈 상태 이미지를 찾을 수 없습니다.');
+    }
+
+    expect(image.props.src).toBe('/images/pantry/empty-state.png');
+    expect(image.props.width).toBe(160);
+    expect(image.props.height).toBe(160);
+    expect(emptyState.props['aria-label']).toBe('등록된 식재료 없음');
+  });
+});
+
+describe('PantryDeleteDialog', () => {
+  it('renders the Figma-sized confirmation dialog for the selected item', () => {
+    const dialog = PantryDeleteDialog({
+      itemName: '양상추',
+      onCancel: vi.fn(),
+      onConfirm: vi.fn(),
+      dialogRef: { current: null },
+    });
+
+    expect(dialog.props['aria-modal']).toBe(true);
+    expect(dialog.props.tabIndex).toBe(-1);
+    expect(dialog.props.className).toContain('w-[308px]');
+    expect(dialog.props.className).toContain('h-[212px]');
+  });
+});
+
 describe('getPantryCardVariant', () => {
   it('uses the image card variant when the comparison route requests it', () => {
     expect(getPantryCardVariant('image')).toBe('image');
@@ -61,5 +104,40 @@ describe('getPantryCardVariant', () => {
 
   it('keeps the existing icon card variant as the default', () => {
     expect(getPantryCardVariant()).toBe('icon');
+  });
+});
+
+describe('getVisiblePantryItems', () => {
+  it('applies search, storage filter, and sort together', () => {
+    const items = pantryItems.map((item, index) => ({
+      ...item,
+      createdAt: `2026-09-0${index + 1}T00:00:00Z`,
+      storageType: index < 2 ? ('REFRIGERATED' as const) : ('FROZEN' as const),
+    }));
+
+    expect(getVisiblePantryItems(items, '대', 'REFRIGERATED', 'OLDEST')).toEqual([
+      expect.objectContaining({ name: '대파' }),
+    ]);
+  });
+});
+
+describe('getDeleteConfirmationTitle', () => {
+  it('uses the correct Korean object particle', () => {
+    expect(getDeleteConfirmationTitle('대파')).toBe('대파를 삭제할까요?');
+    expect(getDeleteConfirmationTitle('양상추')).toBe('양상추를 삭제할까요?');
+    expect(getDeleteConfirmationTitle('계란')).toBe('계란을 삭제할까요?');
+  });
+});
+
+describe('getPantryMenuPosition', () => {
+  it('opens beside a left-column card and keeps a right-column menu inside the viewport', () => {
+    expect(getPantryMenuPosition({ left: 155, right: 195, top: 259 }, 390)).toEqual({
+      left: 188,
+      top: 255,
+    });
+    expect(getPantryMenuPosition({ left: 340, right: 380, top: 259 }, 390)).toEqual({
+      left: 224,
+      top: 255,
+    });
   });
 });
