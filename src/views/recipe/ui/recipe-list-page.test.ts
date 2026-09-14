@@ -71,17 +71,14 @@ describe('getRecipeSections', () => {
   });
 
   it('shows up to three registered, available imminent pantry ingredients in expiry order', () => {
-    expect(getImminentIngredients(pantryItems)).toEqual([
-      { name: '돼지고기', daysLeft: 2 },
-      { name: '대파', daysLeft: 3 },
-    ]);
+    expect(getImminentIngredients(pantryItems)).toEqual([{ name: '바나나', daysLeft: 2 }]);
   });
 
   it('prioritizes recipes using the three closest-expiring available pantry ingredients', () => {
     expect(getPantryRecipeRecommendations(pantryItems).map((recipe) => recipe.id)).toEqual([
       'kimchi-stew',
-      'pork-vegetable-stir-fry',
       'egg-potato-soup',
+      'pork-vegetable-stir-fry',
     ]);
   });
 

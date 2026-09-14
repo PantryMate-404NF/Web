@@ -16,11 +16,13 @@ export function getPantryExpirationPresentation(
   consumptionDate: string,
   today = new Date(),
 ): {
+  daysUntilExpiration: number | null;
   expirationLabel: string;
   expirationStatus: ExpirationStatus;
 } {
   if (!consumptionDate) {
     return {
+      daysUntilExpiration: null,
       expirationLabel: '소비기한 미등록',
       expirationStatus: 'UNREGISTERED',
     };
@@ -31,14 +33,23 @@ export function getPantryExpirationPresentation(
   );
 
   if (remainingDays < 0) {
-    return { expirationLabel: '소비기한 경과', expirationStatus: 'EXPIRED' };
+    return {
+      daysUntilExpiration: remainingDays,
+      expirationLabel: '소비기한 경과',
+      expirationStatus: 'EXPIRED',
+    };
   }
 
   if (remainingDays === 0) {
-    return { expirationLabel: '소비기한 오늘까지', expirationStatus: 'IMMINENT' };
+    return {
+      daysUntilExpiration: 0,
+      expirationLabel: '소비기한 오늘까지',
+      expirationStatus: 'IMMINENT',
+    };
   }
 
   return {
+    daysUntilExpiration: remainingDays,
     expirationLabel: `소비기한 ${remainingDays}일 남음`,
     expirationStatus: remainingDays <= IMMINENT_DAY_LIMIT ? 'IMMINENT' : 'NORMAL',
   };
