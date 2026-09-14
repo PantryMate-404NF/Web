@@ -3,15 +3,10 @@
  * 목록 데이터, 로딩, 오류, 재시도 기능을 Pantry 화면에 제공.
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { getPantries } from '@/entities/pantry/api/get-pantries';
-import { toPantryItem } from '@/entities/pantry/api/pantry.mapper';
+import { PANTRY_QUERY_KEY, usePantriesQuery } from '@/entities/pantry/api/use-pantries-query';
 
-export const PANTRY_QUERY_KEY = ['pantry', 'list'] as const;
+export { PANTRY_QUERY_KEY };
 
 export function usePantryQuery() {
-  return useQuery({
-    queryKey: PANTRY_QUERY_KEY,
-    queryFn: async () => (await getPantries()).map(toPantryItem),
-  });
+  return usePantriesQuery();
 }

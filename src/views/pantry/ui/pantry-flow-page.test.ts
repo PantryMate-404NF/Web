@@ -73,6 +73,7 @@ describe('getPantryExpirationPresentation', () => {
 
   it('derives the remaining days and imminent status from a consumption date', () => {
     expect(getPantryExpirationPresentation('2026-09-16', today)).toEqual({
+      daysUntilExpiration: 2,
       expirationLabel: '소비기한 2일 남음',
       expirationStatus: 'IMMINENT',
     });
@@ -80,6 +81,7 @@ describe('getPantryExpirationPresentation', () => {
 
   it('returns the unregistered state when no consumption date is selected', () => {
     expect(getPantryExpirationPresentation('', today)).toEqual({
+      daysUntilExpiration: null,
       expirationLabel: '소비기한 미등록',
       expirationStatus: 'UNREGISTERED',
     });
