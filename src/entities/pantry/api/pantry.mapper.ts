@@ -28,11 +28,13 @@ export function toPantryItem(dto: PantryDto): PantryItem {
     name: dto.ingredientName,
     expirationLabel,
     expirationStatus,
+    consumptionDate: dto.expirationDate ?? undefined,
     // Swagger에 없는 화면 전용 상태. 필요 여부를 BE와 협의해야 함.
     availability: 'AVAILABLE',
     imageAlt: `${dto.ingredientName} 이미지`,
     imageUrl: dto.imageUrl ?? undefined,
     storageType: dto.storageType,
+    registrationSource: dto.registerType,
     createdAt: dto.createdAt,
   };
 }

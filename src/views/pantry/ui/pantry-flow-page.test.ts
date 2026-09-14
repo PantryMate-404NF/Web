@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   formatPantryDate,
+  getPantryExpirationPresentation,
   getCalendarMonthCells,
   getPantryMockState,
   isIngredientFormSubmittable,
@@ -45,5 +46,23 @@ describe('getCalendarMonthCells', () => {
 describe('formatPantryDate', () => {
   it('uses the date format shown in the pantry form', () => {
     expect(formatPantryDate(2026, 8, 3)).toBe('2026-09-03');
+  });
+});
+
+describe('getPantryExpirationPresentation', () => {
+  const today = new Date('2026-09-14T12:00:00+09:00');
+
+  it('derives the remaining days and imminent status from a consumption date', () => {
+    expect(getPantryExpirationPresentation('2026-09-16', today)).toEqual({
+      expirationLabel: '소비기한 2일 남음',
+      expirationStatus: 'IMMINENT',
+    });
+  });
+
+  it('returns the unregistered state when no consumption date is selected', () => {
+    expect(getPantryExpirationPresentation('', today)).toEqual({
+      expirationLabel: '소비기한 미등록',
+      expirationStatus: 'UNREGISTERED',
+    });
   });
 });

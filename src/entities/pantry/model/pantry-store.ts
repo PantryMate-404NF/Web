@@ -23,8 +23,14 @@ export function sortPantryItems(items: PantryItem[], option: PantrySortOption): 
     }
 
     if (option === 'IMMINENT') {
-      const priority = { EXPIRED: 0, IMMINENT: 1, UNREGISTERED: 2, NORMAL: 3 };
-      return priority[left.expirationStatus] - priority[right.expirationStatus];
+      const priority = { EXPIRED: 0, IMMINENT: 1, NORMAL: 2, UNREGISTERED: 3 };
+      const statusDifference = priority[left.expirationStatus] - priority[right.expirationStatus];
+
+      if (statusDifference !== 0) return statusDifference;
+
+      return (left.consumptionDate ?? '9999-12-31').localeCompare(
+        right.consumptionDate ?? '9999-12-31',
+      );
     }
 
     return (right.createdAt ?? '').localeCompare(left.createdAt ?? '');

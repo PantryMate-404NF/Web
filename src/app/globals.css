@@ -159,6 +159,7 @@
   --surface-disabled: var(--primitive-grey-200);
   --surface-subtle: var(--primitive-primary-50);
   --surface-selected: var(--primitive-primary-300);
+  --surface-selected-foreground: var(--primitive-grey-900);
   --text-primary: var(--primitive-grey-900);
   --text-secondary: var(--primitive-grey-600);
   --text-disabled: var(--primitive-grey-400);
@@ -234,6 +235,7 @@
   --surface-disabled: var(--primitive-grey-600);
   --surface-subtle: var(--primitive-grey-700);
   --surface-selected: var(--primitive-primary-300);
+  --surface-selected-foreground: var(--primitive-grey-900);
   --text-primary: var(--primitive-grey-50);
   --text-secondary: var(--primitive-grey-200);
   --text-disabled: var(--primitive-grey-500);
@@ -275,6 +277,7 @@
   --color-surface-secondary: var(--surface-secondary);
   --color-surface-disabled: var(--surface-disabled);
   --color-surface-selected: var(--surface-selected);
+  --color-surface-selected-foreground: var(--surface-selected-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);

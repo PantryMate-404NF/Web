@@ -43,6 +43,28 @@ describe('sortPantryItems', () => {
       storageItems[0],
     ]);
   });
+
+  it('sorts items with the same status by their actual consumption date', async () => {
+    const pantryStore = await import('./pantry-' + 'store');
+    const items = [
+      {
+        ...storageItems[0],
+        id: 'later',
+        expirationStatus: 'NORMAL' as const,
+        consumptionDate: '2027-01-14',
+      },
+      {
+        ...storageItems[1],
+        id: 'sooner',
+        expirationStatus: 'NORMAL' as const,
+        consumptionDate: '2026-09-18',
+      },
+    ];
+
+    expect(
+      pantryStore.sortPantryItems(items, 'IMMINENT').map((item: PantryItem) => item.id),
+    ).toEqual(['sooner', 'later']);
+  });
 });
 
 describe('upsertPantryItem', () => {

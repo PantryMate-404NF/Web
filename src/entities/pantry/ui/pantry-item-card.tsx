@@ -65,7 +65,14 @@ function PantryImageCard({
   onOptions?: (trigger: HTMLButtonElement) => void;
 }) {
   const storageLabels = { REFRIGERATED: '냉장', FROZEN: '냉동', ROOMTEMP: '실온' } as const;
-  const sourceLabel = item.registrationSource === 'PURCHASED' ? '자사몰 구매' : '사용자 등록';
+  const sourceLabels = {
+    PURCHASED: '자사몰 구매',
+    MANUAL: '사용자 등록',
+    OCR: '영수증 등록',
+  } as const;
+  const sourceLabel = item.registrationSource
+    ? sourceLabels[item.registrationSource]
+    : '등록 출처 미확인';
   const StorageIcon =
     item.storageType === 'FROZEN' ? Snowflake : item.storageType === 'ROOMTEMP' ? Sun : Package;
   const storageIconColor =
@@ -121,7 +128,13 @@ function PantryImageCard({
   );
 }
 
-function PantryIconCard({ item }: { item: PantryItem }) {
+function PantryIconCard({
+  item,
+  onOptions,
+}: {
+  item: PantryItem;
+  onOptions?: (trigger: HTMLButtonElement) => void;
+}) {
   const availabilityLabel = item.availability === 'AVAILABLE' ? '요리 가능' : '확인 필요';
 
   return (
@@ -146,7 +159,7 @@ function PantryIconCard({ item }: { item: PantryItem }) {
           <h2 className="text-body-4 truncate font-semibold">{item.name}</h2>
           <p className="text-label-4 text-muted-foreground mt-1 truncate">{item.expirationLabel}</p>
         </div>
-        <ItemOptionsLink itemName={item.name} />
+        <ItemOptionsLink itemName={item.name} onOptions={onOptions} />
       </div>
 
       <p className="sr-only">{availabilityLabel}</p>
@@ -157,5 +170,5 @@ function PantryIconCard({ item }: { item: PantryItem }) {
 export function PantryItemCard({ item, variant = 'icon', onOptions }: PantryItemCardProps) {
   if (variant === 'image') return <PantryImageCard item={item} onOptions={onOptions} />;
 
-  return <PantryIconCard item={item} />;
+  return <PantryIconCard item={item} onOptions={onOptions} />;
 }

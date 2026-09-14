@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { getPantryExpirationPresentation } from '@/entities/pantry/model/expiration';
 import { getPantryCardVariant } from '@/entities/pantry/model/types';
 import type { PantryStorageType } from '@/entities/pantry/model/types';
 import { usePantryStore } from '@/entities/pantry/model/pantry-store';
@@ -16,9 +17,12 @@ export type PantryMockState =
   'empty' | 'full' | 'loading' | 'delivery-complete' | 'register' | 'edit' | 'delete-confirm';
 
 interface PantryFlowPageProps {
+  itemId?: string;
   state?: string;
   view?: string;
 }
+
+export { getPantryExpirationPresentation } from '@/entities/pantry/model/expiration';
 
 export function getPantryMockState(state?: string): PantryMockState {
   if (
@@ -57,17 +61,17 @@ export function formatPantryDate(year: number, monthIndex: number, day: number) 
   return `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-function IngredientFormMock({ mode }: { mode: 'register' | 'edit' }) {
+function IngredientFormMock({ mode, itemId }: { mode: 'register' | 'edit'; itemId?: string }) {
   const router = useRouter();
   const items = usePantryStore((state) => state.items);
   const upsertItem = usePantryStore((state) => state.upsertItem);
-  const editingItem = mode === 'edit' ? items[0] : undefined;
+  const editingItem = mode === 'edit' ? items.find((item) => item.id === itemId) : undefined;
   const [ingredientName, setIngredientName] = useState(editingItem?.name ?? '');
   const [storageType, setStorageType] = useState<PantryStorageType | null>(
     editingItem?.storageType ?? null,
   );
-  const [expirationDate, setExpirationDate] = useState(editingItem ? '2026-09-18' : '');
-  const [consumptionDate, setConsumptionDate] = useState(editingItem ? '2026-09-18' : '');
+  const [expirationDate, setExpirationDate] = useState(editingItem?.expirationDate ?? '');
+  const [consumptionDate, setConsumptionDate] = useState(editingItem?.consumptionDate ?? '');
   const [activeDateField, setActiveDateField] = useState<'expiration' | 'consumption'>(
     'expiration',
   );
@@ -77,21 +81,26 @@ function IngredientFormMock({ mode }: { mode: 'register' | 'edit' }) {
   const calendarDialogRef = useRef<HTMLElement>(null);
   const calendarTriggerRef = useRef<HTMLButtonElement | null>(null);
   const isEdit = mode === 'edit';
-  const canSubmit = isIngredientFormSubmittable(ingredientName, storageType);
+  const canSubmit =
+    isIngredientFormSubmittable(ingredientName, storageType) && (!isEdit || Boolean(editingItem));
   const calendarCells = getCalendarMonthCells(visibleMonth.year, visibleMonth.monthIndex);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canSubmit || !storageType) return;
+    if (!canSubmit || !storageType || (isEdit && !editingItem)) return;
+
+    const expirationPresentation = getPantryExpirationPresentation(consumptionDate);
 
     upsertItem({
       id: editingItem?.id ?? `manual-${Date.now()}`,
       name: ingredientName.trim(),
-      expirationLabel: '소비기한 8일 남음',
-      expirationStatus: 'NORMAL',
+      ...expirationPresentation,
+      expirationDate: expirationDate || undefined,
+      consumptionDate: consumptionDate || undefined,
       availability: 'AVAILABLE',
       imageAlt: `${ingredientName.trim()} 이미지`,
       storageType,
+      registrationSource: editingItem?.registrationSource ?? 'MANUAL',
       createdAt: editingItem?.createdAt ?? new Date().toISOString(),
       imageUrl: editingItem?.imageUrl,
     });
@@ -422,7 +431,7 @@ function IngredientFormMock({ mode }: { mode: 'register' | 'edit' }) {
                       aria-pressed={day === selectedDay}
                       className={
                         day === selectedDay
-                          ? 'bg-surface-selected grid size-9 shrink-0 place-items-center rounded-full'
+                          ? 'bg-surface-selected text-surface-selected-foreground grid size-9 shrink-0 place-items-center rounded-full'
                           : index % 7 === 0
                             ? 'text-status-danger grid size-9 shrink-0 place-items-center rounded-full'
                             : index % 7 === 6
@@ -518,13 +527,13 @@ function DeleteConfirmSheet() {
   );
 }
 
-export function PantryFlowPage({ state, view }: PantryFlowPageProps) {
+export function PantryFlowPage({ itemId, state, view }: PantryFlowPageProps) {
   const mockState = getPantryMockState(state);
   const cardVariant = getPantryCardVariant(view);
 
   if (mockState === 'empty') return <PantryPage items={[]} />;
   if (mockState === 'register' || mockState === 'edit')
-    return <IngredientFormMock mode={mockState} />;
+    return <IngredientFormMock itemId={itemId} mode={mockState} />;
 
   if (mockState === 'loading') return <PantryPage cardVariant={cardVariant} isLoading />;
 

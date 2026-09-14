@@ -131,6 +131,15 @@ export function PantryEmptyState() {
   );
 }
 
+export function PantryFilterEmptyState() {
+  return (
+    <section aria-live="polite" className="text-muted-foreground px-4 pt-24 text-center">
+      <h2 className="text-title-4 font-semibold">조건에 맞는 식재료가 없어요</h2>
+      <p className="text-body-4 mt-2">검색어나 보관 방법을 다시 확인해 주세요.</p>
+    </section>
+  );
+}
+
 interface PantryDeleteDialogProps {
   itemName: string;
   onCancel: () => void;
@@ -203,6 +212,7 @@ export function PantryPage({
   const menuRef = useRef<HTMLDivElement>(null);
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const deleteDialogRef = useRef<HTMLElement>(null);
+  const addItemLinkRef = useRef<HTMLAnchorElement>(null);
   const visibleItems = getVisiblePantryItems(currentItems, query, storage, sort);
   const viewState = getPantryViewState({ items: currentItems, errorMessage, isLoading });
 
@@ -315,7 +325,7 @@ export function PantryPage({
             asChild
             className="ml-[18px] h-10 w-[107px] shrink-0 justify-start gap-0 rounded-sm px-2 has-[>svg]:px-2"
           >
-            <Link href="/pantry?state=register">
+            <Link href="/pantry?state=register" ref={addItemLinkRef}>
               <Plus className="size-6" />
               재료 추가
             </Link>
@@ -339,7 +349,7 @@ export function PantryPage({
         </button>
         {isSortOpen ? (
           <div className="bg-card absolute top-10 right-0 z-20 w-[134px] space-y-4 rounded-xl p-4 shadow-[0_4px_4px_rgb(26_26_26/16%),0_0_2px_rgb(26_26_26/12%)]">
-            {(['IMMINENT', 'OLDEST'] as const).map((option) => (
+            {(['RECENT', 'IMMINENT', 'OLDEST'] as const).map((option) => (
               <button
                 className="text-label-2 block w-full text-left font-medium"
                 key={option}
@@ -376,6 +386,8 @@ export function PantryPage({
 
       {viewState === 'empty' ? (
         <PantryEmptyState />
+      ) : visibleItems.length === 0 ? (
+        <PantryFilterEmptyState />
       ) : (
         <section
           aria-label="팬트리 식재료 목록"
@@ -392,7 +404,7 @@ export function PantryPage({
                   getPantryMenuPosition(trigger.getBoundingClientRect(), window.innerWidth),
                 );
               }}
-              variant="image"
+              variant={cardVariant}
             />
           ))}
         </section>
@@ -455,6 +467,7 @@ export function PantryPage({
             onConfirm={() => {
               removeItems([deleteItem.id]);
               setDeleteItem(null);
+              requestAnimationFrame(() => addItemLinkRef.current?.focus());
             }}
           />
         </div>
