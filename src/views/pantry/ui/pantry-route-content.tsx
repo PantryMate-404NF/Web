@@ -4,9 +4,7 @@
  */
 'use client';
 
-import { getPantryCardVariant } from '@/entities/pantry/model/types';
-import { usePantryQuery } from '@/views/pantry/model/use-pantry-query';
-
+import { usePantryQuery } from '../model/use-pantry-query';
 import { PantryPage } from './pantry-page';
 
 interface PantryRouteContentProps {
@@ -14,15 +12,19 @@ interface PantryRouteContentProps {
 }
 
 export function PantryRouteContent({ view }: PantryRouteContentProps) {
-  const { data = [], error, isPending, refetch } = usePantryQuery();
+  const { data, error, isPending, refetch } = usePantryQuery();
+  const errorMessage =
+    error instanceof Error ? error.message : error ? '팬트리를 불러오지 못했어요.' : undefined;
 
   return (
     <PantryPage
-      cardVariant={getPantryCardVariant(view)}
-      errorMessage={error instanceof Error ? error.message : undefined}
+      cardVariant={view === 'icon' ? 'icon' : 'image'}
+      errorMessage={errorMessage}
       isLoading={isPending}
-      items={data}
-      onRetry={() => void refetch()}
+      items={data ?? []}
+      onRetry={() => {
+        void refetch();
+      }}
     />
   );
 }

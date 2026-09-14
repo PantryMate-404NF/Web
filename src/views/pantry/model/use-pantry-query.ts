@@ -7,10 +7,11 @@ import { useQuery } from '@tanstack/react-query';
 import { getPantries } from '@/entities/pantry/api/get-pantries';
 import { toPantryItem } from '@/entities/pantry/api/pantry.mapper';
 
+export const PANTRY_QUERY_KEY = ['pantry', 'list'] as const;
+
 export function usePantryQuery() {
   return useQuery({
-    queryKey: ['pantry', 'list'],
-    queryFn: getPantries,
-    select: (items) => items.map(toPantryItem),
+    queryKey: PANTRY_QUERY_KEY,
+    queryFn: async () => (await getPantries()).map(toPantryItem),
   });
 }

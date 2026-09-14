@@ -25,9 +25,11 @@ describe('toPantryItem', () => {
 
     expect(item).toMatchObject({
       id: '1',
+      consumptionDate: '2026-09-10',
       expirationStatus: 'IMMINENT',
       expirationLabel: '소비기한 2일 남음',
       imageUrl: undefined,
+      registrationSource: 'MANUAL',
     });
   });
 
