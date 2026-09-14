@@ -12,8 +12,8 @@ import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
 const orders = Array.from({ length: 4 }, (_, index) => ({
   id: `20260203${index + 1}`,
   orderedAt: '2026. 02. 03',
-  productName: '에콰드르산 달콤 바나나',
-  price: 3480,
+  productName: '완전방사 무항생제 유정란',
+  price: 6700,
 }));
 
 function OrderHistoryItem({ order }: { order: (typeof orders)[number] }) {
