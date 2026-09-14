@@ -16,8 +16,8 @@ describe('RecipeActionIcon', () => {
 
     expect(markup).toContain('lucide-bookmark');
     expect(markup).not.toContain('<button');
-    expect(markup).toContain('style="right:10px"');
-    expect(markup).toContain('bg-card/80');
+    expect(markup).toContain('right:10px');
+    expect(markup).toContain('background-color:var(--surface-default)');
   });
 
   it('renders an expiration-imminent alert card when the pantry has imminent ingredients', () => {

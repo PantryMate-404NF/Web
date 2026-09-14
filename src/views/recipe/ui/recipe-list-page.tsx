@@ -335,8 +335,8 @@ export function RecipeCard({ recipe, rank }: { recipe: Recipe; rank?: number }) 
       </Link>
       <span
         aria-label="레시피 저장 상태"
-        className="bg-card/80 absolute top-2 grid size-8 place-items-center rounded-full"
-        style={{ right: 10 }}
+        className="absolute top-2 grid size-8 place-items-center rounded-full"
+        style={{ backgroundColor: 'var(--surface-default)', right: 10 }}
       >
         <Bookmark aria-hidden="true" className="size-4" strokeWidth={1.8} />
       </span>
