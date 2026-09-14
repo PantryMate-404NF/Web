@@ -16,7 +16,7 @@ describe('RecipeActionIcon', () => {
 
     expect(markup).toContain('lucide-bookmark');
     expect(markup).not.toContain('<button');
-    expect(markup).toContain('right-2.5');
+    expect(markup).toContain('style="right:10px"');
     expect(markup).toContain('bg-card/80');
   });
 
