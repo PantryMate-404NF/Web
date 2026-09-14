@@ -1,6 +1,7 @@
 import { ChefHat, ChevronLeft, Clock3, Heart, Package } from 'lucide-react';
 import Link from 'next/link';
 
+import { IngredientAvailabilityBadge } from '@/entities/pantry/ui/ingredient-availability-badge';
 import { getRecipeById } from '@/entities/recipe/model/mock';
 import { RecipeCartActions } from '@/features/recipe-cart/ui/recipe-cart-actions';
 
@@ -13,11 +14,15 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
   const owned = recipe.ingredients.filter((ingredient) => ingredient.isOwned);
   const missing = recipe.ingredients.filter((ingredient) => !ingredient.isOwned);
   const visibleIngredients = owned.slice(0, 3);
-  const statusChips = [
-    owned.length === recipe.ingredients.length ? '전체 보유' : '일부 보유',
-    owned.some((ingredient) => ingredient.isImminent) ? '기한 임박' : null,
-    missing.length > 0 ? `식재료 ${missing.length}개 부족` : null,
-  ].filter(Boolean);
+  const availabilityStatus =
+    owned.length === recipe.ingredients.length
+      ? 'all-owned'
+      : owned.length === 0
+        ? 'none'
+        : 'partially-owned';
+  const hasImminentIngredient = owned.some((ingredient) => ingredient.isImminent);
+  const shortageLabel =
+    missing.length > 0 && owned.length > 0 ? `식재료 ${missing.length}개 부족` : null;
 
   return (
     <main className="mobile-page bg-background text-foreground pb-28">
@@ -53,14 +58,13 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
             </button>
           </div>
           <div className="mt-4 flex flex-wrap gap-1.5">
-            {statusChips.map((status) => (
-              <span
-                className="bg-muted text-label-4 rounded-full px-2.5 py-1 font-medium"
-                key={status}
-              >
-                {status}
+            <IngredientAvailabilityBadge status={availabilityStatus} />
+            {hasImminentIngredient ? <IngredientAvailabilityBadge status="imminent" /> : null}
+            {shortageLabel ? (
+              <span className="bg-muted text-label-4 rounded-full px-2.5 py-1 font-medium">
+                {shortageLabel}
               </span>
-            ))}
+            ) : null}
           </div>
         </section>
 

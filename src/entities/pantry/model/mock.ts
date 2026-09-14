@@ -4,6 +4,7 @@ export const pantryItems: PantryItem[] = [
   {
     id: 'sugar',
     name: '설탕',
+    daysUntilExpiration: 122,
     expirationLabel: '소비기한 122일 남음',
     expirationStatus: 'NORMAL',
     consumptionDate: '2027-01-14',
@@ -17,6 +18,7 @@ export const pantryItems: PantryItem[] = [
   {
     id: 'green-onion',
     name: '대파',
+    daysUntilExpiration: 14,
     expirationLabel: '소비기한 14일 남음',
     expirationStatus: 'NORMAL',
     consumptionDate: '2026-09-28',
@@ -30,6 +32,7 @@ export const pantryItems: PantryItem[] = [
   {
     id: 'tomato',
     name: '토마토',
+    daysUntilExpiration: 5,
     expirationLabel: '소비기한 5일 남음',
     expirationStatus: 'NORMAL',
     consumptionDate: '2026-09-19',
@@ -43,6 +46,7 @@ export const pantryItems: PantryItem[] = [
   {
     id: 'olive-oil',
     name: '올리브유',
+    daysUntilExpiration: 30,
     expirationLabel: '소비기한 30일 남음',
     expirationStatus: 'NORMAL',
     consumptionDate: '2026-10-14',
@@ -56,6 +60,7 @@ export const pantryItems: PantryItem[] = [
   {
     id: 'dumpling',
     name: '만두',
+    daysUntilExpiration: 10,
     expirationLabel: '소비기한 10일 남음',
     expirationStatus: 'NORMAL',
     consumptionDate: '2026-09-24',
@@ -69,6 +74,7 @@ export const pantryItems: PantryItem[] = [
   {
     id: 'pork',
     name: '돼지고기',
+    daysUntilExpiration: 4,
     expirationLabel: '소비기한 4일 남음',
     expirationStatus: 'NORMAL',
     consumptionDate: '2026-09-18',
@@ -82,6 +88,7 @@ export const pantryItems: PantryItem[] = [
   {
     id: 'banana',
     name: '바나나',
+    daysUntilExpiration: 2,
     expirationLabel: '소비기한 2일 남음',
     expirationStatus: 'IMMINENT',
     consumptionDate: '2026-09-16',
@@ -95,6 +102,7 @@ export const pantryItems: PantryItem[] = [
   {
     id: 'lettuce',
     name: '양상추',
+    daysUntilExpiration: -1,
     expirationLabel: '소비기한 경과',
     expirationStatus: 'EXPIRED',
     consumptionDate: '2026-09-13',
@@ -108,6 +116,7 @@ export const pantryItems: PantryItem[] = [
   {
     id: 'bread',
     name: '식빵',
+    daysUntilExpiration: -2,
     expirationLabel: '소비기한 경과',
     expirationStatus: 'EXPIRED',
     consumptionDate: '2026-09-12',
@@ -121,6 +130,7 @@ export const pantryItems: PantryItem[] = [
   {
     id: 'leaf-lettuce',
     name: '상추',
+    daysUntilExpiration: -3,
     expirationLabel: '소비기한 경과',
     expirationStatus: 'EXPIRED',
     consumptionDate: '2026-09-11',
