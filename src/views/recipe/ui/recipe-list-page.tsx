@@ -335,7 +335,7 @@ export function RecipeCard({ recipe, rank }: { recipe: Recipe; rank?: number }) 
       </Link>
       <span
         aria-label="레시피 저장 상태"
-        className="absolute top-2 right-2.5 grid size-8 place-items-center rounded-full bg-white/80"
+        className="bg-card/80 absolute top-2 right-2.5 grid size-8 place-items-center rounded-full"
       >
         <Bookmark aria-hidden="true" className="size-4" strokeWidth={1.8} />
       </span>
@@ -385,7 +385,7 @@ export function ImminentIngredientChips({
     <div className="flex flex-wrap gap-1">
       {ingredients.map((ingredient) => (
         <span
-          className={`flex items-center gap-1 rounded-full border bg-white px-3 py-1 text-[13px] leading-5 font-medium ${
+          className={`bg-card flex items-center gap-1 rounded-full border px-3 py-1 text-[13px] leading-5 font-medium ${
             showAlert
               ? 'border-[var(--primitive-primary-400)]'
               : 'border-[var(--primitive-grey-300)]'

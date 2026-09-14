@@ -17,6 +17,7 @@ describe('RecipeActionIcon', () => {
     expect(markup).toContain('lucide-bookmark');
     expect(markup).not.toContain('<button');
     expect(markup).toContain('right-2.5');
+    expect(markup).toContain('bg-card/80');
   });
 
   it('renders an expiration-imminent alert card when the pantry has imminent ingredients', () => {
@@ -42,6 +43,7 @@ describe('RecipeActionIcon', () => {
     expect(markup).toContain('D-5');
     expect(markup).not.toContain('기한 임박 식재료가 있어요!');
     expect(markup).toContain('border-[var(--primitive-grey-300)]');
+    expect(markup).toContain('bg-card');
   });
 
   it('renders the grey-600 chevron used by recipe action links', () => {
