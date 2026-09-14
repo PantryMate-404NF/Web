@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   formatPantryDate,
+  getCalendarSelection,
   getPantryExpirationPresentation,
   getCalendarMonthCells,
   getPantryMockState,
@@ -49,8 +50,26 @@ describe('formatPantryDate', () => {
   });
 });
 
+describe('getCalendarSelection', () => {
+  const fallbackDate = new Date(2026, 8, 14, 12);
+
+  it('uses the active field date for the visible month and selected day', () => {
+    expect(getCalendarSelection('2026-10-20', fallbackDate)).toEqual({
+      selectedDay: 20,
+      visibleMonth: { year: 2026, monthIndex: 9 },
+    });
+  });
+
+  it('uses an explicit fallback date when the active field is empty', () => {
+    expect(getCalendarSelection('', fallbackDate)).toEqual({
+      selectedDay: 14,
+      visibleMonth: { year: 2026, monthIndex: 8 },
+    });
+  });
+});
+
 describe('getPantryExpirationPresentation', () => {
-  const today = new Date('2026-09-14T12:00:00+09:00');
+  const today = new Date(2026, 8, 14, 12);
 
   it('derives the remaining days and imminent status from a consumption date', () => {
     expect(getPantryExpirationPresentation('2026-09-16', today)).toEqual({

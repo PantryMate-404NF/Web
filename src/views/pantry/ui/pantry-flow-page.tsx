@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, ChevronLeft } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -8,9 +9,10 @@ import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { getPantryExpirationPresentation } from '@/entities/pantry/model/expiration';
+import { upsertPantryItem, usePantryStore } from '@/entities/pantry/model/pantry-store';
 import { getPantryCardVariant } from '@/entities/pantry/model/types';
-import type { PantryStorageType } from '@/entities/pantry/model/types';
-import { usePantryStore } from '@/entities/pantry/model/pantry-store';
+import type { PantryItem, PantryStorageType } from '@/entities/pantry/model/types';
+import { PANTRY_QUERY_KEY, usePantryQuery } from '@/views/pantry/model/use-pantry-query';
 import { PantryPage } from '@/views/pantry/ui/pantry-page';
 
 export type PantryMockState =
@@ -61,11 +63,30 @@ export function formatPantryDate(year: number, monthIndex: number, day: number) 
   return `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-function IngredientFormMock({ mode, itemId }: { mode: 'register' | 'edit'; itemId?: string }) {
+export function getCalendarSelection(date: string, fallbackDate = new Date()) {
+  const [year, month, day] = date.split('-').map(Number);
+  const hasValidDate = Boolean(year && month && day);
+  const selectedDate = hasValidDate ? new Date(year, month - 1, day) : fallbackDate;
+
+  return {
+    selectedDay: selectedDate.getDate(),
+    visibleMonth: { year: selectedDate.getFullYear(), monthIndex: selectedDate.getMonth() },
+  };
+}
+
+interface IngredientFormMockProps {
+  itemId?: string;
+  items?: PantryItem[];
+  mode: 'register' | 'edit';
+}
+
+function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
   const router = useRouter();
-  const items = usePantryStore((state) => state.items);
+  const queryClient = useQueryClient();
+  const storedItems = usePantryStore((state) => state.items);
   const upsertItem = usePantryStore((state) => state.upsertItem);
-  const editingItem = mode === 'edit' ? items.find((item) => item.id === itemId) : undefined;
+  const currentItems = items ?? storedItems;
+  const editingItem = mode === 'edit' ? currentItems.find((item) => item.id === itemId) : undefined;
   const [ingredientName, setIngredientName] = useState(editingItem?.name ?? '');
   const [storageType, setStorageType] = useState<PantryStorageType | null>(
     editingItem?.storageType ?? null,
@@ -75,8 +96,9 @@ function IngredientFormMock({ mode, itemId }: { mode: 'register' | 'edit'; itemI
   const [activeDateField, setActiveDateField] = useState<'expiration' | 'consumption'>(
     'expiration',
   );
-  const [visibleMonth, setVisibleMonth] = useState({ year: 2026, monthIndex: 8 });
-  const [selectedDay, setSelectedDay] = useState(30);
+  const initialCalendarSelection = getCalendarSelection('');
+  const [visibleMonth, setVisibleMonth] = useState(initialCalendarSelection.visibleMonth);
+  const [selectedDay, setSelectedDay] = useState(initialCalendarSelection.selectedDay);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const calendarDialogRef = useRef<HTMLElement>(null);
   const calendarTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -91,7 +113,7 @@ function IngredientFormMock({ mode, itemId }: { mode: 'register' | 'edit'; itemI
 
     const expirationPresentation = getPantryExpirationPresentation(consumptionDate);
 
-    upsertItem({
+    const nextItem: PantryItem = {
       id: editingItem?.id ?? `manual-${Date.now()}`,
       name: ingredientName.trim(),
       ...expirationPresentation,
@@ -103,8 +125,26 @@ function IngredientFormMock({ mode, itemId }: { mode: 'register' | 'edit'; itemI
       registrationSource: editingItem?.registrationSource ?? 'MANUAL',
       createdAt: editingItem?.createdAt ?? new Date().toISOString(),
       imageUrl: editingItem?.imageUrl,
-    });
+    };
+
+    upsertItem(nextItem);
+    queryClient.setQueryData<PantryItem[]>(PANTRY_QUERY_KEY, (cachedItems) =>
+      upsertPantryItem(cachedItems ?? currentItems, nextItem),
+    );
     router.push('/pantry');
+  }
+
+  function openCalendar(
+    field: 'expiration' | 'consumption',
+    date: string,
+    trigger: HTMLButtonElement,
+  ) {
+    const selection = getCalendarSelection(date);
+    calendarTriggerRef.current = trigger;
+    setActiveDateField(field);
+    setVisibleMonth(selection.visibleMonth);
+    setSelectedDay(selection.selectedDay);
+    setIsCalendarOpen(true);
   }
 
   function closeCalendar() {
@@ -235,9 +275,7 @@ function IngredientFormMock({ mode, itemId }: { mode: 'register' | 'edit'; itemI
               aria-label="유통기한 선택"
               className="bg-surface-secondary text-title-4 focus-visible:ring-ring flex h-[52px] w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2"
               onClick={(event) => {
-                calendarTriggerRef.current = event.currentTarget;
-                setActiveDateField('expiration');
-                setIsCalendarOpen(true);
+                openCalendar('expiration', expirationDate, event.currentTarget);
               }}
               type="button"
             >
@@ -263,9 +301,7 @@ function IngredientFormMock({ mode, itemId }: { mode: 'register' | 'edit'; itemI
               aria-label="소비기한 선택"
               className="bg-surface-secondary text-title-4 focus-visible:ring-ring flex h-[52px] w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2"
               onClick={(event) => {
-                calendarTriggerRef.current = event.currentTarget;
-                setActiveDateField('consumption');
-                setIsCalendarOpen(true);
+                openCalendar('consumption', consumptionDate, event.currentTarget);
               }}
               type="button"
             >
@@ -527,13 +563,33 @@ function DeleteConfirmSheet() {
   );
 }
 
+function EditIngredientForm({ itemId }: { itemId?: string }) {
+  const { data, error, isPending, refetch } = usePantryQuery();
+
+  if (isPending) return <PantryPage isLoading items={[]} />;
+
+  if (error) {
+    return (
+      <PantryPage
+        errorMessage={error instanceof Error ? error.message : '팬트리를 불러오지 못했어요.'}
+        items={[]}
+        onRetry={() => {
+          void refetch();
+        }}
+      />
+    );
+  }
+
+  return <IngredientFormMock itemId={itemId} items={data ?? []} mode="edit" />;
+}
+
 export function PantryFlowPage({ itemId, state, view }: PantryFlowPageProps) {
   const mockState = getPantryMockState(state);
   const cardVariant = getPantryCardVariant(view);
 
   if (mockState === 'empty') return <PantryPage items={[]} />;
-  if (mockState === 'register' || mockState === 'edit')
-    return <IngredientFormMock itemId={itemId} mode={mockState} />;
+  if (mockState === 'register') return <IngredientFormMock mode="register" />;
+  if (mockState === 'edit') return <EditIngredientForm itemId={itemId} />;
 
   if (mockState === 'loading') return <PantryPage cardVariant={cardVariant} isLoading />;
 

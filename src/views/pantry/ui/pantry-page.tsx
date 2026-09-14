@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, ChevronLeft, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -9,6 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   filterPantryItems,
+  removePantryItems,
   sortPantryItems,
   usePantryStore,
 } from '@/entities/pantry/model/pantry-store';
@@ -20,6 +22,7 @@ import type {
 } from '@/entities/pantry/model/types';
 import { PantryItemCard } from '@/entities/pantry/ui/pantry-item-card';
 import type { DataViewState } from '@/shared/model/ui-state';
+import { PANTRY_QUERY_KEY } from '@/views/pantry/model/use-pantry-query';
 import { PantryLoadingSkeleton } from '@/widgets/pantry-list/ui/pantry-loading-skeleton';
 
 type PantryViewState = Extract<DataViewState, 'content' | 'empty' | 'error' | 'loading'>;
@@ -199,6 +202,7 @@ export function PantryPage({
   isLoading = false,
   onRetry,
 }: PantryPageProps) {
+  const queryClient = useQueryClient();
   const storedItems = usePantryStore((state) => state.items);
   const removeItems = usePantryStore((state) => state.removeItems);
   const currentItems = items ?? storedItems;
@@ -465,7 +469,11 @@ export function PantryPage({
             itemName={deleteItem.name}
             onCancel={closeDeleteDialog}
             onConfirm={() => {
-              removeItems([deleteItem.id]);
+              const deletedItemId = deleteItem.id;
+              removeItems([deletedItemId]);
+              queryClient.setQueryData<PantryItem[]>(PANTRY_QUERY_KEY, (cachedItems) =>
+                removePantryItems(cachedItems ?? currentItems, [deletedItemId]),
+              );
               setDeleteItem(null);
               requestAnimationFrame(() => addItemLinkRef.current?.focus());
             }}
