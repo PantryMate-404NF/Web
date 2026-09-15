@@ -5,7 +5,6 @@ import { pathToFileURL } from 'node:url';
 const mobileLayoutFiles = [
   'src/views/cart/ui/cart-page.tsx',
   'src/views/auth/ui/login-page.tsx',
-  'src/views/cooking/ui/cooking-complete-page.tsx',
   'src/views/home/ui/home-page.tsx',
   'src/views/mypage/ui/delivery-tracking-page.tsx',
   'src/views/mypage/ui/order-history-page.tsx',
