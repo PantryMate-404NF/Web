@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { getPostAuthenticationRoute, getStateFreeHref } from './auth-session';
+import {
+  getApplicableRestoreState,
+  getPostAuthenticationRoute,
+  getStateFreeHref,
+} from './auth-session';
 
 describe('getPostAuthenticationRoute', () => {
   it('온보딩 완료 사용자는 상태 쿼리 없이 홈 루트로 이동한다', () => {
@@ -23,5 +27,15 @@ describe('getStateFreeHref', () => {
     expect(getStateFreeHref('/pantry', new URLSearchParams('state=edit&id=pantry-1'))).toBe(
       '/pantry?state=edit&id=pantry-1',
     );
+  });
+});
+
+describe('getApplicableRestoreState', () => {
+  it('명시적 완료 처리 뒤에 끝난 이전 세션 복구 결과는 적용하지 않는다', () => {
+    expect(getApplicableRestoreState(0, 1, 'onboarding')).toBeNull();
+  });
+
+  it('현재 revision의 세션 복구 결과는 적용한다', () => {
+    expect(getApplicableRestoreState(1, 1, 'complete')).toBe('complete');
   });
 });
