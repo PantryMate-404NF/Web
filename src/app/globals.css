@@ -160,9 +160,12 @@
   --surface-subtle: var(--primitive-primary-50);
   --surface-selected: var(--primitive-primary-300);
   --surface-selected-foreground: var(--primitive-grey-900);
+  --surface-inverse: var(--primitive-grey-800);
   --text-primary: var(--primitive-grey-900);
   --text-secondary: var(--primitive-grey-600);
+  --text-tertiary: var(--primitive-grey-500);
   --text-disabled: var(--primitive-grey-400);
+  --text-inverse: var(--primitive-white);
   --border-default: var(--primitive-grey-200);
   --border-subtle: var(--primitive-grey-100);
   --border-strong: var(--primitive-grey-400);
@@ -214,6 +217,8 @@
   --button-secondary-background: var(--action-secondary);
   --card-background: var(--surface-default);
   --card-border: var(--border-default);
+  --home-recipe-background: var(--primitive-primary-100);
+  --surface-reminder: #fef9e9;
 }
 
 /* 390px 모바일 화면은 콘텐츠 기준 폭과 좌우 16px 여백을 공통으로 사용합니다. */
@@ -236,9 +241,12 @@
   --surface-subtle: var(--primitive-grey-700);
   --surface-selected: var(--primitive-primary-300);
   --surface-selected-foreground: var(--primitive-grey-900);
+  --surface-inverse: var(--primitive-grey-50);
   --text-primary: var(--primitive-grey-50);
   --text-secondary: var(--primitive-grey-200);
+  --text-tertiary: var(--primitive-grey-300);
   --text-disabled: var(--primitive-grey-500);
+  --text-inverse: var(--primitive-grey-900);
   --border-default: var(--primitive-grey-700);
   --border-strong: var(--primitive-grey-500);
   --action-primary: var(--primitive-primary-500);
@@ -265,6 +273,8 @@
     var(--primitive-grey-600) 40.408%,
     var(--primitive-grey-500) 80.027%
   );
+  --home-recipe-background: var(--primitive-grey-700);
+  --surface-reminder: var(--primitive-grey-800);
 }
 
 @theme inline {
@@ -278,6 +288,7 @@
   --color-surface-disabled: var(--surface-disabled);
   --color-surface-selected: var(--surface-selected);
   --color-surface-selected-foreground: var(--surface-selected-foreground);
+  --color-surface-inverse: var(--surface-inverse);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -285,6 +296,8 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-inverse: var(--text-inverse);
   --color-border: var(--border);
   --color-border-subtle: var(--border-subtle);
   --color-ring: var(--ring);

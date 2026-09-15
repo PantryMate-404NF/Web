@@ -1,44 +1,84 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
-import { homeProductMocks } from '@/entities/product/model/mock';
+import type { HomeProductItem } from '../model/home-content';
+import { HomeSectionHeading } from './home-section-heading';
 
 interface HomeProductRailProps {
-  description?: string;
+  description: string;
+  items: HomeProductItem[];
+  productNameTone: 'primary' | 'secondary';
   title: string;
 }
 
-export function HomeProductRail({ description, title }: HomeProductRailProps) {
+export function HomeProductRail({
+  description,
+  items,
+  productNameTone,
+  title,
+}: HomeProductRailProps) {
   return (
-    <section className="px-4">
-      <div className="flex items-baseline justify-between">
-        <div>
-          <h2 className="text-lg leading-7 font-semibold">{title}</h2>
-          {description ? <p className="text-medium text-disabled mt-0.5">{description}</p> : null}
-        </div>
-        <a className="text-text-secondary text-base font-medium" href="#more">
-          더보기 <span aria-hidden="true">›</span>
-        </a>
+    <section className="pl-4">
+      <div className="pr-0">
+        <HomeSectionHeading
+          description={description}
+          descriptionTone="tertiary"
+          href="/search"
+          title={title}
+        />
       </div>
-      <div className="mt-3 flex [scrollbar-width:none] gap-2 overflow-x-auto pb-1">
-        {homeProductMocks.map((product) => (
-          <Link
-            aria-label={`${product.name} 상품 상세 보기`}
-            className="focus-visible:ring-ring w-[164px] shrink-0 rounded-lg focus-visible:ring-2"
-            href={`/product/${product.id}`}
-            key={product.id}
-          >
-            <div
-              aria-label={`${product.name} 이미지`}
-              className="bg-muted size-[164px] rounded-lg"
-              role="img"
-            />
-            <p className="text-muted-foreground mt-2 truncate text-sm">{product.name}</p>
-            <p className="mt-0.5 text-lg font-bold">{product.price.toLocaleString()}원</p>
-            <p className="text-disabled mt-0.5 text-xs">{product.summary}</p>
-            <span className="text-label-4 text-muted-foreground mt-1 inline-flex rounded border px-1.5 py-0.5">
-              4만원 이상 무료배송
-            </span>
-          </Link>
+      <div className="mt-3 flex [scrollbar-width:none] gap-2 overflow-x-auto">
+        {items.map((product) => (
+          <article className="w-[164px] shrink-0" key={product.id}>
+            <div className="relative size-[164px]">
+              <Link
+                aria-describedby={`${product.id}-price ${product.id}-unit`}
+                aria-label={`${product.name} 상품 상세 보기`}
+                className="focus-visible:ring-ring relative block size-full rounded-lg focus-visible:ring-2"
+                href={`/product/${product.id}`}
+              >
+                <Image
+                  alt=""
+                  aria-hidden="true"
+                  className="rounded-lg object-cover"
+                  fill
+                  sizes="164px"
+                  src={product.imageSrc}
+                />
+              </Link>
+              <span
+                aria-hidden="true"
+                className="bg-background/80 absolute top-2 right-2 grid size-8 place-items-center rounded-full"
+              >
+                <Image
+                  alt=""
+                  aria-hidden="true"
+                  height={16}
+                  src="/icons/home/product-cart.svg"
+                  width={16}
+                />
+              </span>
+            </div>
+            <Link className="mt-2 block" href={`/product/${product.id}`}>
+              <span
+                className={`${productNameTone === 'primary' ? 'text-foreground' : 'text-text-secondary'} block truncate text-sm leading-[21px] font-medium`}
+              >
+                {product.name}
+              </span>
+              <strong className="text-title-3 block font-bold" id={`${product.id}-price`}>
+                {product.price.toLocaleString()}원
+              </strong>
+              <span
+                className="text-disabled block text-xs leading-[18px]"
+                id={`${product.id}-unit`}
+              >
+                {product.unit}
+              </span>
+              <span className="mt-2 inline-flex h-5 items-center rounded px-2 text-xs leading-[18px] [background:var(--primitive-primary-300)]">
+                4만원 이상 무료배송
+              </span>
+            </Link>
+          </article>
         ))}
       </div>
     </section>
