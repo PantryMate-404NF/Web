@@ -166,6 +166,7 @@
   --text-tertiary: var(--primitive-grey-500);
   --text-disabled: var(--primitive-grey-400);
   --text-inverse: var(--primitive-white);
+  --media-foreground: var(--primitive-white);
   --border-default: var(--primitive-grey-200);
   --border-subtle: var(--primitive-grey-100);
   --border-strong: var(--primitive-grey-400);
@@ -247,6 +248,7 @@
   --text-tertiary: var(--primitive-grey-300);
   --text-disabled: var(--primitive-grey-500);
   --text-inverse: var(--primitive-grey-900);
+  --media-foreground: var(--primitive-white);
   --border-default: var(--primitive-grey-700);
   --border-strong: var(--primitive-grey-500);
   --action-primary: var(--primitive-primary-500);
@@ -298,6 +300,7 @@
   --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--text-tertiary);
   --color-text-inverse: var(--text-inverse);
+  --color-media-foreground: var(--media-foreground);
   --color-border: var(--border);
   --color-border-subtle: var(--border-subtle);
   --color-ring: var(--ring);

@@ -1,9 +1,11 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { HOME_BANNERS, getNextHomeBannerIndex } from '../model/home-banner';
+import type { HomeBanner } from '../model/home-banner';
 
 function FarmBanner() {
   return (
@@ -100,9 +102,27 @@ function SpringBanner() {
   );
 }
 
+function HomeBannerVisual({ banner }: { banner: HomeBanner }) {
+  if (banner.kind === 'farm') return <FarmBanner />;
+  if (banner.kind === 'spring') return <SpringBanner />;
+
+  return (
+    <Image
+      alt=""
+      aria-hidden="true"
+      className="object-cover"
+      fill
+      priority
+      sizes="(max-width: 430px) 100vw, 390px"
+      src={banner.imageSrc ?? ''}
+    />
+  );
+}
+
 export function HomePromotionCarousel() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const activeBanner = HOME_BANNERS[activeIndex] ?? HOME_BANNERS[0];
 
   useEffect(() => {
     if (isPaused) return;
@@ -116,11 +136,11 @@ export function HomePromotionCarousel() {
 
   return (
     <section
-      aria-label={HOME_BANNERS[activeIndex].label}
+      aria-label={activeBanner.label}
       aria-roledescription="carousel"
       className="relative h-64 w-full overflow-hidden"
     >
-      {activeIndex === 0 ? <FarmBanner /> : <SpringBanner />}
+      <HomeBannerVisual banner={activeBanner} />
       <div className="absolute right-[18px] bottom-[18px] flex items-center gap-2.5">
         <button
           aria-label={isPaused ? '배너 자동 전환 재생' : '배너 자동 전환 일시정지'}
@@ -131,21 +151,18 @@ export function HomePromotionCarousel() {
         >
           <Image alt="" aria-hidden="true" height={24} src="/icons/home/pause.svg" width={24} />
         </button>
-        <button
-          aria-label="다음 배너 보기"
-          className="bg-background/80 text-text-secondary focus-visible:ring-ring flex h-9 items-center rounded-full pl-5 focus-visible:ring-2"
-          onClick={() =>
-            setActiveIndex((current) => getNextHomeBannerIndex(current, HOME_BANNERS.length))
-          }
-          type="button"
-        >
+        <div className="bg-background/80 text-text-secondary flex h-9 items-center rounded-full pl-5">
           <span className="text-[15px] leading-[23px] font-medium">
             {activeIndex + 1} <span className="text-disabled">/ {HOME_BANNERS.length}</span>
           </span>
-          <span className="grid size-9 place-items-center">
+          <Link
+            aria-label="프로모션 전체 보기"
+            className="focus-visible:ring-ring grid size-9 place-items-center rounded-full focus-visible:ring-2"
+            href="/promotion"
+          >
             <Image alt="" aria-hidden="true" height={24} src="/icons/home/plus.svg" width={24} />
-          </span>
-        </button>
+          </Link>
+        </div>
       </div>
     </section>
   );
