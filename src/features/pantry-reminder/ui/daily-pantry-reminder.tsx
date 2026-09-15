@@ -107,6 +107,10 @@ interface DailyPantryReminderProps {
   isEligible: boolean;
 }
 
+export function focusInitialDialogControl(closeButtonRef: RefObject<HTMLButtonElement | null>) {
+  closeButtonRef.current?.focus();
+}
+
 export function DailyPantryReminder({ forceOpen = false, isEligible }: DailyPantryReminderProps) {
   const isPreviewEnabled = isPantryReminderPreviewEnabled(process.env.NODE_ENV, forceOpen);
   const [isOpen, setIsOpen] = useState(isPreviewEnabled);
@@ -159,7 +163,9 @@ export function DailyPantryReminder({ forceOpen = false, isEligible }: DailyPant
     if (!isOpen) return;
 
     previousFocusRef.current ??= document.activeElement as HTMLElement | null;
-    const animationFrame = window.requestAnimationFrame(() => dialogRef.current?.focus());
+    const animationFrame = window.requestAnimationFrame(() =>
+      focusInitialDialogControl(closeButtonRef),
+    );
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();

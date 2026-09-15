@@ -7,6 +7,7 @@ import {
   getOnboardingHref,
   HomeCategoryNavigation,
   HOME_CATEGORIES,
+  HomePage,
 } from './home-page';
 
 describe('HOME_CATEGORIES', () => {
@@ -49,5 +50,21 @@ describe('getOnboardingHref', () => {
   it('비회원은 로그인으로, 로그인한 미완료 사용자는 온보딩으로 이동시킨다', () => {
     expect(getOnboardingHref('guest')).toBe('/login');
     expect(getOnboardingHref('onboarding')).toBe('/onboarding');
+  });
+});
+
+describe('360px 홈 레이아웃', () => {
+  it('추천 툴팁의 폭을 화면 안으로 제한한다', () => {
+    const markup = renderToStaticMarkup(createElement(HomePage, { state: 'complete' }));
+
+    expect(markup).toContain('left-1/2');
+    expect(markup).toContain('max-w-[calc(100%-2rem)]');
+  });
+
+  it('온보딩 문구 영역이 CTA를 밀어내지 않도록 축소된다', () => {
+    const markup = renderToStaticMarkup(createElement(HomePage, { state: 'onboarding' }));
+
+    expect(markup).toContain('min-w-0 flex-1');
+    expect(markup).toContain('truncate');
   });
 });

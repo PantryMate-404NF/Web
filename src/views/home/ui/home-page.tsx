@@ -50,7 +50,7 @@ export function HomeCategoryNavigation() {
 
 function RecommendationTooltip() {
   return (
-    <p className="bg-surface-inverse text-text-inverse shadow-card pointer-events-none absolute top-[239px] left-[98px] z-10 flex w-[269px] items-center justify-center rounded-full px-5 py-2 text-base leading-6 font-medium whitespace-nowrap">
+    <p className="bg-surface-inverse text-text-inverse shadow-card pointer-events-none absolute top-[239px] left-1/2 z-10 flex w-[269px] max-w-[calc(100%-2rem)] -translate-x-1/2 items-center justify-center rounded-full px-5 py-2 text-base leading-6 font-medium whitespace-nowrap min-[390px]:left-[98px] min-[390px]:translate-x-0">
       <span
         aria-hidden="true"
         className="bg-surface-inverse absolute top-[26px] left-[14px] size-4 rotate-45 rounded-[3px]"
@@ -63,8 +63,8 @@ function RecommendationTooltip() {
 function OnboardingPrompt({ href }: { href: string }) {
   return (
     <section className="mx-4 mt-4 flex h-22 items-center gap-4 rounded-xl p-4 [background:var(--primitive-secondary-300)]">
-      <div className="flex h-15 shrink-0 flex-col items-start gap-0.5">
-        <h2 className="text-title-4 font-bold [color:var(--primitive-secondary-800)]">
+      <div className="flex h-15 min-w-0 flex-1 flex-col items-start gap-0.5">
+        <h2 className="text-title-4 w-full truncate font-bold [color:var(--primitive-secondary-800)]">
           나를 위한 레시피를 찾아볼까요?
         </h2>
         <p className="text-sm leading-[21px] font-medium [color:var(--primitive-secondary-700)]">

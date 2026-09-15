@@ -1,7 +1,7 @@
 import { Children, isValidElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { PantryReminderDialog } from './daily-pantry-reminder';
+import { focusInitialDialogControl, PantryReminderDialog } from './daily-pantry-reminder';
 
 describe('PantryReminderDialog', () => {
   it('피그마 크기와 접근 가능한 대화상자 의미를 제공한다', () => {
@@ -18,5 +18,15 @@ describe('PantryReminderDialog', () => {
 
     const actions = Children.toArray(dialog.props.children).at(-1);
     expect(isValidElement(actions)).toBe(true);
+  });
+});
+
+describe('focusInitialDialogControl', () => {
+  it('대화상자가 열리면 닫기 버튼에 초기 포커스를 이동한다', () => {
+    const focus = vi.fn();
+
+    focusInitialDialogControl({ current: { focus } as unknown as HTMLButtonElement });
+
+    expect(focus).toHaveBeenCalledOnce();
   });
 });

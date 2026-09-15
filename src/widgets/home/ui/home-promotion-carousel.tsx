@@ -119,10 +119,17 @@ function HomeBannerVisual({ banner }: { banner: HomeBanner }) {
   );
 }
 
+export function getCarouselPlaybackControl(isPaused: boolean) {
+  return isPaused
+    ? { iconSrc: '/icons/home/play.svg', label: '배너 자동 전환 재생' }
+    : { iconSrc: '/icons/home/pause.svg', label: '배너 자동 전환 일시정지' };
+}
+
 export function HomePromotionCarousel() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const activeBanner = HOME_BANNERS[activeIndex] ?? HOME_BANNERS[0];
+  const playbackControl = getCarouselPlaybackControl(isPaused);
 
   useEffect(() => {
     if (isPaused) return;
@@ -143,13 +150,12 @@ export function HomePromotionCarousel() {
       <HomeBannerVisual banner={activeBanner} />
       <div className="absolute right-[18px] bottom-[18px] flex items-center gap-2.5">
         <button
-          aria-label={isPaused ? '배너 자동 전환 재생' : '배너 자동 전환 일시정지'}
-          aria-pressed={isPaused}
+          aria-label={playbackControl.label}
           className="bg-background/80 focus-visible:ring-ring grid size-9 place-items-center rounded-full focus-visible:ring-2"
           onClick={() => setIsPaused((paused) => !paused)}
           type="button"
         >
-          <Image alt="" aria-hidden="true" height={24} src="/icons/home/pause.svg" width={24} />
+          <Image alt="" aria-hidden="true" height={24} src={playbackControl.iconSrc} width={24} />
         </button>
         <div className="bg-background/80 text-text-secondary flex h-9 items-center rounded-full pl-5">
           <span className="text-[15px] leading-[23px] font-medium">
