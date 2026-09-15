@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 
 import { MockProvider } from '@/mocks/mock-provider';
+import { AuthSessionProvider } from '@/features/auth/ui/auth-session-provider';
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -12,7 +13,9 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <MockProvider>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthSessionProvider>{children}</AuthSessionProvider>
+      </QueryClientProvider>
     </MockProvider>
   );
 }

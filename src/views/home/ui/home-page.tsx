@@ -1,6 +1,9 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 import { HOME_PRODUCT_SECTIONS } from '@/widgets/home/model/home-content';
 import { HomeHeader } from '@/widgets/home/ui/home-header';
 import { HomeProductRail } from '@/widgets/home/ui/home-product-rail';
@@ -24,7 +27,11 @@ export const HOME_CATEGORIES = [
 export type HomeMockState = 'guest' | 'onboarding' | 'complete';
 
 /** 목업에서 로그인·온보딩 완료 여부에 따라 홈 화면을 구분합니다. */
-export function getHomeMockState(state?: string): HomeMockState {
+export function getHomeMockState(
+  state?: string,
+  restoredSessionState?: Exclude<HomeMockState, 'guest'>,
+): HomeMockState {
+  if (restoredSessionState) return restoredSessionState;
   if (state === 'complete' || state === 'onboarding') return state;
   return 'guest';
 }
@@ -102,7 +109,7 @@ function HomeContent({
 
   return (
     <main className="mobile-page bg-background flex min-h-dvh flex-col overflow-x-clip">
-      <HomeHeader isAuthenticated={isAuthenticated} isOnboardingComplete={hasCompletedOnboarding} />
+      <HomeHeader isAuthenticated={isAuthenticated} />
       <HomeCategoryNavigation />
       <div className="relative">
         <HomePromotionCarousel />
@@ -120,7 +127,7 @@ function HomeContent({
           <HomeProductRail key={section.id} {...section} />
         ))}
       </div>
-      <BottomNavigation isAuthenticated={isAuthenticated} />
+      <BottomNavigation />
       {hasCompletedOnboarding ? <HomePantryReminder forceOpen={forceReminder} /> : null}
     </main>
   );
@@ -133,7 +140,13 @@ export function HomePage({
   forceReminder?: boolean;
   state?: string;
 }) {
-  const homeState = getHomeMockState(state);
+  const { state: sessionState } = useAuthSession();
+  const restoredSessionState =
+    sessionState === 'complete' || sessionState === 'onboarding' ? sessionState : undefined;
+  const homeState = getHomeMockState(
+    sessionState === 'loading' ? state : undefined,
+    restoredSessionState,
+  );
 
   return <HomeContent forceReminder={forceReminder} homeState={homeState} />;
 }

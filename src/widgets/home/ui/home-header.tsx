@@ -3,14 +3,10 @@ import Link from 'next/link';
 
 interface HomeHeaderProps {
   isAuthenticated?: boolean;
-  isOnboardingComplete?: boolean;
 }
 
-export function HomeHeader({
-  isAuthenticated = true,
-  isOnboardingComplete = false,
-}: HomeHeaderProps) {
-  const myPageHref = isOnboardingComplete ? '/mypage?state=complete' : '/mypage';
+export function HomeHeader({ isAuthenticated = true }: HomeHeaderProps) {
+  const myPageHref = '/mypage';
 
   return (
     <header className="flex h-16 items-center justify-between pr-4 pl-6">

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { getMyPreferences } from '@/entities/user/api/get-my-preferences';
 import { updateMyPreferences } from '@/entities/user/api/update-my-preferences';
 import { ApiError } from '@/shared/api/api-error';
+import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 
 import {
   canAdvanceOnboardingStep,
@@ -297,6 +298,7 @@ export function TastePreferenceSelector({
 
 export function OnboardingFlow() {
   const router = useRouter();
+  const { setAuthenticatedState } = useAuthSession();
   const searchParams = useSearchParams();
   const isPreview = searchParams.get('preview') === '1';
   const [step, setStep] = useState<OnboardingStep>(1);
@@ -315,7 +317,8 @@ export function OnboardingFlow() {
         const preference = await getMyPreferences();
 
         if (preference.onboardingCompleted) {
-          router.replace('/?state=complete');
+          setAuthenticatedState('complete');
+          router.replace('/');
           return;
         }
 
@@ -339,7 +342,7 @@ export function OnboardingFlow() {
     }
 
     void restoreOnboarding();
-  }, [isPreview, router]);
+  }, [isPreview, router, setAuthenticatedState]);
 
   function toggleAnswer(key: 'allergies' | 'foodTypes' | 'favoriteFoods', value: string) {
     setAnswers((current) => ({
@@ -393,7 +396,8 @@ export function OnboardingFlow() {
     }
 
     if (!(await saveOnboarding(step, true))) return;
-    router.replace('/?state=complete');
+    setAuthenticatedState('complete');
+    router.replace('/');
   }
 
   async function handleSkip() {
