@@ -1,9 +1,14 @@
-import { ChevronRight } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 
-import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
+import { HOME_PRODUCT_SECTIONS } from '@/widgets/home/model/home-content';
 import { HomeHeader } from '@/widgets/home/ui/home-header';
 import { HomeProductRail } from '@/widgets/home/ui/home-product-rail';
+import { HomePromotionCarousel } from '@/widgets/home/ui/home-promotion-carousel';
+import { HomeRecipeRail } from '@/widgets/home/ui/home-recipe-rail';
+import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
+
+import { HomePantryReminder } from './home-pantry-reminder';
 
 export const HOME_CATEGORIES = [
   '오늘의 채소',
@@ -12,86 +17,123 @@ export const HOME_CATEGORIES = [
   '계란 · 알류',
   '쌀 · 잡곡 · 견과',
   '돼지고기 · 소고기',
+  '생선 · 해산물 · 건어물',
+  '소스 · 양념',
 ] as const;
 
-export type HomeMockState = 'onboarding' | 'complete';
+export type HomeMockState = 'guest' | 'onboarding' | 'complete';
 
 /** 목업에서 로그인·온보딩 완료 여부에 따라 홈 화면을 구분합니다. */
 export function getHomeMockState(state?: string): HomeMockState {
-  return state === 'complete' ? 'complete' : 'onboarding';
+  if (state === 'complete' || state === 'onboarding') return state;
+  return 'guest';
 }
 
-function RecipeRail() {
-  const recipes = ['간장 불고기', '채소 두부 찜', '닭가슴살 샐러드'];
+export function getOnboardingHref(state: HomeMockState) {
+  return state === 'guest' ? '/login' : '/onboarding';
+}
 
+export function HomeCategoryNavigation() {
   return (
-    <section className="bg-muted mx-4 pt-3 pb-8">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-medium font-semibold">나를 위한 레시피</h2>
-        <Link
-          className="text-text-secondary flex items-center text-base font-medium"
-          href="/recipe"
-        >
-          더보기 <ChevronRight aria-hidden="true" className="size-3" />
-        </Link>
+    <ul
+      aria-label="상품 카테고리"
+      className="text-title-4 mx-4 flex h-11 w-[calc(100%-2rem)] shrink-0 [scrollbar-width:none] items-center gap-4 overflow-x-auto font-medium"
+    >
+      {HOME_CATEGORIES.map((category) => (
+        <li className="shrink-0" key={category}>
+          {category}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function RecommendationTooltip() {
+  return (
+    <p className="bg-surface-inverse text-text-inverse shadow-card pointer-events-none absolute top-[239px] left-1/2 z-10 flex w-[269px] max-w-[calc(100%-2rem)] -translate-x-1/2 items-center justify-center rounded-full px-5 py-2 text-base leading-6 font-medium whitespace-nowrap min-[390px]:left-[98px] min-[390px]:translate-x-0">
+      <span
+        aria-hidden="true"
+        className="bg-surface-inverse absolute top-[26px] left-[14px] size-4 rotate-45 rounded-[3px]"
+      />
+      <span className="relative">맛 선호도를 반영해 AI가 추천했어요.</span>
+    </p>
+  );
+}
+
+function OnboardingPrompt({ href }: { href: string }) {
+  return (
+    <section className="mx-4 mt-4 flex h-22 items-center gap-4 rounded-xl p-4 [background:var(--primitive-secondary-300)]">
+      <div className="flex h-15 min-w-0 flex-1 flex-col items-start gap-0.5">
+        <h2 className="text-title-4 w-full truncate font-bold [color:var(--primitive-secondary-800)]">
+          나를 위한 레시피를 찾아볼까요?
+        </h2>
+        <p className="text-sm leading-[21px] font-medium [color:var(--primitive-secondary-700)]">
+          AI가 레시피를 추천해 드려요.
+        </p>
       </div>
-      <div className="mt-3 flex [scrollbar-width:none] gap-2 overflow-x-auto pb-1">
-        {recipes.map((recipe) => (
-          <Link className="w-[156px] shrink-0" href="/recipe" key={recipe}>
-            <div aria-label={`${recipe} 이미지`} className="bg-border h-24 rounded-lg" role="img" />
-            <p className="text-body-4 mt-2 font-semibold whitespace-normal">{recipe}</p>
-            <p className="text-label-4 text-muted-foreground mt-1 whitespace-normal">
-              보유 재료로 맛있게 즐겨보세요.
-            </p>
-          </Link>
-        ))}
+      <div className="flex h-15 shrink-0 flex-col items-end justify-end">
+        <Link
+          className="bg-background focus-visible:ring-ring flex shrink-0 items-center rounded-full py-1.5 pr-2.5 pl-4 text-sm leading-[21px] font-semibold [color:var(--primitive-secondary-800)] focus-visible:ring-2"
+          href={href}
+        >
+          온보딩 하기
+          <Image
+            alt=""
+            aria-hidden="true"
+            height={20}
+            src="/icons/home/chevron-right.svg"
+            width={20}
+          />
+        </Link>
       </div>
     </section>
   );
 }
 
-function HomeContent({ hasCompletedOnboarding }: { hasCompletedOnboarding: boolean }) {
+function HomeContent({
+  forceReminder,
+  homeState,
+}: {
+  forceReminder: boolean;
+  homeState: HomeMockState;
+}) {
+  const isAuthenticated = homeState !== 'guest';
+  const hasCompletedOnboarding = homeState === 'complete';
+
   return (
-    <main className="mobile-page bg-background flex flex-col">
-      <HomeHeader isAuthenticated={hasCompletedOnboarding} />
-      <div className="text-title-4 flex h-11 [scrollbar-width:none] items-center gap-4 overflow-x-auto px-4 font-medium">
-        {HOME_CATEGORIES.map((category) => (
-          <span className="shrink-0" key={category}>
-            {category}
-          </span>
+    <main className="mobile-page bg-background flex min-h-dvh flex-col overflow-x-clip">
+      <HomeHeader isAuthenticated={isAuthenticated} isOnboardingComplete={hasCompletedOnboarding} />
+      <HomeCategoryNavigation />
+      <div className="relative">
+        <HomePromotionCarousel />
+        {hasCompletedOnboarding ? <RecommendationTooltip /> : null}
+      </div>
+      {hasCompletedOnboarding ? (
+        <div className="mt-4">
+          <HomeRecipeRail />
+        </div>
+      ) : (
+        <OnboardingPrompt href={getOnboardingHref(homeState)} />
+      )}
+      <div className="flex flex-1 flex-col gap-6 pt-6 pb-6">
+        {HOME_PRODUCT_SECTIONS.map((section) => (
+          <HomeProductRail key={section.id} {...section} />
         ))}
       </div>
-      <div className="relative mx-4">
-        <div aria-label="프로모션 배너" className="h-64 w-89 bg-gray-800" role="img" />
-        {hasCompletedOnboarding ? (
-          <p className="text-label-2 bg-border text-muted-foreground shadow-card pointer-events-none absolute bottom-[-20px] left-1/2 z-10 -translate-x-1/2 rounded-full px-5 py-2 font-medium whitespace-nowrap">
-            <span
-              aria-hidden="true"
-              className="bg-border absolute top-[26px] left-[14px] z-0 size-4 rotate-45 rounded-[3px]"
-            />
-            <span className="relative z-10">맛 선호도를 반영해 AI가 추천했어요.</span>
-          </p>
-        ) : null}
-      </div>
-      <div className="flex flex-1 flex-col gap-12 pt-4 pb-6">
-        {hasCompletedOnboarding ? <RecipeRail /> : null}
-        <HomeProductRail description="꼭 먹어야 할 식재료" title="지금 가장 많이 담는 TOP 10" />
-        <HomeProductRail
-          description="봄 제철 식재료로 식단의 봄을 만나보세요"
-          title="이달의 제철 식재료"
-        />
-        <HomeProductRail
-          description="저장·보관법·비법 음식은 이런 재료로 만들어요."
-          title="요즘 주목받는 재료"
-        />
-      </div>
-      <BottomNavigation isAuthenticated={hasCompletedOnboarding} />
+      <BottomNavigation isAuthenticated={isAuthenticated} />
+      {hasCompletedOnboarding ? <HomePantryReminder forceOpen={forceReminder} /> : null}
     </main>
   );
 }
 
-export function HomePage({ state }: { state?: string }) {
+export function HomePage({
+  forceReminder = false,
+  state,
+}: {
+  forceReminder?: boolean;
+  state?: string;
+}) {
   const homeState = getHomeMockState(state);
 
-  return <HomeContent hasCompletedOnboarding={homeState === 'complete'} />;
+  return <HomeContent forceReminder={forceReminder} homeState={homeState} />;
 }

@@ -81,6 +81,45 @@ export const recipeMocks: Recipe[] = [
   },
 ];
 
+const homeRecipeDetailMocks: Recipe[] = [
+  {
+    id: 'soft-boiled-egg-jang',
+    name: '반숙 계란장',
+    category: '한식',
+    cookTime: '25분',
+    description: '부드러운 반숙 계란에 짭조름한 간장 양념을 더한 밑반찬이에요.',
+    cookingSteps: ['계란을 반숙으로 삶아 주세요.', '간장 양념에 계란을 넣어 숙성해요.'],
+    missingCount: 0,
+    ingredients: [{ id: 'egg', name: '계란', amount: '6개', isOwned: true }],
+    linkedProducts: [],
+  },
+  {
+    id: 'beef-bulgogi',
+    name: '소불고기',
+    category: '한식',
+    cookTime: '30분',
+    description: '달콤한 양념에 재운 소고기를 부드럽게 볶은 한식 메뉴예요.',
+    cookingSteps: ['소고기를 양념에 재워 주세요.', '채소와 함께 볶아 마무리해요.'],
+    missingCount: 1,
+    ingredients: [{ id: 'beef', name: '소고기', amount: '300g', isOwned: false }],
+    linkedProducts: [],
+  },
+  {
+    id: 'braised-tofu',
+    name: '두부조림',
+    category: '한식',
+    cookTime: '20분',
+    description: '담백한 두부에 매콤한 양념을 졸여 만든 반찬이에요.',
+    cookingSteps: ['두부를 노릇하게 구워 주세요.', '양념을 넣고 자작하게 졸여요.'],
+    missingCount: 0,
+    ingredients: [{ id: 'tofu', name: '두부', amount: '1모', isOwned: true }],
+    linkedProducts: [],
+  },
+];
+
 export function getRecipeById(recipeId: string) {
-  return recipeMocks.find((recipe) => recipe.id === recipeId) ?? recipeMocks[0];
+  return (
+    [...recipeMocks, ...homeRecipeDetailMocks].find((recipe) => recipe.id === recipeId) ??
+    recipeMocks[0]
+  );
 }

@@ -1,4 +1,36 @@
-import type { ProductDetail, RelatedProduct } from './types';
+import type { ProductDetail, ProductId, RelatedProduct } from './types';
+
+const HOME_PRODUCT_DETAIL_INPUTS: Array<[ProductId, string, string, number, string]> = [
+  ['domestic-onion', '채소', '국산 양파', 5900, '1.5kg'],
+  ['pesticide-free-potato', '채소', '무농약이상 감자', 3000, '500g'],
+  ['free-range-eggs', '계란·알류', '완전방사 무항생제 유정란', 6700, '10구'],
+  ['dried-rapeseed-greens', '채소', '제주 건유채나물', 5500, '80g'],
+  ['blanched-chwinamul', '채소', '국산 데친 생 취나물', 6300, '250g x 1개'],
+  ['bujigaengi-greens', '채소', '피아골 3분나물 부지깽이', 6900, '160g'],
+  ['buckwheat-tofu-noodles', '면·두부', '마이노멀 국산콩 100% 메밀두부면', 5580, '180g x 1봉'],
+  ['garlic-cream-cheese', '유제품', '[그랑도르] 차이브&갈릭 크림치즈', 9500, '125g'],
+  ['low-sugar-plum-syrup', '소스·양념', '마이노멀 저당 매실청', 16000, '550g'],
+];
+
+const HOME_PRODUCT_DETAILS: ProductDetail[] = HOME_PRODUCT_DETAIL_INPUTS.map(
+  ([id, category, name, price, weight]) => ({
+    id,
+    category,
+    name,
+    summary: `구성: 1개 · 용량: ${weight} · 원산지: 국내산`,
+    price,
+    reviewCount: 0,
+    rating: 0,
+    isAvailable: true,
+    delivery: '내일 오전 7시 이전 도착 예정',
+    deliveryFee: '3,000원 (4만원 이상 무료)',
+    seller: '프레시마켓',
+    storageMethod: '상품별 보관 방법 참고',
+    saleUnit: '1개',
+    weight,
+    origin: '국산',
+  }),
+);
 
 export const productMocks: ProductDetail[] = [
   {
@@ -69,6 +101,7 @@ export const productMocks: ProductDetail[] = [
     weight: '300g',
     origin: '국산',
   },
+  ...HOME_PRODUCT_DETAILS,
 ];
 
 export const homeProductMocks = productMocks.filter((product) => product.id !== 'organic-broccoli');

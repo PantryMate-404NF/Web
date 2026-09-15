@@ -3,9 +3,11 @@ import { HomePage } from '@/views/home/ui/home-page';
 export default async function HomeRoute({
   searchParams,
 }: {
-  searchParams: Promise<{ state?: string }>;
+  searchParams: Promise<{ reminder?: string; state?: string }>;
 }) {
-  const { state } = await searchParams;
+  const { reminder, state } = await searchParams;
 
-  return <HomePage state={state} />;
+  const forceReminder = process.env.NODE_ENV === 'development' && reminder === '1';
+
+  return <HomePage forceReminder={forceReminder} state={state} />;
 }

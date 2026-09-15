@@ -1,4 +1,17 @@
-export type ProductId = 'organic-broccoli' | 'sweet-banana' | 'fresh-milk' | 'soft-tofu';
+export type ProductId =
+  | 'organic-broccoli'
+  | 'sweet-banana'
+  | 'fresh-milk'
+  | 'soft-tofu'
+  | 'domestic-onion'
+  | 'pesticide-free-potato'
+  | 'free-range-eggs'
+  | 'dried-rapeseed-greens'
+  | 'blanched-chwinamul'
+  | 'bujigaengi-greens'
+  | 'buckwheat-tofu-noodles'
+  | 'garlic-cream-cheese'
+  | 'low-sugar-plum-syrup';
 
 export interface ProductDetail {
   id: ProductId;

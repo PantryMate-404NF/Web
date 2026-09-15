@@ -1,37 +1,33 @@
-import { UserRound } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-export function HomeHeader({ isAuthenticated = true }: { isAuthenticated?: boolean }) {
+interface HomeHeaderProps {
+  isAuthenticated?: boolean;
+  isOnboardingComplete?: boolean;
+}
+
+export function HomeHeader({
+  isAuthenticated = true,
+  isOnboardingComplete = false,
+}: HomeHeaderProps) {
+  const myPageHref = isOnboardingComplete ? '/mypage?state=complete' : '/mypage';
+
   return (
-    <header className="flex h-14 items-center justify-between px-4">
+    <header className="flex h-16 items-center justify-between pr-4 pl-6">
       <Link
         aria-label="마이페이지"
-        className="bg-muted grid size-8 place-items-center rounded-full"
-        href={isAuthenticated ? '/' : '/login'}
+        className="focus-visible:ring-ring grid size-11 place-items-center rounded-full focus-visible:ring-2"
+        href={isAuthenticated ? myPageHref : '/login'}
       >
-        <UserRound aria-hidden="true" className="text-muted-foreground size-4" />
+        <Image alt="" aria-hidden="true" height={44} src="/icons/home/avatar.svg" width={44} />
       </Link>
-      <div className="flex items-center">
-        <Link aria-label="알림" className="grid size-10 place-items-center p-2" href="/">
-          <Image
-            alt=""
-            aria-hidden="true"
-            height={24}
-            src="/icons/header/Icon-Bell.svg"
-            width={24}
-          />
-        </Link>
-        <Link aria-label="장바구니" className="grid size-10 place-items-center p-2" href="/cart">
-          <Image
-            alt=""
-            aria-hidden="true"
-            height={24}
-            src="/icons/header/Icon-Cart.svg"
-            width={24}
-          />
-        </Link>
-      </div>
+      <Link
+        aria-label="장바구니"
+        className="focus-visible:ring-ring grid size-10 place-items-center rounded-full p-2 focus-visible:ring-2"
+        href="/cart"
+      >
+        <Image alt="" aria-hidden="true" height={24} src="/icons/header/Icon-Cart.svg" width={24} />
+      </Link>
     </header>
   );
 }
