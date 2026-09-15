@@ -43,11 +43,11 @@ describe('getBottomNavigationItems', () => {
     expect(items.find((item) => item.id === 'mypage')?.href).toBe('/mypage');
   });
 
-  it('온보딩 완료 상태에서는 홈 탭으로 돌아갈 때 완료 상태를 유지한다', () => {
-    const items = getBottomNavigationItems('/mypage', { state: 'complete' });
+  it('로그인 완료 상태라도 탭 이동 URL에 상태 쿼리를 추가하지 않는다', () => {
+    const items = getBottomNavigationItems('/mypage');
 
-    expect(items.find((item) => item.id === 'home')?.href).toBe('/?state=complete');
-    expect(items.find((item) => item.id === 'mypage')?.href).toBe('/mypage?state=complete');
+    expect(items.find((item) => item.id === 'home')?.href).toBe('/');
+    expect(items.find((item) => item.id === 'mypage')?.href).toBe('/mypage');
   });
 
   it('비회원 홈에서는 팬트리와 마이페이지 탭을 로그인 화면으로 연결한다', () => {

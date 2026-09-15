@@ -68,7 +68,7 @@ export function PantryReminderDialog({
         </button>
         <Link
           className="bg-primary text-primary-foreground focus-visible:ring-ring flex h-[51px] w-[130px] items-center justify-center rounded-full text-base leading-6 font-semibold focus-visible:ring-2"
-          href="/pantry?state=complete"
+          href="/pantry"
           onClick={onClose}
         >
           팬트리로 이동

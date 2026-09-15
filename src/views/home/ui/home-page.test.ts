@@ -44,6 +44,10 @@ describe('getHomeMockState', () => {
   it('완료 상태에서만 개인화 홈 화면을 사용한다', () => {
     expect(getHomeMockState('complete')).toBe('complete');
   });
+
+  it('URL 상태값이 없어도 복구된 로그인 세션의 완료 상태를 유지한다', () => {
+    expect(getHomeMockState(undefined, 'complete')).toBe('complete');
+  });
 });
 
 describe('getOnboardingHref', () => {

@@ -16,7 +16,6 @@ export interface BottomNavigationItem extends BottomNavigationDefinition {
 
 export interface BottomNavigationOptions {
   isAuthenticated?: boolean;
-  state?: string;
 }
 
 /** 하단 네비게이션의 Figma spacing·typography 규칙입니다. */
@@ -47,17 +46,15 @@ function isCurrentPath(item: BottomNavigationDefinition, pathname: string): bool
 
 export function getBottomNavigationItems(
   pathname: string,
-  { isAuthenticated = true, state }: BottomNavigationOptions = {},
+  { isAuthenticated = true }: BottomNavigationOptions = {},
 ): BottomNavigationItem[] {
   return navigationDefinitions.map((item) => {
     const isActive = isCurrentPath(item, pathname);
     const href = !isAuthenticated && loginRequiredItemIds.has(item.id) ? '/login' : item.href;
-    const statefulHref =
-      state === 'complete' && href && href !== '/login' ? `${href}?state=complete` : href;
 
     return {
       ...item,
-      href: statefulHref,
+      href,
       iconSrc: `/icons/navigation/${item.id}-${isActive ? 'fill' : 'line'}.svg`,
       isActive,
     };

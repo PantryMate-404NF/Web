@@ -5,28 +5,31 @@
  */
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Suspense } from 'react';
+
+import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 
 import { BOTTOM_NAVIGATION_LAYOUT, getBottomNavigationItems } from '../model/bottom-navigation';
 
-export function BottomNavigation({ isAuthenticated = true }: { isAuthenticated?: boolean }) {
-  const fallbackNavigationItems = getBottomNavigationItems('/', { isAuthenticated });
+export function BottomNavigation({ isAuthenticated }: { isAuthenticated?: boolean }) {
+  const { state } = useAuthSession();
+  const resolvedIsAuthenticated =
+    isAuthenticated ?? (state === 'complete' || state === 'onboarding');
+  const fallbackNavigationItems = getBottomNavigationItems('/', {
+    isAuthenticated: resolvedIsAuthenticated,
+  });
 
   return (
     <Suspense fallback={<BottomNavigationLinks navigationItems={fallbackNavigationItems} />}>
-      <BottomNavigationContent isAuthenticated={isAuthenticated} />
+      <BottomNavigationContent isAuthenticated={resolvedIsAuthenticated} />
     </Suspense>
   );
 }
 
 function BottomNavigationContent({ isAuthenticated }: { isAuthenticated: boolean }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const navigationItems = getBottomNavigationItems(pathname, {
-    isAuthenticated,
-    state: searchParams.get('state') ?? undefined,
-  });
+  const navigationItems = getBottomNavigationItems(pathname, { isAuthenticated });
 
   return <BottomNavigationLinks navigationItems={navigationItems} />;
 }

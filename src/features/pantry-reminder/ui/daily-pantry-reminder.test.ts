@@ -1,4 +1,5 @@
 import { Children, isValidElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
 import { focusInitialDialogControl, PantryReminderDialog } from './daily-pantry-reminder';
@@ -18,6 +19,19 @@ describe('PantryReminderDialog', () => {
 
     const actions = Children.toArray(dialog.props.children).at(-1);
     expect(isValidElement(actions)).toBe(true);
+  });
+
+  it('팬트리 이동 URL에 로그인 상태 쿼리를 추가하지 않는다', () => {
+    const markup = renderToStaticMarkup(
+      PantryReminderDialog({
+        closeButtonRef: { current: null },
+        dialogRef: { current: null },
+        onClose: vi.fn(),
+      }),
+    );
+
+    expect(markup).toContain('href="/pantry"');
+    expect(markup).not.toContain('state=complete');
   });
 });
 

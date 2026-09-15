@@ -3,8 +3,10 @@
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { restoreAuthSession } from '@/features/auth/model/restore-auth-session';
+import { getPostAuthenticationRoute } from '@/features/auth/model/auth-session';
 import { Skeleton } from '@/shared/ui/skeleton';
+
+import { useAuthSession } from './auth-session-provider';
 
 /** OAuth 세션을 복구하는 짧은 시간 동안 표시하는 접근 가능한 로딩 화면입니다. */
 export function AuthCallbackLoading() {
@@ -27,6 +29,7 @@ export function AuthCallbackLoading() {
 export function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { restore } = useAuthSession();
 
   useEffect(() => {
     async function restoreSession() {
@@ -36,15 +39,16 @@ export function AuthCallbackContent() {
       }
 
       try {
-        const homeState = await restoreAuthSession();
-        router.replace(homeState === 'complete' ? '/?state=complete' : '/onboarding');
+        const homeState = await restore();
+        if (homeState === 'guest') throw new Error('로그인 세션을 복구하지 못했습니다.');
+        router.replace(getPostAuthenticationRoute(homeState));
       } catch {
         router.replace('/?login=failed');
       }
     }
 
     void restoreSession();
-  }, [router, searchParams]);
+  }, [restore, router, searchParams]);
 
   return <AuthCallbackLoading />;
 }
