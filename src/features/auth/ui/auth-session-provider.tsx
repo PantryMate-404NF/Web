@@ -1,6 +1,14 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  Suspense,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import type { ReactNode } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
@@ -68,7 +76,9 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthSessionContext.Provider value={value}>
-      <AuthStateQueryCleaner />
+      <Suspense fallback={null}>
+        <AuthStateQueryCleaner />
+      </Suspense>
       {children}
     </AuthSessionContext.Provider>
   );
