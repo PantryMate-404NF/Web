@@ -1,4 +1,4 @@
-import { HomePage } from '@/views/home/ui/home-page';
+import { AppEntryPage } from '@/views/splash/ui/app-entry-page';
 
 export default async function HomeRoute({
   searchParams,
@@ -6,8 +6,7 @@ export default async function HomeRoute({
   searchParams: Promise<{ reminder?: string }>;
 }) {
   const { reminder } = await searchParams;
-
   const forceReminder = process.env.NODE_ENV === 'development' && reminder === '1';
 
-  return <HomePage forceReminder={forceReminder} />;
+  return <AppEntryPage forceReminder={forceReminder} />;
 }

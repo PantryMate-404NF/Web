@@ -26,15 +26,7 @@ export function LoginPage() {
       </header>
 
       <section className="mt-[117px] flex flex-col items-center" aria-label="Pantry Mate 소개">
-        <Image alt="" height={172} priority src="/images/auth/login-profile.png" width={172} />
-        <Image
-          alt="Pantry Mate"
-          className="mt-4"
-          height={21}
-          priority
-          src="/images/auth/pantrymate-wordmark.svg"
-          width={145}
-        />
+        <Image alt="" height={196} priority src="/images/logo/logo.svg" width={196} />
       </section>
 
       <div className="mt-[143px] space-y-1">

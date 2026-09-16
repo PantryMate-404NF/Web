@@ -1,21 +1,21 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-interface HomeHeaderProps {
-  isAuthenticated?: boolean;
-}
-
-export function HomeHeader({ isAuthenticated = true }: HomeHeaderProps) {
-  const myPageHref = '/mypage';
-
+export function HomeHeader() {
   return (
-    <header className="flex h-16 items-center justify-between pr-4 pl-6">
+    <header className="flex h-16 items-center justify-between pr-4 pl-4">
       <Link
-        aria-label="마이페이지"
-        className="focus-visible:ring-ring grid size-11 place-items-center rounded-full focus-visible:ring-2"
-        href={isAuthenticated ? myPageHref : '/login'}
+        aria-label="홈으로 이동"
+        className="focus-visible:ring-ring grid h-16 w-[151px] shrink-0 place-items-center rounded-[20px] focus-visible:ring-2"
+        href="/"
       >
-        <Image alt="" aria-hidden="true" height={44} src="/icons/home/avatar.svg" width={44} />
+        <Image
+          alt=""
+          aria-hidden="true"
+          height={64}
+          src="/images/logo/pantry_logo.svg"
+          width={150}
+        />
       </Link>
       <Link
         aria-label="장바구니"
