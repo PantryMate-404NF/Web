@@ -1,4 +1,4 @@
-import { Image as ImageIcon, MoreHorizontal, Package, Snowflake, Sun } from 'lucide-react';
+import { Image as ImageIcon, Package } from 'lucide-react';
 import Image from 'next/image';
 
 import type {
@@ -48,11 +48,11 @@ function ItemOptionsLink({
   return (
     <button
       aria-label={`${itemName} 옵션`}
-      className="flex size-10 shrink-0 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:outline-none"
+      className="flex size-10 shrink-0 items-center justify-center rounded-md p-2 focus-visible:ring-2 focus-visible:outline-none"
       onClick={(event) => onOptions?.(event.currentTarget)}
       type="button"
     >
-      <MoreHorizontal aria-hidden="true" className="size-6" />
+      <Image alt="" aria-hidden="true" height={24} src="/images/pantry/dots.svg" width={24} />
     </button>
   );
 }
@@ -73,14 +73,12 @@ function PantryImageCard({
   const sourceLabel = item.registrationSource
     ? sourceLabels[item.registrationSource]
     : '등록 출처 미확인';
-  const StorageIcon =
-    item.storageType === 'FROZEN' ? Snowflake : item.storageType === 'ROOMTEMP' ? Sun : Package;
-  const storageIconColor =
+  const storageIconSrc =
     item.storageType === 'FROZEN'
-      ? 'text-status-info'
+      ? '/images/pantry/snow.svg'
       : item.storageType === 'ROOMTEMP'
-        ? 'text-status-warning'
-        : 'text-status-success';
+        ? '/images/pantry/sun.svg'
+        : '/images/pantry/refrigerator.svg';
 
   return (
     <article className="text-foreground bg-card shadow-card relative flex h-[156px] min-w-0 flex-col rounded-xl p-3">
@@ -111,9 +109,13 @@ function PantryImageCard({
         <h2 className="truncate text-[15px] leading-[22.5px] font-semibold">{item.name}</h2>
         <p className="text-muted-foreground mt-1 flex items-center gap-0.5 truncate text-xs leading-[18px] font-medium">
           <span className="flex items-center gap-1.5">
-            <StorageIcon
+            <Image
+              alt=""
               aria-hidden="true"
-              className={`size-[13px] shrink-0 ${storageIconColor}`}
+              className="size-[13px] shrink-0 object-contain"
+              height={13}
+              src={storageIconSrc}
+              width={13}
             />
             <span>{item.storageType ? storageLabels[item.storageType] : '냉장'}</span>
           </span>

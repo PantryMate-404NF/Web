@@ -313,7 +313,7 @@ export function PantryPage({
           >
             <ChevronLeft className="size-6" />
           </Link>
-          <label className="border-border focus-within:ring-ring ml-0.5 flex h-[42px] min-w-0 flex-1 items-center rounded-full border px-1.5 focus-within:ring-2">
+          <label className="border-border focus-within:ring-ring ml-0.5 flex h-[42px] w-[274px] shrink-0 items-center rounded-full border px-1.5 focus-within:ring-2">
             <span className="grid size-10 shrink-0 place-items-center">
               <Search aria-hidden="true" className="text-muted-foreground size-6" />
             </span>
@@ -327,11 +327,12 @@ export function PantryPage({
           </label>
           <Button
             asChild
-            className="ml-[18px] h-10 w-[107px] shrink-0 justify-start gap-0 rounded-sm px-2 has-[>svg]:px-2"
+            className="ml-[18px] size-10 shrink-0 rounded-full p-0 has-[>svg]:p-0"
+            size="icon"
           >
             <Link href="/pantry?state=register" ref={addItemLinkRef}>
               <Plus className="size-6" />
-              재료 추가
+              <span className="sr-only">재료 추가</span>
             </Link>
           </Button>
         </div>
@@ -342,20 +343,20 @@ export function PantryPage({
           {visibleItems.length}개
         </strong>
         <button
-          className="text-label-2 flex h-10 w-[117px] items-center justify-end font-medium"
+          className="text-label-2 flex h-10 w-max shrink-0 items-center justify-end font-medium"
           onClick={() => setIsSortOpen((value) => !value)}
           type="button"
         >
-          {sortLabels[sort]}
-          <span className="grid size-10 place-items-center">
+          <span className="whitespace-nowrap">{sortLabels[sort]}</span>
+          <span className="grid size-10 shrink-0 place-items-center">
             <ChevronDown className="size-6" />
           </span>
         </button>
         {isSortOpen ? (
-          <div className="bg-card absolute top-10 right-0 z-20 w-[134px] space-y-4 rounded-xl p-4 shadow-[0_4px_4px_rgb(26_26_26/16%),0_0_2px_rgb(26_26_26/12%)]">
+          <div className="bg-card absolute top-10 right-0 z-20 w-max min-w-[134px] space-y-4 rounded-xl p-4 shadow-[0_4px_4px_rgb(26_26_26/16%),0_0_2px_rgb(26_26_26/12%)]">
             {(['RECENT', 'IMMINENT', 'OLDEST'] as const).map((option) => (
               <button
-                className="text-label-2 block w-full text-left font-medium"
+                className="block w-full text-left text-base font-medium whitespace-nowrap"
                 key={option}
                 onClick={() => {
                   setSort(option);
@@ -378,7 +379,7 @@ export function PantryPage({
         {filters.map((filter) => (
           <button
             aria-pressed={storage === filter.value}
-            className={`h-7 rounded-full border px-3 text-xs leading-[18px] font-medium ${storage === filter.value ? 'bg-foreground text-background border-foreground' : 'text-muted-foreground border-muted-foreground'}`}
+            className={`h-7 rounded-full border-1 px-3 text-xs leading-[18px] font-medium ${storage === filter.value ? 'bg-foreground text-background border-foreground' : 'text-muted-foreground border-muted-foreground'}`}
             key={filter.value}
             onClick={() => setStorage(filter.value)}
             type="button"
