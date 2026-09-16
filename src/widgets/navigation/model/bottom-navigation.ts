@@ -34,7 +34,7 @@ const navigationDefinitions: readonly BottomNavigationDefinition[] = [
   { id: 'mypage', href: '/mypage', label: '마이페이지' },
 ];
 
-const loginRequiredItemIds = new Set<BottomNavigationItemId>(['pantry', 'mypage']);
+const loginRequiredItemIds = new Set<BottomNavigationItemId>(['pantry']);
 
 function isCurrentPath(item: BottomNavigationDefinition, pathname: string): boolean {
   if (!item.href) return false;
