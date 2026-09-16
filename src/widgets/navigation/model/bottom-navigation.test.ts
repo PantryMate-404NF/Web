@@ -50,11 +50,11 @@ describe('getBottomNavigationItems', () => {
     expect(items.find((item) => item.id === 'mypage')?.href).toBe('/mypage');
   });
 
-  it('비회원 홈에서는 팬트리와 마이페이지 탭을 로그인 화면으로 연결한다', () => {
+  it('비회원 홈에서는 팬트리만 로그인 화면으로 연결하고 마이페이지는 직접 진입을 허용한다', () => {
     const items = getBottomNavigationItems('/', { isAuthenticated: false });
 
     expect(items.find((item) => item.id === 'pantry')?.href).toBe('/login');
-    expect(items.find((item) => item.id === 'mypage')?.href).toBe('/login');
+    expect(items.find((item) => item.id === 'mypage')?.href).toBe('/mypage');
   });
 
   it('마이페이지 경로에서는 filled 마이페이지 아이콘을 선택한다', () => {

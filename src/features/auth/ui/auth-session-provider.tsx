@@ -25,6 +25,7 @@ interface AuthSessionContextValue {
   state: AuthSessionState;
   restore: () => Promise<Exclude<AuthSessionState, 'loading'>>;
   setAuthenticatedState: (state: AuthHomeState) => void;
+  setGuestState: () => void;
 }
 
 const AuthSessionContext = createContext<AuthSessionContextValue | null>(null);
@@ -82,6 +83,11 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     setState(nextState);
   }, []);
 
+  const setGuestState = useCallback(() => {
+    sessionRevisionRef.current += 1;
+    setState('guest');
+  }, []);
+
   useEffect(() => {
     const restoreTimer = window.setTimeout(() => {
       void restore();
@@ -91,12 +97,8 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
   }, [restore]);
 
   const value = useMemo(
-    () => ({
-      state,
-      restore,
-      setAuthenticatedState,
-    }),
-    [restore, setAuthenticatedState, state],
+    () => ({ state, restore, setAuthenticatedState, setGuestState }),
+    [restore, setAuthenticatedState, setGuestState, state],
   );
 
   return (
@@ -117,6 +119,7 @@ export function useAuthSession() {
       state: 'loading' as const,
       restore: async () => 'guest' as const,
       setAuthenticatedState: () => undefined,
+      setGuestState: () => undefined,
     };
   }
 
