@@ -12,6 +12,7 @@ import {
   PantryDeleteDialog,
   PantryEmptyState,
   PantryErrorState,
+  PantryPage,
 } from './pantry-page';
 
 describe('getPantryViewState', () => {
@@ -98,12 +99,10 @@ describe('PantryDeleteDialog', () => {
 });
 
 describe('getPantryCardVariant', () => {
-  it('uses the image card variant when the comparison route requests it', () => {
+  it('uses the Figma image-card variant unless the compact view is explicitly requested', () => {
+    expect(getPantryCardVariant()).toBe('image');
     expect(getPantryCardVariant('image')).toBe('image');
-  });
-
-  it('keeps the existing icon card variant as the default', () => {
-    expect(getPantryCardVariant()).toBe('icon');
+    expect(getPantryCardVariant('icon')).toBe('icon');
   });
 });
 
@@ -139,5 +138,16 @@ describe('getPantryMenuPosition', () => {
       left: 224,
       top: 255,
     });
+  });
+});
+
+describe('pantry sort layout', () => {
+  it('uses Hug widths for the selected label and the 40px arrow area', () => {
+    const pageSource = PantryPage.toString();
+
+    expect(pageSource).toContain('flex h-10 w-max shrink-0 items-center justify-end');
+    expect(pageSource).toContain('whitespace-nowrap');
+    expect(pageSource).not.toContain('absolute top-1/2');
+    expect(pageSource).toContain('w-max min-w-[134px]');
   });
 });

@@ -8,7 +8,7 @@ export type PantryRegistrationSource = 'PURCHASED' | 'MANUAL' | 'OCR';
 export type PantrySortOption = 'RECENT' | 'IMMINENT' | 'OLDEST';
 
 export function getPantryCardVariant(view?: string): PantryCardVariant {
-  return view === 'image' ? 'image' : 'icon';
+  return view === 'icon' ? 'icon' : 'image';
 }
 
 export interface PantryItem {

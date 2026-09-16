@@ -1,9 +1,8 @@
 /**
  * /pantry 주소의 페이지 진입점.
- * URL query를 해석해 FSD 페이지 레이어로 전달합니다.
+ * 목업 단계에서는 기본 주소에서도 가득 찬 팬트리 화면을 제공합니다.
  */
 
-import { PantryRouteContent } from '@/views/pantry/ui/pantry-route-content';
 import { PantryFlowPage } from '@/views/pantry/ui/pantry-flow-page';
 
 interface PantryRouteProps {
@@ -15,5 +14,5 @@ export default async function PantryRoute({ searchParams }: PantryRouteProps) {
 
   if (state) return <PantryFlowPage itemId={id} state={state} view={view} />;
 
-  return <PantryRouteContent view={view} />;
+  return <PantryFlowPage state="full" view={view} />;
 }
