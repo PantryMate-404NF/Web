@@ -104,12 +104,11 @@ function HomeContent({
   forceReminder: boolean;
   homeState: HomeMockState;
 }) {
-  const isAuthenticated = homeState !== 'guest';
   const hasCompletedOnboarding = homeState === 'complete';
 
   return (
     <main className="mobile-page bg-background flex min-h-dvh flex-col overflow-x-clip">
-      <HomeHeader isAuthenticated={isAuthenticated} />
+      <HomeHeader />
       <HomeCategoryNavigation />
       <div className="relative">
         <HomePromotionCarousel />
