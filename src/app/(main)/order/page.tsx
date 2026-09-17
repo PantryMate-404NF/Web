@@ -1,7 +1,15 @@
 import { ORDER_ITEMS_MOCK } from '@/entities/order/model/mock';
 import { OrderRouteContent } from '@/views/order/ui/order-route-content';
 
-export default async function OrderRoute({ searchParams }: PageProps<'/order'>) {
+type OrderPageProps = {
+  searchParams: Promise<{
+    cartId?: string | string[];
+    items?: string | string[];
+    preview?: string | string[];
+  }>;
+};
+
+export default async function OrderRoute({ searchParams }: OrderPageProps) {
   const { cartId, items, preview } = await searchParams;
   const selectedItemIds = typeof items === 'string' ? items.split(',').filter(Boolean) : [];
   const previewItems =
