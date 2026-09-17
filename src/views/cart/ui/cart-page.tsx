@@ -7,24 +7,81 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import { getCartTotal, useCartStore } from '@/entities/cart/model/cart-store';
+import type { CartItem } from '@/entities/cart/model/cart-store';
+import { buildOrderHref } from '@/features/order/model/order-sheet';
 
 const SHIPPING_FEE = 3000;
 
-export function CartPage() {
+export function CartOrderAction({
+  cartId,
+  selectedItems,
+}: {
+  cartId?: number;
+  selectedItems: CartItem[];
+}) {
+  if (selectedItems.length === 0) {
+    return (
+      <button
+        className="bg-muted-foreground text-background text-label-2 w-[220px] rounded-sm font-semibold opacity-50"
+        disabled
+        type="button"
+      >
+        주문하기
+      </button>
+    );
+  }
+
+  const href =
+    cartId === undefined
+      ? `/order?${new URLSearchParams({
+          preview: '1',
+          items: selectedItems.map((item) => item.id).join(','),
+        }).toString()}`
+      : buildOrderHref(
+          cartId,
+          selectedItems.map((item) => item.id),
+        );
+
+  return (
+    <Link
+      className="bg-muted-foreground text-background text-label-2 flex w-[220px] items-center justify-center rounded-sm font-semibold"
+      href={href}
+    >
+      주문하기
+    </Link>
+  );
+}
+
+interface CartPageProps {
+  cartId?: number;
+  errorMessage?: string;
+  isLoading?: boolean;
+  items?: CartItem[];
+  onRetry?: () => void;
+}
+
+export function CartPage({
+  cartId,
+  errorMessage,
+  isLoading = false,
+  items,
+  onRetry,
+}: CartPageProps = {}) {
   const router = useRouter();
-  const items = useCartStore((state) => state.items);
+  const storedItems = useCartStore((state) => state.items);
   const removeProduct = useCartStore((state) => state.removeProduct);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const [deselectedIds, setDeselectedIds] = useState<string[]>([]);
+  const currentItems = items ?? storedItems;
 
   const selectedItems = useMemo(
-    () => items.filter((item) => !deselectedIds.includes(item.id)),
-    [deselectedIds, items],
+    () => currentItems.filter((item) => !deselectedIds.includes(item.id)),
+    [currentItems, deselectedIds],
   );
   const selectedTotal = getCartTotal(selectedItems);
   const hasSelectedItems = selectedItems.length > 0;
   const paymentTotal = selectedTotal + (hasSelectedItems ? SHIPPING_FEE : 0);
-  const isAllSelected = selectedItems.length === items.length;
+  const isAllSelected = selectedItems.length === currentItems.length;
 
   function toggleItem(itemId: string) {
     setDeselectedIds((currentIds) =>
@@ -35,7 +92,7 @@ export function CartPage() {
   }
 
   function toggleAllItems() {
-    setDeselectedIds(isAllSelected ? items.map((item) => item.id) : []);
+    setDeselectedIds(isAllSelected ? currentItems.map((item) => item.id) : []);
   }
 
   function removeSelectedItems() {
@@ -43,7 +100,7 @@ export function CartPage() {
   }
 
   function removeAllItems() {
-    items.forEach((item) => removeProduct(item.id));
+    currentItems.forEach((item) => removeProduct(item.id));
   }
 
   return (
@@ -62,7 +119,23 @@ export function CartPage() {
         </h1>
       </header>
 
-      {items.length === 0 ? (
+      {isLoading ? (
+        <section className="flex min-h-[480px] items-center justify-center px-4 text-center">
+          <p className="text-text-secondary text-sm">장바구니를 불러오는 중이에요.</p>
+        </section>
+      ) : errorMessage ? (
+        <section className="flex min-h-[480px] flex-col items-center justify-center px-4 text-center">
+          <p className="font-semibold">장바구니를 불러오지 못했어요.</p>
+          <p className="text-text-secondary mt-2 text-sm">{errorMessage}</p>
+          <button
+            className="border-border mt-5 rounded-full border px-4 py-2"
+            onClick={onRetry}
+            type="button"
+          >
+            다시 시도
+          </button>
+        </section>
+      ) : currentItems.length === 0 ? (
         <section className="flex min-h-[480px] flex-col items-center justify-center px-4 text-center">
           <div className="bg-muted text-muted-foreground grid size-20 place-items-center rounded-full">
             <ChefHat className="size-9" aria-hidden="true" strokeWidth={1.5} />
@@ -112,7 +185,7 @@ export function CartPage() {
               </div>
 
               <ul>
-                {items.map((item) => {
+                {currentItems.map((item) => {
                   const isSelected = !deselectedIds.includes(item.id);
 
                   return (
@@ -231,7 +304,7 @@ export function CartPage() {
         </>
       )}
 
-      {items.length > 0 ? (
+      {!isLoading && !errorMessage && currentItems.length > 0 ? (
         <footer className="bg-background border-border fixed right-0 bottom-0 left-0 z-10 mx-auto w-full max-w-[var(--layout-mobile-design-frame)] border-t px-4 pt-1 pb-[max(env(safe-area-inset-bottom),0.5rem)]">
           <div className="text-title-4 text-text-secondary flex items-center justify-between px-2 py-1 font-medium">
             <span>총 주문 금액</span>
@@ -246,13 +319,7 @@ export function CartPage() {
             >
               상품 추가
             </Link>
-            <button
-              className="bg-muted-foreground text-background text-label-2 w-[220px] rounded-sm font-semibold disabled:opacity-50"
-              disabled={!hasSelectedItems}
-              type="button"
-            >
-              주문하기
-            </button>
+            <CartOrderAction cartId={cartId} selectedItems={selectedItems} />
           </div>
         </footer>
       ) : null}

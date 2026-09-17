@@ -19,4 +19,17 @@ describe('Next API proxy', () => {
       source: '/api/:path*',
     });
   });
+
+  it('브라우저의 /order-api 요청을 주문 결제 서비스로 전달한다', async () => {
+    vi.stubEnv('ORDER_PAYMENT_API_BASE_URL', 'http://localhost:8084');
+
+    const config = nextConfig as typeof nextConfig & {
+      rewrites?: () => Promise<Array<{ destination: string; source: string }>>;
+    };
+
+    await expect(config.rewrites?.()).resolves.toContainEqual({
+      destination: 'http://localhost:8084/api/:path*',
+      source: '/order-api/:path*',
+    });
+  });
 });

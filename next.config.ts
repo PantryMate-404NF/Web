@@ -16,17 +16,24 @@ const nextConfig: NextConfig = {
    */
   async rewrites() {
     const backendApiBaseUrl = process.env.BACKEND_API_BASE_URL?.replace(/\/+$/, '');
+    const orderPaymentApiBaseUrl = process.env.ORDER_PAYMENT_API_BASE_URL?.replace(/\/+$/, '');
+    const rewrites = [];
 
-    if (!backendApiBaseUrl) {
-      return [];
-    }
-
-    return [
-      {
+    if (backendApiBaseUrl) {
+      rewrites.push({
         destination: `${backendApiBaseUrl}/api/:path*`,
         source: '/api/:path*',
-      },
-    ];
+      });
+    }
+
+    if (orderPaymentApiBaseUrl) {
+      rewrites.push({
+        destination: `${orderPaymentApiBaseUrl}/api/:path*`,
+        source: '/order-api/:path*',
+      });
+    }
+
+    return rewrites;
   },
 };
 

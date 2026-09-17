@@ -1,10 +1,14 @@
 import { create } from 'zustand';
 
 export type CartProduct = {
+  cartItemId?: number;
   id: string;
   ingredient: string;
   name: string;
   price: number;
+  productId?: number;
+  purchasable?: boolean;
+  thumbnailUrl?: string;
 };
 
 export type CartItem = CartProduct & {
