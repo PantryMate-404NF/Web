@@ -33,7 +33,6 @@
 **Interfaces:**
 
 - Produces: `orderPaymentRequest<T>(path, options): Promise<T>`
-- Produces: `getOrderPaymentTestUserId(): string`
 
 - [ ] **Step 1: 실패 테스트 작성**
 

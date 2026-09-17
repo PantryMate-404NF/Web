@@ -14,7 +14,7 @@ export function CartRouteContent({ apiEnabled }: { apiEnabled?: boolean } = {}) 
   const cartMutations = useCartMutations();
 
   if (isAuthLoading) return <CartPage isLoading />;
-  if (!shouldUseApi) return <CartPage errorMessage="로그인 후 장바구니를 이용해 주세요." />;
+  if (!shouldUseApi) return <CartPage isUnauthorized />;
 
   return (
     <CartPage

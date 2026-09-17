@@ -34,4 +34,21 @@ describe('orderPaymentRequest', () => {
 
     expect(requestMock).toHaveBeenCalledWith('/api/orders', options);
   });
+
+  it('무응답 계약을 Gateway 클라이언트에 전달한다', async () => {
+    requestMock.mockResolvedValue(undefined);
+    const { orderPaymentRequest } = await import('./order-payment-client');
+
+    await expect(
+      orderPaymentRequest('/carts/items/10', {
+        method: 'DELETE',
+        responseType: 'none',
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(requestMock).toHaveBeenCalledWith('/api/carts/items/10', {
+      method: 'DELETE',
+      responseType: 'none',
+    });
+  });
 });

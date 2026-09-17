@@ -31,6 +31,7 @@ describe('cart mutations', () => {
 
     expect(orderPaymentRequestMock).toHaveBeenCalledWith('/carts/items/10', {
       method: 'DELETE',
+      responseType: 'none',
     });
   });
 });

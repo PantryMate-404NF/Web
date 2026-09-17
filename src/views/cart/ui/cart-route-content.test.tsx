@@ -57,4 +57,17 @@ describe('CartRouteContent', () => {
     expect(useCartQueryMock).toHaveBeenCalledWith(false);
     expect(page.props).toMatchObject({ isLoading: true });
   });
+
+  it('비로그인 상태는 재시도 오류가 아닌 로그인 안내 상태로 전달한다', () => {
+    useAuthSessionMock.mockReturnValue({ state: 'guest' });
+    useCartQueryMock.mockReturnValue({ data: undefined, error: null, isPending: false });
+    useCartMutationsMock.mockReturnValue({ error: null, isPending: false });
+
+    const page = CartRouteContent();
+
+    expect(useCartQueryMock).toHaveBeenCalledWith(false);
+    expect(page.props).toMatchObject({ isUnauthorized: true });
+    expect(page.props.errorMessage).toBeUndefined();
+    expect(page.props.onRetry).toBeUndefined();
+  });
 });

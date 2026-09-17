@@ -32,13 +32,22 @@ export function useCartMutations() {
   const removeMutation = useMutation({
     mutationFn: async (items: CartItem[]) => {
       const itemIds = items.map(getCartItemId);
-      await Promise.all(itemIds.map(deleteCartItem));
+      const results = await Promise.allSettled(itemIds.map(deleteCartItem));
+      const failedResult = results.find((result) => result.status === 'rejected');
+
+      if (failedResult?.status === 'rejected') {
+        throw failedResult.reason;
+      }
+
       return itemIds;
     },
     onSuccess: (removedItemIds) => {
       queryClient.setQueryData<CartResponseDto>(CART_QUERY_KEY, (cart) =>
         removeCartItemsFromCache(cart, removedItemIds),
       );
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: CART_QUERY_KEY });
     },
   });
 

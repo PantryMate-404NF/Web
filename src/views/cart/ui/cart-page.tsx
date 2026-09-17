@@ -52,11 +52,12 @@ export function CartOrderAction({
   );
 }
 
-interface CartPageProps {
+export interface CartPageProps {
   cartId?: number;
   errorMessage?: string;
   isLoading?: boolean;
   isMutating?: boolean;
+  isUnauthorized?: boolean;
   items?: CartItem[];
   mutationErrorMessage?: string;
   onRemoveItems?: (items: CartItem[]) => void;
@@ -69,6 +70,7 @@ export function CartPage({
   errorMessage,
   isLoading = false,
   isMutating = false,
+  isUnauthorized = false,
   items,
   mutationErrorMessage,
   onRemoveItems,
@@ -149,6 +151,19 @@ export function CartPage({
       {isLoading ? (
         <section className="flex min-h-[480px] items-center justify-center px-4 text-center">
           <p className="text-text-secondary text-sm">장바구니를 불러오는 중이에요.</p>
+        </section>
+      ) : isUnauthorized ? (
+        <section className="flex min-h-[480px] flex-col items-center justify-center px-4 text-center">
+          <h2 className="text-title-3 font-bold">로그인이 필요해요</h2>
+          <p className="text-body-4 text-text-secondary mt-2">
+            로그인 후 장바구니를 이용해 주세요.
+          </p>
+          <Link
+            className="bg-secondary text-secondary-foreground text-label-3 mt-6 rounded-2xl px-5 py-3 font-semibold"
+            href="/login"
+          >
+            로그인하기
+          </Link>
         </section>
       ) : errorMessage ? (
         <section className="flex min-h-[480px] flex-col items-center justify-center px-4 text-center">
