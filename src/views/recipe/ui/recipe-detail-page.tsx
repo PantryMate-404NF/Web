@@ -3,8 +3,10 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Bookmark, Check, Share } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
+import { getCartItemCount, type CartProduct, useCartStore } from '@/entities/cart/model/cart-store';
 import type { PantryDto } from '@/entities/pantry/api/pantry.dto';
 import { usePantryStore } from '@/entities/pantry/model/pantry-store';
 import type { PantryItem } from '@/entities/pantry/model/types';
@@ -34,6 +36,15 @@ interface CleanupIngredient {
 type CleanupToast = {
   message: string;
   type: 'incomplete' | 'success';
+};
+
+const mockCartPriceByIngredientId: Record<string, number> = {
+  tomato: 3900,
+  egg: 5900,
+  ketchup: 3200,
+  sugar: 2800,
+  'green-onion': 1900,
+  'cooking-oil': 6900,
 };
 
 const recipeDetailImage = (fileName: string) => `/images/recipe-detail/${fileName}`;
@@ -178,10 +189,25 @@ export function getCleanupDeletionCount(selectedIngredientIds: string[]) {
   return selectedIngredientIds.length;
 }
 
+/** 현재 목업 필요 재료를 장바구니 표시용 임시 상품으로 변환함 */
+export function toRecipeCartProducts(
+  recipeId: string,
+  sourceIngredients: Ingredient[],
+): CartProduct[] {
+  return sourceIngredients.map((ingredient) => ({
+    id: `${recipeId}-${ingredient.id}`,
+    ingredient: ingredient.name,
+    name: `${ingredient.name} 상품`,
+    price: mockCartPriceByIngredientId[ingredient.id] ?? 0,
+  }));
+}
+
 export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
   const queryClient = useQueryClient();
   const pantryItems = usePantryStore((state) => state.items);
   const removePantryItems = usePantryStore((state) => state.removeItems);
+  const cartItems = useCartStore((state) => state.items);
+  const addProducts = useCartStore((state) => state.addProducts);
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
   const [selectedUsedIngredientIds, setSelectedUsedIngredientIds] = useState<string[]>([]);
   const [isCleanupSheetOpen, setIsCleanupSheetOpen] = useState(false);
@@ -190,10 +216,9 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
   const stepsSectionRef = useRef<HTMLElement>(null);
   const hasStartedCookingGuideTimerRef = useRef(false);
   const cleanupToastTimerRef = useRef<number | undefined>(undefined);
-  const ingredientIds = ingredients.map((ingredient) => ingredient.id);
   const hasSelectedIngredient = selectedIngredientIds.length > 0;
-  const isAllIngredientsSelected = areAllIngredientsSelected(selectedIngredientIds, ingredientIds);
   const cleanupIngredients = getCleanupIngredients(ingredients);
+  const cartItemCount = getCartItemCount(cartItems);
 
   useEffect(() => {
     const stepsSection = stepsSectionRef.current;
@@ -239,8 +264,17 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
     setSelectedIngredientIds((selectedIds) => toggleIngredientSelection(selectedIds, ingredientId));
   };
 
-  const handleSelectAllIngredients = () => {
-    setSelectedIngredientIds(isAllIngredientsSelected ? [] : ingredientIds);
+  const handleAddSelectedIngredients = () => {
+    addProducts(
+      toRecipeCartProducts(
+        recipeId,
+        ingredients.filter((ingredient) => selectedIngredientIds.includes(ingredient.id)),
+      ),
+    );
+  };
+
+  const handleAddAllIngredients = () => {
+    addProducts(toRecipeCartProducts(recipeId, ingredients));
   };
 
   const handleUsedIngredientClick = (ingredientId: string) => {
@@ -418,14 +452,15 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
           <div className="mt-4 flex gap-2">
             <button
               className="text-label-3 h-10 flex-1 rounded-full border-[1.5px] border-[var(--primitive-primary-400)] bg-[var(--surface-default)] font-medium text-[var(--primitive-black)]"
+              disabled={!hasSelectedIngredient}
+              onClick={handleAddSelectedIngredients}
               type="button"
             >
               선택 담기
             </button>
             <button
-              aria-pressed={isAllIngredientsSelected}
               className="text-label-3 h-10 flex-1 rounded-full border-[1.5px] border-[var(--primitive-primary-500)] bg-[var(--primitive-primary-300)] font-medium text-[var(--primitive-black)]"
-              onClick={handleSelectAllIngredients}
+              onClick={handleAddAllIngredients}
               style={{ borderColor: 'var(--primitive-primary-500)' }}
               type="button"
             >
@@ -469,6 +504,24 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
           조리 완료
         </button>
       </div>
+      <Link
+        aria-label={`장바구니 ${cartItemCount}개 상품`}
+        className="fixed bottom-8 left-1/2 z-40 ml-[130px] grid size-10 place-items-center rounded-full bg-[var(--primitive-primary-500)] shadow-[var(--shadow-floating)]"
+        href="/cart"
+      >
+        <Image
+          alt=""
+          aria-hidden="true"
+          height={24}
+          src="/images/recipe-detail/shoppingcart.svg"
+          width={24}
+        />
+        {cartItemCount > 0 ? (
+          <span className="absolute top-0 -right-1 grid size-[14px] place-items-center rounded-full bg-[var(--primitive-grey-800)] text-[10px] leading-none font-medium text-[var(--primitive-white)]">
+            {cartItemCount}
+          </span>
+        ) : null}
+      </Link>
       {isCookingGuideVisible ? (
         <p
           aria-live="polite"

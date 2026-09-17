@@ -11,6 +11,7 @@ import {
   getCleanupIngredients,
   getCleanupToastMessage,
   getMatchingPantryIngredients,
+  toRecipeCartProducts,
   toggleIngredientSelection,
 } from './recipe-detail-page';
 
@@ -65,6 +66,32 @@ describe('RecipeDetailPage', () => {
 });
 
 describe('ingredient selection', () => {
+  it('선택한 필요 재료를 장바구니 상품으로 변환한다', () => {
+    expect(
+      toRecipeCartProducts('tomato-egg-stir-fry', [
+        {
+          id: 'tomato',
+          name: '토마토',
+          amount: '2개',
+          imageSrc: '/tomato.png',
+          status: 'available',
+          statusLabel: '보유',
+        },
+        {
+          id: 'egg',
+          name: '달걀',
+          amount: '3개',
+          imageSrc: '/egg.png',
+          status: 'unavailable',
+          statusLabel: '미보유',
+        },
+      ]),
+    ).toEqual([
+      expect.objectContaining({ id: 'tomato-egg-stir-fry-tomato', ingredient: '토마토' }),
+      expect.objectContaining({ id: 'tomato-egg-stir-fry-egg', ingredient: '달걀' }),
+    ]);
+  });
+
   it('toggles one ingredient and can identify a fully selected ingredient list', () => {
     expect(toggleIngredientSelection([], 'tomato')).toEqual(['tomato']);
     expect(toggleIngredientSelection(['tomato'], 'tomato')).toEqual([]);
