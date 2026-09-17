@@ -2,11 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { CartRouteContent } from './cart-route-content';
 
-const { useCartMutationsMock, useCartQueryMock } = vi.hoisted(() => ({
+const { useAuthSessionMock, useCartMutationsMock, useCartQueryMock } = vi.hoisted(() => ({
+  useAuthSessionMock: vi.fn(),
   useCartMutationsMock: vi.fn(),
   useCartQueryMock: vi.fn(),
 }));
 
+vi.mock('@/features/auth/ui/auth-session-provider', () => ({ useAuthSession: useAuthSessionMock }));
 vi.mock('../model/use-cart-query', () => ({ useCartQuery: useCartQueryMock }));
 vi.mock('../model/use-cart-mutations', () => ({ useCartMutations: useCartMutationsMock }));
 
@@ -28,9 +30,11 @@ describe('CartRouteContent', () => {
       removeItems,
       updateQuantity,
     });
+    useAuthSessionMock.mockReturnValue({ state: 'complete' });
 
-    const page = CartRouteContent({ apiEnabled: true });
+    const page = CartRouteContent();
 
+    expect(useCartQueryMock).toHaveBeenCalledWith(true);
     expect(page.props).toMatchObject({
       cartId: 3,
       isLoading: false,
@@ -41,5 +45,16 @@ describe('CartRouteContent', () => {
     });
     page.props.onRetry();
     expect(refetch).toHaveBeenCalledOnce();
+  });
+
+  it('로그인 세션 복구 중에는 장바구니 조회를 시작하지 않는다', () => {
+    useAuthSessionMock.mockReturnValue({ state: 'loading' });
+    useCartQueryMock.mockReturnValue({ data: undefined, error: null, isPending: true });
+    useCartMutationsMock.mockReturnValue({ error: null, isPending: false });
+
+    const page = CartRouteContent();
+
+    expect(useCartQueryMock).toHaveBeenCalledWith(false);
+    expect(page.props).toMatchObject({ isLoading: true });
   });
 });

@@ -15,12 +15,11 @@
 ## 명세 가정과 변경 지점
 
 - 합동 테스트 전까지 설명 문서를 우선해 장바구니 경로는 `/api/carts`를 사용한다.
-- 임시 인증은 `X-User-Id` 헤더를 사용한다.
+- 기존 로그인에서 발급받은 Access Token을 `Authorization: Bearer` 헤더로 전달한다.
 - 장바구니 단수·복수 경로와 인증 방식은 API 경로 상수와 헤더 생성 함수 한 곳에서 변경한다.
-- 주문·결제 서비스는 기존 Gateway 프록시와 분리한 `/order-api/*` 브라우저 경로로 호출한다.
-- `ORDER_PAYMENT_API_BASE_URL=http://localhost:8084`를 Next 서버 전용 환경변수로 사용한다.
-- 테스트 사용자 ID는 `NEXT_PUBLIC_ORDER_PAYMENT_TEST_USER_ID`, 토스 키는 `NEXT_PUBLIC_TOSS_CLIENT_KEY`로 주입한다.
-- 테스트 사용자 ID는 Gateway의 JWT 인증이 연결되면 제거한다.
+- 주문·결제 서비스는 기존 Gateway 프록시의 `/api/*` 브라우저 경로로 호출한다.
+- 백엔드 Gateway 주소는 `BACKEND_API_BASE_URL`을 사용한다.
+- 토스 테스트 키는 `NEXT_PUBLIC_TOSS_CLIENT_KEY`로 주입한다.
 
 ## 구조
 
@@ -87,7 +86,7 @@
 ## 합동 테스트 체크리스트
 
 - 장바구니 API 경로는 `/api/carts` 사용
-- 인증 전달이 `X-User-Id`인지 `currentUser` 쿼리인지 확정
+- Gateway JWT Bearer 인증 전달 확인
 - Gateway 경유 여부와 실제 서비스 URL 확정
 - 테스트 `userId`, 장바구니 상품, 토스 테스트 클라이언트 키 준비
 - success·fail URL을 토스 개발자센터 허용 목록에 등록

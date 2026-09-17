@@ -20,16 +20,13 @@ describe('Next API proxy', () => {
     });
   });
 
-  it('브라우저의 /order-api 요청을 주문 결제 서비스로 전달한다', async () => {
-    vi.stubEnv('ORDER_PAYMENT_API_BASE_URL', 'http://localhost:8084');
+  it('주문 결제용 별도 프록시를 생성하지 않는다', async () => {
+    vi.stubEnv('BACKEND_API_BASE_URL', 'http://221.166.239.233:8080');
 
     const config = nextConfig as typeof nextConfig & {
       rewrites?: () => Promise<Array<{ destination: string; source: string }>>;
     };
 
-    await expect(config.rewrites?.()).resolves.toContainEqual({
-      destination: 'http://localhost:8084/api/:path*',
-      source: '/order-api/:path*',
-    });
+    await expect(config.rewrites?.()).resolves.toHaveLength(1);
   });
 });

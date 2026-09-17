@@ -4,7 +4,7 @@
 
 **Goal:** 주문서에서 실제 장바구니 항목으로 주문을 생성하고 토스 결제 인증 및 백엔드 승인을 완료하는 프론트 흐름을 구현한다.
 
-**Architecture:** 주문·결제 서비스는 `/order-api` Next rewrite 뒤의 전용 HTTP 클라이언트로 접근한다. Cart·Order DTO는 entities에, 결제 실행과 토스 SDK 어댑터는 features에, 화면 상태 조합은 views에 두며 app은 검색 파라미터 전달만 담당한다.
+**Architecture:** 주문·결제 서비스는 기존 `/api` Gateway rewrite와 Bearer 인증 HTTP 클라이언트로 접근한다. Cart·Order DTO는 entities에, 결제 실행과 토스 SDK 어댑터는 features에, 화면 상태 조합은 views에 두며 app은 검색 파라미터 전달만 담당한다.
 
 **Tech Stack:** Next.js 16 App Router, React 19, TypeScript, TanStack Query, TossPayments JavaScript SDK v2, Vitest
 
@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - 390 × 844 CSS px를 기준으로 기존 주문서 레이아웃을 유지한다.
-- 설명 문서 기준 `/api/carts`와 `X-User-Id`를 사용하되 한 파일에서 변경 가능하게 한다.
+- `/api/carts`와 기존 로그인 Access Token의 Bearer 인증을 사용한다.
 - 실제 결제 금액은 주문 생성 응답의 `totalAmount`만 사용한다.
 - 토스 Secret Key와 승인 API 직접 호출은 브라우저에 두지 않는다.
 - 모든 새 API 함수는 공통 응답의 `data`만 반환하고 서버 오류 코드를 보존한다.
@@ -37,7 +37,7 @@
 
 - [ ] **Step 1: 실패 테스트 작성**
 
-`fetch`를 mock해 `/order-api/carts` 호출, `X-User-Id`, JSON body, 오류 코드 보존을 검증한다.
+공통 HTTP 클라이언트를 mock해 `/api/carts` 호출과 요청 옵션 전달을 검증한다.
 
 - [ ] **Step 2: 실패 확인**
 
@@ -47,7 +47,7 @@ Expected: 모듈이 없어 FAIL.
 
 - [ ] **Step 3: 최소 구현**
 
-`NEXT_PUBLIC_API_BASE_URL` 뒤에 `/order-api`를 붙이고 공통 응답을 해석하는 클라이언트를 구현한다. `next.config.ts`에는 `ORDER_PAYMENT_API_BASE_URL`이 있을 때만 `/order-api/:path* → {base}/api/:path*` rewrite를 추가한다.
+주문·결제 요청을 기존 공통 HTTP 클라이언트에 연결해 `/api/*` Gateway 경로와 Bearer 인증을 재사용한다.
 
 - [ ] **Step 4: 테스트 통과 확인**
 
@@ -222,7 +222,7 @@ Run: `npm run test -- src/features/payment/model/payment-redirect.test.ts src/vi
 
 - [ ] **Step 1: 환경변수와 화면별 API 매핑 기록**
 
-`ORDER_PAYMENT_API_BASE_URL`, `NEXT_PUBLIC_ORDER_PAYMENT_TEST_USER_ID`, `NEXT_PUBLIC_TOSS_CLIENT_KEY`, success/fail 경로를 기록한다.
+`BACKEND_API_BASE_URL`, `NEXT_PUBLIC_TOSS_CLIENT_KEY`, success/fail 경로를 기록한다.
 
 - [ ] **Step 2: 전체 자동 검증**
 

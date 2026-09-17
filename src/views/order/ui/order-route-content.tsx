@@ -1,6 +1,7 @@
 'use client';
 
 import type { CartItem } from '@/entities/cart/model/cart-store';
+import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 import { useCartQuery } from '@/views/cart/model/use-cart-query';
 
 import { OrderPage } from './order-page';
@@ -13,18 +14,29 @@ interface OrderRouteContentProps {
 }
 
 export function OrderRouteContent({
-  apiEnabled = Boolean(process.env.NEXT_PUBLIC_ORDER_PAYMENT_TEST_USER_ID),
+  apiEnabled,
   previewItems,
   selectedItemIds,
 }: OrderRouteContentProps) {
-  const shouldQuery = apiEnabled && !previewItems;
+  const { state: authState } = useAuthSession();
+  const isAuthLoading = apiEnabled === undefined && authState === 'loading';
+  const shouldUseApi = apiEnabled ?? (authState === 'complete' || authState === 'onboarding');
+  const shouldQuery = shouldUseApi && !previewItems;
   const { data, error, isPending, refetch } = useCartQuery(shouldQuery);
 
   if (previewItems) {
     return <OrderPage items={previewItems} selectedItemIds={selectedItemIds} />;
   }
 
-  if (!apiEnabled) return <OrderPage selectedItemIds={selectedItemIds} />;
+  if (isAuthLoading) return <OrderPage isLoading selectedItemIds={selectedItemIds} />;
+  if (!shouldUseApi) {
+    return (
+      <OrderPage
+        errorMessage="로그인 후 주문서를 이용해 주세요."
+        selectedItemIds={selectedItemIds}
+      />
+    );
+  }
 
   return (
     <OrderPage

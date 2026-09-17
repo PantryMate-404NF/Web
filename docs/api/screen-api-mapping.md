@@ -109,5 +109,5 @@ interface CreatePantryRequest {
 | 중간     | 레시피 목록 조건 | 임박 추천·재료 선택의 요청 파라미터와 빈 결과 기준               |
 | 중간     | 홈 데이터        | 홈에서 필요한 팬트리·레시피 요약 API 또는 조합 기준              |
 | 중간     | 배송 자동 등록   | 배송 완료 이벤트 전달 방식과 자동 등록 API                       |
-| 높음     | 임시 결제 인증   | `X-User-Id` 헤더와 `currentUser` query 중 테스트 계약 확정       |
+| 완료     | 주문·결제 인증   | 기존 로그인 Access Token을 Gateway JWT Bearer 인증으로 전달      |
 | 높음     | 결제 중복 준비   | 같은 주문의 prepare 중복 레코드 생성 방지 적용 여부              |
