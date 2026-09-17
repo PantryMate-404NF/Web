@@ -1,11 +1,20 @@
 /**
- * 서버에서 팬트리 목록 원본 데이터를 조회.
- * 화면용 데이터 변환은 pantry.mapper.ts에서 담당.
+ * Swagger 팬트리 목록 요청과 query string 생성 담당함
  */
 
 import { request } from '@/shared/api/http-client';
-import type { PantryDto } from './pantry.dto';
+import type { PantryItemDto } from './pantry.dto';
 
-export function getPantries() {
-  return request<PantryDto[]>('/api/pantries');
+export interface PantryListFilters {
+  storageType?: 'REFRIGERATED' | 'FROZEN' | 'ROOM_TEMP';
+  sort?: 'RECENT' | 'IMMINENT' | 'OLDEST';
+}
+
+export function getPantries(filters: PantryListFilters = {}) {
+  const searchParams = new URLSearchParams();
+  if (filters.storageType) searchParams.set('storageType', filters.storageType);
+  if (filters.sort) searchParams.set('sort', filters.sort);
+  const query = searchParams.toString();
+
+  return request<PantryItemDto[]>(`/api/pantry-items${query ? `?${query}` : ''}`);
 }

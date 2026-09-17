@@ -11,7 +11,7 @@ const storageItems: PantryItem[] = [
     createdAt: '2026-09-03T00:00:00Z',
   },
   { ...pantryItems[1], id: 'frozen', storageType: 'FROZEN', createdAt: '2026-09-01T00:00:00Z' },
-  { ...pantryItems[2], id: 'room', storageType: 'ROOMTEMP', createdAt: '2026-09-02T00:00:00Z' },
+  { ...pantryItems[2], id: 'room', storageType: 'ROOM_TEMP', createdAt: '2026-09-02T00:00:00Z' },
 ];
 
 describe('removePantryItems', () => {

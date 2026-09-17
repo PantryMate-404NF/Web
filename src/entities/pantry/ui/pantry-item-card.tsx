@@ -1,3 +1,5 @@
+/** 팬트리 식재료 카드의 이미지·상태·보관 방법 표시 담당함 */
+
 import { Image as ImageIcon, Package } from 'lucide-react';
 import Image from 'next/image';
 
@@ -64,7 +66,7 @@ function PantryImageCard({
   item: PantryItem;
   onOptions?: (trigger: HTMLButtonElement) => void;
 }) {
-  const storageLabels = { REFRIGERATED: '냉장', FROZEN: '냉동', ROOMTEMP: '실온' } as const;
+  const storageLabels = { REFRIGERATED: '냉장', FROZEN: '냉동', ROOM_TEMP: '실온' } as const;
   const sourceLabels = {
     PURCHASED: '자사몰 구매',
     MANUAL: '사용자 등록',
@@ -76,7 +78,7 @@ function PantryImageCard({
   const storageIconSrc =
     item.storageType === 'FROZEN'
       ? '/images/pantry/snow.svg'
-      : item.storageType === 'ROOMTEMP'
+      : item.storageType === 'ROOM_TEMP'
         ? '/images/pantry/sun.svg'
         : '/images/pantry/refrigerator.svg';
 

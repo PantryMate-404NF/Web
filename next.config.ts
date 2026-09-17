@@ -16,13 +16,41 @@ const nextConfig: NextConfig = {
    */
   async rewrites() {
     const backendApiBaseUrl = process.env.BACKEND_API_BASE_URL?.replace(/\/+$/, '');
-    const rewrites = [];
 
     if (backendApiBaseUrl) {
-      rewrites.push({
-        destination: `${backendApiBaseUrl}/api/:path*`,
-        source: '/api/:path*',
-      });
+      return [{ source: '/api/:path*', destination: `${backendApiBaseUrl}/api/:path*` }];
+    }
+
+    const authApiBaseUrl = process.env.AUTH_API_BASE_URL?.replace(/\/+$/, '');
+    const pantryRecipeApiBaseUrl = process.env.PANTRY_RECIPE_API_BASE_URL?.replace(/\/+$/, '');
+    const productApiBaseUrl = process.env.PRODUCT_API_BASE_URL?.replace(/\/+$/, '');
+    const rewrites = [];
+
+    if (productApiBaseUrl) {
+      rewrites.push(
+        { source: '/api/products/:path*', destination: `${productApiBaseUrl}/api/products/:path*` },
+        {
+          source: '/api/categories/:path*',
+          destination: `${productApiBaseUrl}/api/categories/:path*`,
+        },
+      );
+    }
+
+    if (pantryRecipeApiBaseUrl) {
+      rewrites.push(
+        {
+          source: '/api/pantry-items/:path*',
+          destination: `${pantryRecipeApiBaseUrl}/api/pantry-items/:path*`,
+        },
+        {
+          source: '/api/recipes/:path*',
+          destination: `${pantryRecipeApiBaseUrl}/api/recipes/:path*`,
+        },
+      );
+    }
+
+    if (authApiBaseUrl) {
+      rewrites.push({ source: '/api/:path*', destination: `${authApiBaseUrl}/api/:path*` });
     }
 
     return rewrites;

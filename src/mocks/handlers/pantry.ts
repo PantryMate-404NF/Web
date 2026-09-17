@@ -1,6 +1,5 @@
 /**
- * 개발 환경에서 팬트리 목록 API를 대신하는 MSW 핸들러.
- * 기본·빈 목록·오류 상태를 화면에서 확인할 수 있게 함.
+ * 개발 환경에서 팬트리 API 응답을 재현하는 MSW 핸들러임
  */
 
 import { http, HttpResponse } from 'msw';
@@ -18,7 +17,7 @@ const pantryUnauthorizedResponse: ApiErrorResponse = {
 };
 
 export const pantryHandlers = [
-  http.get('*/api/pantries', ({ request }) => {
+  http.get('*/api/pantry-items', ({ request }) => {
     const mock = new URL(request.url).searchParams.get('mock');
 
     if (mock === 'empty') {

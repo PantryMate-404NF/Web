@@ -1,3 +1,5 @@
+/** 목업 화면과 테스트에서 사용할 팬트리 식재료 데이터 제공함 */
+
 import type { PantryItem } from './types';
 
 export const pantryItems: PantryItem[] = [
@@ -11,7 +13,7 @@ export const pantryItems: PantryItem[] = [
     availability: 'AVAILABLE',
     imageAlt: '설탕',
     imageUrl: '/images/pantry/sugar.png',
-    storageType: 'ROOMTEMP',
+    storageType: 'ROOM_TEMP',
     registrationSource: 'PURCHASED',
     createdAt: '2026-09-10T10:00:00Z',
   },
@@ -53,7 +55,7 @@ export const pantryItems: PantryItem[] = [
     availability: 'AVAILABLE',
     imageAlt: '올리브유',
     imageUrl: '/images/pantry/olive-oil.png',
-    storageType: 'ROOMTEMP',
+    storageType: 'ROOM_TEMP',
     registrationSource: 'MANUAL',
     createdAt: '2026-09-10T07:00:00Z',
   },
@@ -95,7 +97,7 @@ export const pantryItems: PantryItem[] = [
     availability: 'AVAILABLE',
     imageAlt: '바나나',
     imageUrl: '/images/pantry/banana.png',
-    storageType: 'ROOMTEMP',
+    storageType: 'ROOM_TEMP',
     registrationSource: 'MANUAL',
     createdAt: '2026-09-10T04:00:00Z',
   },
@@ -123,7 +125,7 @@ export const pantryItems: PantryItem[] = [
     availability: 'AVAILABLE',
     imageAlt: '식빵',
     imageUrl: '/images/pantry/bread.png',
-    storageType: 'ROOMTEMP',
+    storageType: 'ROOM_TEMP',
     registrationSource: 'MANUAL',
     createdAt: '2026-09-10T02:00:00Z',
   },

@@ -1,16 +1,15 @@
 'use client';
 
-import { useQueryClient } from '@tanstack/react-query';
 import { Bookmark, Check, Share } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 import { getCartItemCount, type CartProduct, useCartStore } from '@/entities/cart/model/cart-store';
-import type { PantryDto } from '@/entities/pantry/api/pantry.dto';
+import { usePantryMutations } from '@/entities/pantry/api/use-pantry-mutations';
+import { useRecipeMutations } from '@/entities/recipe/api/use-recipe-mutations';
 import { usePantryStore } from '@/entities/pantry/model/pantry-store';
 import type { PantryItem } from '@/entities/pantry/model/types';
-import { PANTRY_QUERY_KEY } from '@/entities/pantry/api/use-pantries-query';
 
 interface RecipeDetailPageProps {
   recipeId: string;
@@ -203,9 +202,10 @@ export function toRecipeCartProducts(
 }
 
 export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
-  const queryClient = useQueryClient();
   const pantryItems = usePantryStore((state) => state.items);
   const removePantryItems = usePantryStore((state) => state.removeItems);
+  const { remove: removePantryItem } = usePantryMutations();
+  const { completeCooking } = useRecipeMutations();
   const cartItems = useCartStore((state) => state.items);
   const addProducts = useCartStore((state) => state.addProducts);
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
@@ -293,9 +293,17 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
     }, COOKING_GUIDE_VISIBLE_MS);
   };
 
-  const handleCookingComplete = () => {
-    setSelectedUsedIngredientIds([]);
-    setIsCleanupSheetOpen(true);
+  const handleCookingComplete = async () => {
+    try {
+      await completeCooking.mutateAsync(recipeId);
+      setSelectedUsedIngredientIds([]);
+      setIsCleanupSheetOpen(true);
+    } catch {
+      showCleanupToast({
+        message: '조리 완료를 저장하지 못했어요. 다시 시도해 주세요.',
+        type: 'incomplete',
+      });
+    }
   };
 
   const handleCleanupDismiss = () => {
@@ -306,7 +314,7 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
     });
   };
 
-  const handleCleanupComplete = () => {
+  const handleCleanupComplete = async () => {
     const selectedIngredientNames = new Set(
       ingredients
         .filter((ingredient) => selectedUsedIngredientIds.includes(ingredient.id))
@@ -316,17 +324,18 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
       .filter((item) => selectedIngredientNames.has(item.name))
       .map((item) => item.id);
 
-    if (selectedPantryItemIds.length > 0) {
-      const selectedIdSet = new Set(selectedPantryItemIds);
-      removePantryItems(selectedPantryItemIds);
-      queryClient.setQueryData<PantryDto[]>(PANTRY_QUERY_KEY, (cachedItems) =>
-        cachedItems?.filter((item) => !selectedIdSet.has(String(item.pantryId))),
-      );
-    }
+    const results = await Promise.allSettled(
+      selectedPantryItemIds.map((pantryItemId) => removePantryItem.mutateAsync(pantryItemId)),
+    );
+    const deletedItemIds = selectedPantryItemIds.filter(
+      (_, index) => results[index]?.status === 'fulfilled',
+    );
+
+    if (deletedItemIds.length > 0) removePantryItems(deletedItemIds);
 
     setIsCleanupSheetOpen(false);
     showCleanupToast({
-      message: getCleanupToastMessage(getCleanupDeletionCount(selectedUsedIngredientIds)),
+      message: getCleanupToastMessage(deletedItemIds.length),
       type: 'success',
     });
   };
