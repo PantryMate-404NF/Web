@@ -1,5 +1,7 @@
 'use client';
 
+/** 팬트리 조회와 등록·수정·목업 화면 흐름을 조합함 */
+
 import { useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, ChevronLeft } from 'lucide-react';
 import Image from 'next/image';
@@ -11,7 +13,11 @@ import { Button } from '@/components/ui/button';
 import { getPantryExpirationPresentation } from '@/entities/pantry/model/expiration';
 import { upsertPantryItem, usePantryStore } from '@/entities/pantry/model/pantry-store';
 import { getPantryCardVariant } from '@/entities/pantry/model/types';
-import type { PantryItem, PantryStorageType } from '@/entities/pantry/model/types';
+import type {
+  PantryCardVariant,
+  PantryItem,
+  PantryStorageType,
+} from '@/entities/pantry/model/types';
 import { PANTRY_QUERY_KEY, usePantryQuery } from '@/views/pantry/model/use-pantry-query';
 import { PantryPage } from '@/views/pantry/ui/pantry-page';
 
@@ -328,7 +334,7 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
                 [
                   ['냉장', 'REFRIGERATED', '/icons/pantry/refrigerated.svg', 'h-[15px] w-[11px]'],
                   ['냉동', 'FROZEN', '/icons/pantry/frozen.svg', 'h-4 w-[14px]'],
-                  ['실온', 'ROOMTEMP', '/icons/pantry/room-temperature.svg', 'size-4'],
+                  ['실온', 'ROOM_TEMP', '/icons/pantry/room-temperature.svg', 'size-4'],
                 ] as const
               ).map(([label, type, iconSrc, iconClassName]) => (
                 <button
@@ -583,6 +589,24 @@ function EditIngredientForm({ itemId }: { itemId?: string }) {
   return <IngredientFormMock itemId={itemId} items={data ?? []} mode="edit" />;
 }
 
+function PantryContent({ cardVariant }: { cardVariant: PantryCardVariant }) {
+  const { data, error, isPending, refetch } = usePantryQuery();
+
+  if (isPending) return <PantryPage cardVariant={cardVariant} isLoading items={[]} />;
+  if (error) {
+    return (
+      <PantryPage
+        cardVariant={cardVariant}
+        errorMessage={error.message}
+        items={[]}
+        onRetry={() => void refetch()}
+      />
+    );
+  }
+
+  return <PantryPage cardVariant={cardVariant} items={data ?? []} />;
+}
+
 export function PantryFlowPage({ itemId, state, view }: PantryFlowPageProps) {
   const mockState = getPantryMockState(state);
   const cardVariant = getPantryCardVariant(view);
@@ -595,7 +619,7 @@ export function PantryFlowPage({ itemId, state, view }: PantryFlowPageProps) {
 
   return (
     <>
-      <PantryPage cardVariant={cardVariant} />
+      <PantryContent cardVariant={cardVariant} />
       {mockState === 'delivery-complete' && <DeliveryCompleteDialog />}
       {mockState === 'delete-confirm' && <DeleteConfirmSheet />}
     </>

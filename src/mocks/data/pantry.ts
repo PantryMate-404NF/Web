@@ -1,25 +1,26 @@
 /**
- * 개발·테스트 환경에서 GET /api/pantries 응답으로 사용하는 팬트리 목업 데이터.
+ * 개발·테스트 환경의 팬트리 API 응답 목업 데이터 제공함
  */
 
-import type { PantryDto } from '@/entities/pantry/api/pantry.dto';
+import type { PantryItemDto } from '@/entities/pantry/api/pantry.dto';
 import type { ApiSuccessResponse } from '@/shared/api/api-response';
 
-export const pantryListResponse: ApiSuccessResponse<PantryDto[]> = {
+export const pantryListResponse: ApiSuccessResponse<PantryItemDto[]> = {
   status: 'SUCCESS' as const,
   message: '팬트리 목록을 조회했습니다.',
   data: [
     {
-      pantryId: 1,
+      pantryItemId: 1,
       ingredientName: '대파',
-      expirationDate: '2026-09-07',
+      sellByDate: null,
+      expiryDate: '2026-09-07',
       dDay: 3,
-      isImminent: true,
-      isExpired: false,
+      expiryStatus: 'IMMINENT',
       storageType: 'REFRIGERATED' as const,
+      isExpiryAutoCalculated: false,
+      isCookable: true,
       registerType: 'MANUAL' as const,
       imageUrl: null,
-      createdAt: '2026-09-04T00:00:00Z',
     },
   ],
   error: null,

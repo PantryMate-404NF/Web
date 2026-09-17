@@ -4,6 +4,7 @@ import { Bookmark, ChevronRight, ShoppingCart, UserRound } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { useRecipesQuery } from '@/entities/recipe/api/use-recipes-query';
 import { recipeMocks } from '@/entities/recipe/model/mock';
 import { usePantriesQuery } from '@/entities/pantry/api/use-pantries-query';
 import type { PantryItem } from '@/entities/pantry/model/types';
@@ -220,11 +221,14 @@ function getRecipePantryPriority(recipe: Recipe, priorityByIngredientId: Map<str
   };
 }
 
-export function getRecipeSections(tab: RecipeTab): RecipeRailSection[] {
-  const imminentRecipes = recipeMocks.filter((recipe) =>
+export function getRecipeSections(
+  tab: RecipeTab,
+  sourceRecipes = recipeMocks,
+): RecipeRailSection[] {
+  const imminentRecipes = sourceRecipes.filter((recipe) =>
     recipe.ingredients.some((ingredient) => ingredient.isImminent),
   );
-  const recipes = tab === 'imminent' ? imminentRecipes : recipeMocks;
+  const recipes = tab === 'imminent' ? imminentRecipes : sourceRecipes;
 
   return [
     {
@@ -463,7 +467,8 @@ export function RecipeListPage({
   tab?: RecipeTab;
   mockPantryMode?: RecipePantryMockMode;
 }) {
-  const sections = getRecipeSections(tab);
+  const { data: apiRecipes } = useRecipesQuery();
+  const sections = getRecipeSections(tab, apiRecipes ?? recipeMocks);
   const { data: pantryItems = [] } = usePantriesQuery();
   const recipePantryItems = getRecipePantryItems(pantryItems, mockPantryMode);
   const displayMode = getRecipeDisplayMode(recipePantryItems);

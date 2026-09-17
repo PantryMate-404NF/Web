@@ -1,9 +1,11 @@
+/** 팬트리 화면에서 공유하는 도메인 타입 정의함 */
+
 export type PantryAvailability = 'AVAILABLE' | 'UNAVAILABLE';
 
 export type ExpirationStatus = 'NORMAL' | 'IMMINENT' | 'EXPIRED' | 'UNREGISTERED';
 
 export type PantryCardVariant = 'icon' | 'image';
-export type PantryStorageType = 'REFRIGERATED' | 'FROZEN' | 'ROOMTEMP';
+export type PantryStorageType = 'REFRIGERATED' | 'FROZEN' | 'ROOM_TEMP';
 export type PantryRegistrationSource = 'PURCHASED' | 'MANUAL' | 'OCR';
 export type PantrySortOption = 'RECENT' | 'IMMINENT' | 'OLDEST';
 
