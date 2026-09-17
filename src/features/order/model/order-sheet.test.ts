@@ -7,6 +7,7 @@ import {
   buildPaymentExecutionInput,
   buildOrderHref,
   calculateOrderAmounts,
+  getSelectedCartItemIds,
   ORDER_AGREEMENT_IDS,
   selectOrderItems,
   toggleOrderAgreement,
@@ -25,6 +26,16 @@ describe('order sheet model', () => {
   it('선택 ID에 해당하는 장바구니 상품만 주문 대상으로 사용한다', () => {
     expect(selectOrderItems(items, ['potato'])).toEqual([items[1]]);
     expect(selectOrderItems(items, [])).toEqual(items);
+  });
+
+  it('화면에 표시된 상품에서 주문 API용 장바구니 항목 ID를 만든다', () => {
+    expect(
+      getSelectedCartItemIds([
+        { ...items[0], cartItemId: 10 },
+        { ...items[1], id: '12' },
+        { ...items[1], id: 'preview-item' },
+      ]),
+    ).toEqual([10, 12]);
   });
 
   it('주문 금액과 배송비를 합산한다', () => {

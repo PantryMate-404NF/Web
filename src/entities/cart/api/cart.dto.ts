@@ -15,3 +15,9 @@ export interface CartResponseDto {
   cartId: number;
   items: CartItemDto[];
 }
+
+export interface CartItemMutationResponseDto {
+  cartItemId: number;
+  productId: number;
+  quantity: number;
+}

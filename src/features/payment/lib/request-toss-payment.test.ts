@@ -26,7 +26,7 @@ describe('requestTossPayment', () => {
     });
     expect(storage.setItem).toHaveBeenCalledWith(
       'order-payment-attempt',
-      JSON.stringify({ amount: 42500, orderId: 'ORDER_1' }),
+      JSON.stringify({ amount: 42500, name: '국산 양파 외 1건', orderId: 'ORDER_1' }),
     );
   });
 

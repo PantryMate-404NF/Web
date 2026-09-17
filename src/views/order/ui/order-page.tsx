@@ -13,6 +13,7 @@ import {
   areAllRequiredAgreementsSelected,
   buildPaymentExecutionInput,
   calculateOrderAmounts,
+  getSelectedCartItemIds,
   ORDER_AGREEMENT_IDS,
   selectOrderItems,
   toggleOrderAgreement,
@@ -391,7 +392,7 @@ export function OrderPage({
     <OrderSheet
       cartId={cartId}
       items={orderItems}
-      selectedCartItemIds={selectedItemIds.map(Number).filter(Number.isInteger)}
+      selectedCartItemIds={getSelectedCartItemIds(orderItems)}
     />
   );
 }

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { getPaymentErrorMessage, parsePaymentSuccessParams } from './payment-redirect';
+import {
+  getPaymentErrorMessage,
+  parsePaymentSuccessParams,
+  readPaymentAttempt,
+} from './payment-redirect';
 
 describe('parsePaymentSuccessParams', () => {
   it('유효한 결제 성공 파라미터를 승인 요청으로 변환한다', () => {
@@ -19,7 +23,7 @@ describe('parsePaymentSuccessParams', () => {
     expect(
       parsePaymentSuccessParams(
         { amount: '13000', orderId: 'ORDER_2', paymentKey: 'payment-key' },
-        { amount: 13000, orderId: 'ORDER_1' },
+        { amount: 13000, name: '국산 양파', orderId: 'ORDER_1' },
       ),
     ).toBeNull();
   });
@@ -33,5 +37,33 @@ describe('getPaymentErrorMessage', () => {
     ['PAYMENT_IN_PROGRESS', '결제를 처리하고 있어요. 잠시 후 다시 확인해 주세요.'],
   ])('%s 오류를 사용자 안내로 변환한다', (code, message) => {
     expect(getPaymentErrorMessage({ code })).toBe(message);
+  });
+});
+
+describe('readPaymentAttempt', () => {
+  it('저장된 주문 정보를 결제 재시도 상태로 복원한다', () => {
+    const storage = {
+      getItem: () =>
+        JSON.stringify({ amount: 13000, name: '국산 양파 외 1건', orderId: 'ORDER_1' }),
+    };
+
+    expect(readPaymentAttempt(storage)).toEqual({
+      amount: 13000,
+      name: '국산 양파 외 1건',
+      orderId: 'ORDER_1',
+    });
+  });
+
+  it('주문명 또는 유효한 금액이 없는 저장 상태를 거부한다', () => {
+    expect(
+      readPaymentAttempt({
+        getItem: () => JSON.stringify({ amount: 13000, orderId: 'ORDER_1' }),
+      }),
+    ).toBeNull();
+    expect(
+      readPaymentAttempt({
+        getItem: () => JSON.stringify({ amount: 0, name: '국산 양파', orderId: 'ORDER_1' }),
+      }),
+    ).toBeNull();
   });
 });

@@ -2,6 +2,7 @@ import type { PaymentConfirmRequestDto } from '@/features/payment/api/payment.dt
 
 export interface PaymentAttempt {
   amount: number;
+  name: string;
   orderId: string;
 }
 
@@ -37,8 +38,13 @@ export function readPaymentAttempt(storage: Pick<Storage, 'getItem'>): PaymentAt
   try {
     const attempt = JSON.parse(storedAttempt) as Partial<PaymentAttempt>;
 
-    return typeof attempt.amount === 'number' && typeof attempt.orderId === 'string'
-      ? { amount: attempt.amount, orderId: attempt.orderId }
+    return Number.isSafeInteger(attempt.amount) &&
+      Number(attempt.amount) > 0 &&
+      typeof attempt.name === 'string' &&
+      attempt.name.length > 0 &&
+      typeof attempt.orderId === 'string' &&
+      attempt.orderId.length > 0
+      ? { amount: Number(attempt.amount), name: attempt.name, orderId: attempt.orderId }
       : null;
   } catch {
     return null;

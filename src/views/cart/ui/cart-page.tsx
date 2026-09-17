@@ -56,16 +56,24 @@ interface CartPageProps {
   cartId?: number;
   errorMessage?: string;
   isLoading?: boolean;
+  isMutating?: boolean;
   items?: CartItem[];
+  mutationErrorMessage?: string;
+  onRemoveItems?: (items: CartItem[]) => void;
   onRetry?: () => void;
+  onUpdateQuantity?: (item: CartItem, quantity: number) => void;
 }
 
 export function CartPage({
   cartId,
   errorMessage,
   isLoading = false,
+  isMutating = false,
   items,
+  mutationErrorMessage,
+  onRemoveItems,
   onRetry,
+  onUpdateQuantity,
 }: CartPageProps = {}) {
   const router = useRouter();
   const storedItems = useCartStore((state) => state.items);
@@ -96,11 +104,30 @@ export function CartPage({
   }
 
   function removeSelectedItems() {
+    if (onRemoveItems) {
+      onRemoveItems(selectedItems);
+      return;
+    }
+
     selectedItems.forEach((item) => removeProduct(item.id));
   }
 
   function removeAllItems() {
+    if (onRemoveItems) {
+      onRemoveItems(currentItems);
+      return;
+    }
+
     currentItems.forEach((item) => removeProduct(item.id));
+  }
+
+  function changeQuantity(item: CartItem, quantity: number) {
+    if (onUpdateQuantity) {
+      onUpdateQuantity(item, quantity);
+      return;
+    }
+
+    updateQuantity(item.id, quantity);
   }
 
   return (
@@ -172,13 +199,13 @@ export function CartPage({
                   <span className="text-label-2 font-semibold">전체 선택</span>
                 </button>
                 <div className="text-label-3 text-text-secondary flex items-center gap-2 pr-1 font-medium">
-                  <button onClick={removeSelectedItems} type="button">
+                  <button disabled={isMutating} onClick={removeSelectedItems} type="button">
                     선택 삭제
                   </button>
                   <span className="text-disabled" aria-hidden="true">
                     |
                   </span>
-                  <button onClick={removeAllItems} type="button">
+                  <button disabled={isMutating} onClick={removeAllItems} type="button">
                     전체 삭제
                   </button>
                 </div>
@@ -231,7 +258,8 @@ export function CartPage({
                           <button
                             aria-label={`${item.name} 수량 줄이기`}
                             className="grid size-10 place-items-center"
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            disabled={isMutating || item.quantity <= 1}
+                            onClick={() => changeQuantity(item, item.quantity - 1)}
                             type="button"
                           >
                             <Image
@@ -251,7 +279,8 @@ export function CartPage({
                           <button
                             aria-label={`${item.name} 수량 늘리기`}
                             className="grid size-10 place-items-center"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            disabled={isMutating}
+                            onClick={() => changeQuantity(item, item.quantity + 1)}
                             type="button"
                           >
                             <Image
@@ -276,6 +305,12 @@ export function CartPage({
               </ul>
             </div>
           </section>
+
+          {mutationErrorMessage ? (
+            <p className="text-destructive px-4 pt-3 text-center text-sm" role="alert">
+              {mutationErrorMessage}
+            </p>
+          ) : null}
 
           <section className="border-border mx-4 border-b py-4" aria-label="결제 금액">
             <h2 className="text-title-4 text-text-secondary font-semibold">결제 금액</h2>

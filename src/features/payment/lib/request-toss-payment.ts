@@ -59,7 +59,7 @@ export async function requestTossPayment(
 
   paymentStorage.setItem(
     'order-payment-attempt',
-    JSON.stringify({ amount: order.totalAmount, orderId: order.orderId }),
+    JSON.stringify({ amount: order.totalAmount, name: order.name, orderId: order.orderId }),
   );
 
   await payment.requestPayment({

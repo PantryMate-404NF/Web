@@ -86,7 +86,7 @@
 
 ## 합동 테스트 체크리스트
 
-- 실제 경로가 `/api/cart`인지 `/api/carts`인지 확정
+- 장바구니 API 경로는 `/api/carts` 사용
 - 인증 전달이 `X-User-Id`인지 `currentUser` 쿼리인지 확정
 - Gateway 경유 여부와 실제 서비스 URL 확정
 - 테스트 `userId`, 장바구니 상품, 토스 테스트 클라이언트 키 준비

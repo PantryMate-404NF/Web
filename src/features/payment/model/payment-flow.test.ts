@@ -59,4 +59,27 @@ describe('createPaymentExecutor', () => {
     expect(preparePayment).toHaveBeenCalledTimes(1);
     expect(requestPayment).toHaveBeenCalledTimes(1);
   });
+
+  it('토스 요청 실패 후 재시도하면 생성된 주문과 결제 준비 상태를 재사용한다', async () => {
+    const createOrder = vi.fn().mockResolvedValue(orderResponse);
+    const preparePayment = vi.fn().mockResolvedValue({
+      paymentId: 1,
+      orderId: 'ORDER_1',
+      status: 'READY' as const,
+      totalAmount: 42500,
+    });
+    const requestPayment = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('결제창을 열지 못했습니다.'))
+      .mockResolvedValueOnce(undefined);
+    const execute = createPaymentExecutor({ createOrder, preparePayment, requestPayment });
+    const input = { cartId: 3, idempotencyKey: 'uuid', selectedCartItemIds: [10] };
+
+    await expect(execute(input)).rejects.toThrow('결제창을 열지 못했습니다.');
+    await expect(execute(input)).resolves.toBeUndefined();
+
+    expect(createOrder).toHaveBeenCalledTimes(1);
+    expect(preparePayment).toHaveBeenCalledTimes(1);
+    expect(requestPayment).toHaveBeenCalledTimes(2);
+  });
 });

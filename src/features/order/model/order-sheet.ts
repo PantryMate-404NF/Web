@@ -31,6 +31,12 @@ export function selectOrderItems(items: CartItem[], selectedItemIds: string[]) {
   return items.filter((item) => selectedIds.has(item.id));
 }
 
+export function getSelectedCartItemIds(items: CartItem[]) {
+  return items
+    .map((item) => item.cartItemId ?? Number(item.id))
+    .filter((itemId) => Number.isSafeInteger(itemId) && itemId > 0);
+}
+
 export function calculateOrderAmounts(items: CartItem[]) {
   const orderAmount = getCartTotal(items);
   const shippingFee = orderAmount > 0 ? SHIPPING_FEE : 0;

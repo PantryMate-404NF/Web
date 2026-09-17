@@ -14,7 +14,6 @@ interface OrderRouteContentProps {
 
 export function OrderRouteContent({
   apiEnabled = Boolean(process.env.NEXT_PUBLIC_ORDER_PAYMENT_TEST_USER_ID),
-  cartId,
   previewItems,
   selectedItemIds,
 }: OrderRouteContentProps) {
@@ -29,7 +28,7 @@ export function OrderRouteContent({
 
   return (
     <OrderPage
-      cartId={cartId ?? data?.cartId}
+      cartId={data?.cartId}
       errorMessage={error instanceof Error ? error.message : undefined}
       isLoading={isPending}
       items={data?.items ?? []}

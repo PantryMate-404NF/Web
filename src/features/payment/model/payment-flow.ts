@@ -22,14 +22,20 @@ interface PaymentExecutorDependencies {
 
 export function createPaymentExecutor(dependencies: PaymentExecutorDependencies) {
   let inFlight: Promise<void> | null = null;
+  let order: OrderCreateResponseDto | null = null;
+  let isPrepared = false;
 
   return function executePayment({ idempotencyKey, ...orderInput }: PaymentExecutionInput) {
     if (inFlight) return inFlight;
 
     inFlight = (async () => {
-      const order = await dependencies.createOrder(orderInput, idempotencyKey);
+      order ??= await dependencies.createOrder(orderInput, idempotencyKey);
 
-      await dependencies.preparePayment(order.orderId);
+      if (!isPrepared) {
+        await dependencies.preparePayment(order.orderId);
+        isPrepared = true;
+      }
+
       await dependencies.requestPayment({
         name: order.name,
         orderId: order.orderId,

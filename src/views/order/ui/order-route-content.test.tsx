@@ -18,7 +18,7 @@ describe('OrderRouteContent', () => {
 
     const page = OrderRouteContent({
       apiEnabled: true,
-      cartId: 3,
+      cartId: 99,
       selectedItemIds: ['10'],
     });
 
