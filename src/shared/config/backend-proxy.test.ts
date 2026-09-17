@@ -19,4 +19,14 @@ describe('Next API proxy', () => {
       source: '/api/:path*',
     });
   });
+
+  it('주문 결제용 별도 프록시를 생성하지 않는다', async () => {
+    vi.stubEnv('BACKEND_API_BASE_URL', 'http://221.166.239.233:8080');
+
+    const config = nextConfig as typeof nextConfig & {
+      rewrites?: () => Promise<Array<{ destination: string; source: string }>>;
+    };
+
+    await expect(config.rewrites?.()).resolves.toHaveLength(1);
+  });
 });
