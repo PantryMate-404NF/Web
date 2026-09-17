@@ -75,7 +75,7 @@ describe('PantryEmptyState', () => {
       throw new Error('빈 상태 이미지를 찾을 수 없습니다.');
     }
 
-    expect(image.props.src).toBe('/images/pantry/empty-state.png');
+    expect(image.props.src).toBe('/images/pantry/empty-image.svg');
     expect(image.props.width).toBe(160);
     expect(image.props.height).toBe(160);
     expect(emptyState.props['aria-label']).toBe('등록된 식재료 없음');

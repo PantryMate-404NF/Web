@@ -126,6 +126,7 @@
   --typography-label-2-size: 1rem;
   --typography-label-3-size: 0.875rem;
   --typography-label-4-size: 0.8125rem;
+  --typography-caption-size: 0.625rem;
   --typography-gnb-size: 0.6875rem;
   --line-height-title: 1.5;
   --line-height-body: 1.6;
@@ -358,6 +359,8 @@
   --text-label-3--line-height: var(--line-height-label);
   --text-label-4: var(--typography-label-4-size);
   --text-label-4--line-height: var(--line-height-label);
+  --text-caption: var(--typography-caption-size);
+  --text-caption--line-height: 1;
   --text-gnb: var(--typography-gnb-size);
   --text-gnb--line-height: 1;
   --radius-sm: var(--primitive-radius-sm);

@@ -123,7 +123,7 @@ export function PantryEmptyState() {
         aria-hidden="true"
         className="rounded-xl object-cover"
         height={160}
-        src="/images/pantry/empty-state.png"
+        src="/images/pantry/empty-image.svg"
         width={160}
       />
       <div className="text-disabled text-title-4 w-full leading-6">
