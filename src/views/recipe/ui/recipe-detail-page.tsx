@@ -517,7 +517,7 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
           width={24}
         />
         {cartItemCount > 0 ? (
-          <span className="absolute top-0 -right-1 grid size-[14px] place-items-center rounded-full bg-[var(--primitive-grey-800)] text-[10px] leading-none font-medium text-[var(--primitive-white)]">
+          <span className="text-caption absolute top-0 -right-1 grid size-[14px] place-items-center rounded-full bg-[var(--primitive-grey-800)] font-medium text-[var(--primitive-white)]">
             {cartItemCount}
           </span>
         ) : null}
