@@ -23,10 +23,10 @@ const activityItems = [
 ] as const;
 
 const accountItems = [
-  { label: '회원 정보 관리' },
+  { href: '/mypage/edit', label: '회원 정보 관리' },
   { href: '/mypage/delivery', label: '배송지 관리' },
   { href: '/onboarding', label: '개인화 설정' },
-  { label: '취소/환불 요청' },
+  { href: '/mypage/orders/cancel', label: '취소/환불 요청' },
 ] as const;
 
 const supportItems = [
@@ -130,10 +130,11 @@ export function MyPagePage() {
       >
         <div className="relative grid size-25 place-items-center rounded-full bg-[var(--primitive-primary-200)] p-1">
           <Image alt="기본 프로필" height={22} src="/images/mypage/profile-face.png" width={45} />
-          <button
+          <Link
             aria-label="프로필 편집"
             className="absolute right-0 bottom-0 grid size-8 place-items-center rounded-full bg-[var(--primitive-secondary-600)]"
             type="button"
+            href="/mypage/edit"
           >
             <Image
               alt=""
@@ -142,7 +143,7 @@ export function MyPagePage() {
               src="/images/mypage/profile-edit.png"
               width={16}
             />
-          </button>
+          </Link>
         </div>
         <p className="mt-4 text-base leading-6 font-medium [color:var(--primitive-primary-900)]">
           안녕하세요!
