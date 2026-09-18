@@ -40,8 +40,8 @@ export const HOME_PRODUCT_SECTIONS: HomeProductSection[] = [
       {
         id: 'free-range-eggs',
         imageSrc: '/images/home/product-third.png',
-        name: '완전방사 무항생제 유정란',
-        price: 6700,
+        name: '완전방사 무항생제 유정란(10구)',
+        price: 5900,
         unit: '(10구)',
       },
     ],

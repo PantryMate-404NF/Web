@@ -13,23 +13,58 @@ const HOME_PRODUCT_DETAIL_INPUTS: Array<[ProductId, string, string, number, stri
 ];
 
 const HOME_PRODUCT_DETAILS: ProductDetail[] = HOME_PRODUCT_DETAIL_INPUTS.map(
-  ([id, category, name, price, weight]) => ({
-    id,
-    category,
-    name,
-    summary: `구성: 1개 · 용량: ${weight} · 원산지: 국내산`,
-    price,
-    reviewCount: 0,
-    rating: 0,
-    isAvailable: true,
-    delivery: '내일 오전 7시 이전 도착 예정',
-    deliveryFee: '3,000원 (4만원 이상 무료)',
-    seller: '프레시마켓',
-    storageMethod: '상품별 보관 방법 참고',
-    saleUnit: '1개',
-    weight,
-    origin: '국산',
-  }),
+  ([id, category, name, price, weight]) => {
+    if (id === 'free-range-eggs') {
+      return {
+        id,
+        category: '계란 · 알류',
+        name: '완전방사 무항생제 유정란(10구)',
+        summary: '구성: 1개(10구) · 용량: 520g · 원산지: 국내산',
+        price: 5900,
+        reviewCount: 381,
+        rating: 4,
+        isAvailable: true,
+        delivery: '내일 도착 예정',
+        deliveryFee: '5,000원 (3만원 이상 무료)',
+        seller: '오아시스',
+        storageMethod: '실온',
+        saleUnit: '1개(10구)',
+        weight: '520g 이상',
+        origin: '국내산',
+        imageUrl: '/images/product-detail/free-range-eggs-main.png',
+        thumbnailUrl: '/images/product-detail/free-range-eggs-thumb.png',
+        detailImageUrls: [
+          '/images/product-detail/detail-1.png',
+          '/images/product-detail/detail-2.png',
+          '/images/product-detail/detail-3.png',
+          '/images/product-detail/detail-4.png',
+        ],
+        options: [
+          { id: 'large-10', label: '대란 10구 (520g)', price: 5900 },
+          { id: 'extra-large-10', label: '특란 10구 (600g)', price: 6500 },
+          { id: 'king-10', label: '왕란 10구 (680g)', price: 7200 },
+        ],
+      };
+    }
+
+    return {
+      id,
+      category,
+      name,
+      summary: `구성: 1개 · 용량: ${weight} · 원산지: 국내산`,
+      price,
+      reviewCount: 0,
+      rating: 0,
+      isAvailable: true,
+      delivery: '내일 오전 7시 이전 도착 예정',
+      deliveryFee: '3,000원 (4만원 이상 무료)',
+      seller: '프레시마켓',
+      storageMethod: '상품별 보관 방법 참고',
+      saleUnit: '1개',
+      weight,
+      origin: '국산',
+    };
+  },
 );
 
 export const productMocks: ProductDetail[] = [
