@@ -1,10 +1,10 @@
-import { ChevronRight, ShoppingCart, Star } from 'lucide-react';
+import { ChevronRight, Star } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
 
-import { relatedProductMocks } from '@/entities/product/model/mock';
-import type { ProductDetail } from '@/entities/product/model/types';
+import type { ProductDetail, RelatedProduct } from '@/entities/product/model/types';
 import { ProductCard } from '@/entities/product/ui/product-card';
+import { ProductCartActions } from '@/features/product-cart/ui/product-cart-actions';
+import { ProductFavoriteButton } from '@/features/product-favorite/ui/product-favorite-button';
 import { BackButton } from '@/shared/ui/back-button';
 
 interface ProductDetailPageProps {
@@ -16,62 +16,146 @@ interface ProductInfoRowProps {
   value: string;
 }
 
+const frequentlyViewedProducts: RelatedProduct[] = [
+  {
+    id: 'soft-boiled-eggs',
+    imageUrl: '/images/product-detail/frequently-viewed-1.png',
+    name: '동물복지 유정 반숙란 10구',
+    price: 6950,
+    unitPrice: '(500g)',
+  },
+  {
+    id: 'pan-frying-tofu',
+    imageUrl: '/images/product-detail/frequently-viewed-2.png',
+    name: '좋은콩 부침두부',
+    price: 1700,
+    productId: 'soft-tofu',
+    unitPrice: '(300g)',
+  },
+  {
+    id: 'fermented-fish-sauce',
+    imageUrl: '/images/product-detail/frequently-viewed-3.png',
+    name: '발효 어간장',
+    price: 19900,
+    unitPrice: '(490ml)',
+  },
+];
+
+const comparisonProducts: RelatedProduct[] = [
+  {
+    id: 'potato-comparison',
+    imageUrl: '/images/product-detail/comparison-1.png',
+    name: '무농약이상 감자',
+    price: 3000,
+    productId: 'pesticide-free-potato',
+    unitPrice: '(500g)',
+  },
+  {
+    id: 'onion-comparison',
+    imageUrl: '/images/product-detail/comparison-2.png',
+    name: '국산 양파',
+    price: 5900,
+    productId: 'domestic-onion',
+    unitPrice: '(1.5kg)',
+  },
+  {
+    id: 'tofu-noodles-comparison',
+    imageUrl: '/images/home/product-noodles.png',
+    name: '마이노멀 국산콩 100% 메밀두부면',
+    price: 5580,
+    productId: 'buckwheat-tofu-noodles',
+    unitPrice: '(180g x 1봉)',
+  },
+];
+
 function ProductInfoRow({ label, value }: ProductInfoRowProps) {
   return (
-    <div className="text-body-4 flex gap-4 leading-[21px] font-medium">
-      <dt className="text-muted-foreground w-20 shrink-0">{label}</dt>
+    <div className="flex text-sm leading-[21px] font-medium">
+      <dt className="text-text-tertiary w-20 shrink-0">{label}</dt>
       <dd className="text-text-secondary min-w-0">{value}</dd>
     </div>
   );
 }
 
-function ProductImage({ product }: { product: ProductDetail }) {
+export function ProductImage({ product }: { product: ProductDetail }) {
   const imageLabel = product.isAvailable
     ? `${product.name} 상품 이미지`
     : `${product.name} 상품 이미지, 판매 중인 상품이 아니에요`;
 
   return (
-    <section
-      aria-label={imageLabel}
-      className="bg-muted-foreground relative aspect-square w-full"
-      role="img"
-    >
+    <section aria-label={imageLabel} className="bg-surface-secondary relative aspect-square w-full">
+      {product.imageUrl ? (
+        <Image
+          alt={imageLabel}
+          className="object-cover"
+          fill
+          priority
+          sizes="(max-width: 390px) 100vw, 390px"
+          src={product.imageUrl}
+        />
+      ) : (
+        <div className="text-text-tertiary absolute inset-0 grid place-items-center px-6 text-center text-sm">
+          상품 이미지가 준비 중이에요
+        </div>
+      )}
       {!product.isAvailable ? (
-        <div className="absolute inset-0 grid place-items-center px-6 text-center">
+        <div className="bg-overlay/50 absolute inset-0 grid place-items-center px-6 text-center">
           <p className="text-title-3 text-background font-semibold">판매 중인 상품이 아니에요</p>
         </div>
       ) : null}
-      <div
-        aria-label="상품 이미지 1 / 4"
-        className="absolute right-1/2 bottom-3 flex translate-x-1/2 gap-1.5"
-      >
-        {[0, 1, 2, 3].map((index) => (
-          <span
-            aria-current={index === 0 ? 'true' : undefined}
-            className="bg-background/50 aria-[current=true]:bg-background h-2 w-2 rounded-full aria-[current=true]:w-5"
-            key={index}
-          />
-        ))}
-      </div>
     </section>
   );
 }
 
-function RelatedProducts({ id, title }: { id: string; title: string }) {
+export function ProductDetailImages({ product }: { product: ProductDetail }) {
+  if (!product.detailImageUrls?.length) return null;
+
   return (
-    <section className="border-border border-t-8 px-4 py-4" id={id}>
-      <div className="flex items-center justify-between">
-        <h2 className="text-title-3 font-semibold">{title}</h2>
+    <section
+      aria-label="상품 상세 이미지"
+      className="border-border flex flex-col gap-6 border-t-8 px-4 py-4"
+    >
+      {product.detailImageUrls.map((imageUrl, index) => (
+        <Image
+          alt={`${product.name} 상세 정보 ${index + 1}`}
+          className={`w-full object-cover ${index === 1 ? 'h-[1220px]' : index === 2 ? 'h-[835px]' : index === 3 ? 'h-[200px]' : 'h-[149px]'}`}
+          height={index === 1 ? 1220 : index === 2 ? 835 : index === 3 ? 200 : 149}
+          key={imageUrl}
+          sizes="(max-width: 390px) calc(100vw - 32px), 358px"
+          src={imageUrl}
+          width={358}
+        />
+      ))}
+    </section>
+  );
+}
+
+function RelatedProducts({
+  id,
+  products,
+  title,
+}: {
+  id: string;
+  products: RelatedProduct[];
+  title: string;
+}) {
+  return (
+    <section className="border-border relative border-t-8 p-4" id={id}>
+      <div className="w-[281px]">
+        <h2 className="text-title-3 leading-[27px] font-semibold">{title}</h2>
         <button
-          className="text-title-4 text-muted-foreground flex items-center font-medium"
+          aria-label={`${title} 더보기`}
+          className="text-title-4 text-text-secondary focus-visible:ring-ring absolute top-[10px] right-0 flex h-10 items-center rounded-sm font-medium focus-visible:ring-2"
           type="button"
         >
           더보기
-          <ChevronRight aria-hidden="true" className="size-4" />
+          <span className="grid size-10 place-items-center">
+            <ChevronRight aria-hidden="true" className="size-6" />
+          </span>
         </button>
       </div>
-      <div className="mt-2 flex [scrollbar-width:none] gap-2 overflow-x-auto pb-1">
-        {relatedProductMocks.map((relatedProduct) => (
+      <div className="mt-4 flex [scrollbar-width:none] gap-2 overflow-x-auto">
+        {products.map((relatedProduct) => (
           <ProductCard key={relatedProduct.id} product={relatedProduct} />
         ))}
       </div>
@@ -81,27 +165,33 @@ function RelatedProducts({ id, title }: { id: string; title: string }) {
 
 function ProductSectionNavigation() {
   const items = [
-    { label: '상품안내', href: '#product-detail' },
+    { label: '상품안내', href: '#product-guide' },
     { label: '상세정보', href: '#product-detail' },
     { label: '리뷰' },
     { label: '문의' },
   ];
 
   return (
-    <nav aria-label="상품 상세 이동" className="flex h-10 justify-around border-b px-2">
-      {items.map((item) =>
+    <nav aria-label="상품 상세 이동" className="border-border flex h-12 border-b px-4">
+      {items.map((item, index) =>
         item.href ? (
           <a
-            className="flex items-center text-xs leading-[18px] font-medium"
+            aria-current={index === 0 ? 'page' : undefined}
+            className={`flex flex-1 items-center justify-center border-b-2 text-base font-semibold ${
+              index === 0
+                ? 'border-foreground text-foreground'
+                : 'text-text-secondary border-transparent'
+            }`}
             href={item.href}
             key={item.label}
+            style={index === 0 ? { borderBottomColor: 'var(--foreground)' } : undefined}
           >
             {item.label}
           </a>
         ) : (
           <span
             aria-disabled="true"
-            className="text-muted-foreground flex items-center text-xs leading-[18px] font-medium"
+            className="text-text-secondary flex flex-1 items-center justify-center border-b-2 border-transparent text-base font-semibold"
             key={item.label}
           >
             {item.label}
@@ -120,68 +210,43 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
   ];
 
   return (
-    <main className="mobile-page bg-background pb-32">
-      <header className="bg-background flex h-12 items-center justify-between px-4">
+    <main className="mobile-page bg-background overflow-x-clip pb-[52px]">
+      <header className="bg-background relative flex h-10 items-center px-2">
         <BackButton />
-        <p className="text-heading-4 font-semibold">상품 상세</p>
-        <Link
-          aria-label="장바구니로 이동"
-          className="focus-visible:ring-ring grid size-10 place-items-center rounded-full focus-visible:ring-2"
-          href="/cart"
-        >
-          <ShoppingCart aria-hidden="true" className="size-6" />
-        </Link>
+        <h1 className="text-title-3 absolute left-1/2 -translate-x-1/2 font-semibold">상품 상세</h1>
       </header>
 
       <ProductSectionNavigation />
 
-      <ProductImage product={product} />
+      <div id="product-guide">
+        <ProductImage product={product} />
+      </div>
 
       <section className="relative flex h-[186px] w-full flex-col gap-2 px-4 py-4">
-        <div className="absolute top-0 right-4 flex h-12">
+        <div className="absolute top-0 right-4 flex h-12 items-center">
+          <ProductFavoriteButton product={product} />
           <button
-            aria-label={`${product.name} 찜하기`}
+            aria-label="상품 공유하기"
             className="focus-visible:ring-ring grid h-12 w-10 place-items-center rounded-full focus-visible:ring-2"
             type="button"
           >
-            <Image
-              alt=""
-              aria-hidden="true"
-              height={24}
-              src="/icons/product/like-line.svg"
-              width={24}
-            />
-          </button>
-          <button
-            aria-label="상품 이미지 전체 화면으로 보기"
-            className="focus-visible:ring-ring grid h-12 w-10 place-items-center rounded-full focus-visible:ring-2"
-            type="button"
-          >
-            <Image
-              alt=""
-              aria-hidden="true"
-              height={24}
-              src="/icons/product/expand-screen-line.svg"
-              width={24}
-            />
+            <Image alt="" height={24} src="/icons/product/expand-screen-line.svg" width={24} />
           </button>
         </div>
-        <span className="bg-muted text-muted-foreground inline-flex self-start rounded px-2 py-1 text-xs leading-[18px]">
+        <span className="bg-surface-secondary text-text-tertiary inline-flex self-start rounded px-2 py-1 text-xs leading-[18px]">
           {product.category}
         </span>
-        <h1 className="text-title-3 w-full pr-20 font-bold">{product.name}</h1>
-        <p className="text-body-4 text-text-secondary w-full leading-[21px] font-medium">
-          {product.summary}
-        </p>
+        <p className="text-title-3 w-full pr-20 font-bold">{product.name}</p>
+        <p className="text-body-4 text-text-secondary w-full font-medium">{product.summary}</p>
         <p className="text-title-2 w-full font-semibold">{product.price.toLocaleString()}원</p>
         <div
-          className="text-text-secondary flex items-center gap-1 text-xs leading-[18px]"
           aria-label={`평점 ${product.rating}점, 리뷰 ${product.reviewCount}개`}
+          className="text-text-secondary flex items-center gap-1 text-xs leading-[18px]"
         >
           {Array.from({ length: 5 }, (_, index) => (
             <Star
               aria-hidden="true"
-              className={`size-3 ${index < Math.floor(product.rating) ? 'fill-foreground text-foreground' : 'fill-muted text-muted'}`}
+              className={`size-3 ${index < Math.floor(product.rating) ? 'fill-primary text-primary' : 'text-disabled fill-transparent'}`}
               key={index}
             />
           ))}
@@ -191,7 +256,7 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
 
       <section className="border-border border-t-8 px-4 py-4">
         <h2 className="sr-only">배송 및 판매 정보</h2>
-        <dl className="space-y-3">
+        <dl className="space-y-2">
           <ProductInfoRow label="배송" value={product.delivery} />
           <ProductInfoRow label="배송비" value={product.deliveryFee} />
           <ProductInfoRow label="판매자" value={product.seller} />
@@ -199,44 +264,30 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
         </dl>
       </section>
 
-      <RelatedProducts id="related-products" title="다른 고객이 많이 본 연관 상품" />
+      <RelatedProducts
+        id="related-products"
+        products={frequentlyViewedProducts}
+        title="다른 고객이 많이 본 연관 상품"
+      />
 
       <section className="border-border border-t-8 px-4 py-4" id="product-detail">
-        <h2 className="text-title-3 font-semibold">상품 상세</h2>
-        <dl className="mt-5 space-y-3">
+        <h2 className="sr-only">상품 상세정보</h2>
+        <dl className="space-y-2">
           {detailRows.map((row) => (
             <ProductInfoRow key={row.label} {...row} />
           ))}
         </dl>
-        <div
-          aria-label="상품 상세 이미지"
-          className="bg-border text-text-secondary mt-4 grid h-[600px] place-items-center"
-          role="img"
-        >
-          상품 상세 이미지
-        </div>
       </section>
 
-      <RelatedProducts id="comparison-products" title="이런 상품도 비교해 보세요" />
+      <ProductDetailImages product={product} />
 
-      <footer className="bg-background border-border fixed right-0 bottom-0 left-0 z-10 mx-auto w-full max-w-[var(--layout-mobile-design-frame)] border-t">
-        <div className="flex h-16 gap-2 px-4 py-2">
-          <button
-            className="bg-border text-text-secondary text-label-3 h-12 flex-1 rounded-lg font-semibold"
-            disabled
-            type="button"
-          >
-            장바구니
-          </button>
-          <button
-            className="bg-muted-foreground text-background text-label-3 h-12 flex-1 rounded-lg font-semibold"
-            disabled
-            type="button"
-          >
-            구매하기
-          </button>
-        </div>
-      </footer>
+      <RelatedProducts
+        id="comparison-products"
+        products={comparisonProducts}
+        title="이런 상품도 비교해 보세요"
+      />
+
+      <ProductCartActions product={product} />
     </main>
   );
 }

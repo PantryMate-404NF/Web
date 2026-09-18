@@ -13,10 +13,20 @@ export type ProductId =
   | 'garlic-cream-cheese'
   | 'low-sugar-plum-syrup';
 
+export interface ProductOption {
+  id: string;
+  label: string;
+  price: number;
+}
+
 export interface ProductDetail {
   id: ProductId;
+  detailImageUrls?: string[];
+  imageUrl?: string;
+  thumbnailUrl?: string;
   category: string;
   name: string;
+  options?: ProductOption[];
   summary: string;
   price: number;
   reviewCount: number;
@@ -33,6 +43,7 @@ export interface ProductDetail {
 
 export interface RelatedProduct {
   id: string;
+  imageUrl?: string;
   productId?: ProductId;
   name: string;
   price: number;

@@ -12,24 +12,72 @@ const HOME_PRODUCT_DETAIL_INPUTS: Array<[ProductId, string, string, number, stri
   ['low-sugar-plum-syrup', '소스·양념', '마이노멀 저당 매실청', 16000, '550g'],
 ];
 
+const HOME_PRODUCT_IMAGE_URLS: Partial<Record<ProductId, string>> = {
+  'domestic-onion': '/images/home/product-onion.png',
+  'pesticide-free-potato': '/images/home/product-potato.png',
+  'free-range-eggs': '/images/home/product-third.png',
+  'dried-rapeseed-greens': '/images/home/product-rapeseed.png',
+  'blanched-chwinamul': '/images/home/product-chwinamul.png',
+  'bujigaengi-greens': '/images/home/product-sixth.png',
+  'buckwheat-tofu-noodles': '/images/home/product-noodles.png',
+  'garlic-cream-cheese': '/images/home/product-cheese.png',
+  'low-sugar-plum-syrup': '/images/home/product-ninth.png',
+};
+
 const HOME_PRODUCT_DETAILS: ProductDetail[] = HOME_PRODUCT_DETAIL_INPUTS.map(
-  ([id, category, name, price, weight]) => ({
-    id,
-    category,
-    name,
-    summary: `구성: 1개 · 용량: ${weight} · 원산지: 국내산`,
-    price,
-    reviewCount: 0,
-    rating: 0,
-    isAvailable: true,
-    delivery: '내일 오전 7시 이전 도착 예정',
-    deliveryFee: '3,000원 (4만원 이상 무료)',
-    seller: '프레시마켓',
-    storageMethod: '상품별 보관 방법 참고',
-    saleUnit: '1개',
-    weight,
-    origin: '국산',
-  }),
+  ([id, category, name, price, weight]) => {
+    if (id === 'free-range-eggs') {
+      return {
+        id,
+        category: '계란 · 알류',
+        name: '완전방사 무항생제 유정란(10구)',
+        summary: '구성: 1개(10구) · 용량: 520g · 원산지: 국내산',
+        price: 5900,
+        reviewCount: 381,
+        rating: 4,
+        isAvailable: true,
+        delivery: '내일 도착 예정',
+        deliveryFee: '5,000원 (3만원 이상 무료)',
+        seller: '오아시스',
+        storageMethod: '실온',
+        saleUnit: '1개(10구)',
+        weight: '520g 이상',
+        origin: '국내산',
+        imageUrl: '/images/product-detail/free-range-eggs-main.png',
+        thumbnailUrl: '/images/product-detail/free-range-eggs-thumb.png',
+        detailImageUrls: [
+          '/images/product-detail/detail-1.png',
+          '/images/product-detail/detail-2.png',
+          '/images/product-detail/detail-3.png',
+          '/images/product-detail/detail-4.png',
+        ],
+        options: [
+          { id: 'large-10', label: '대란 10구 (520g)', price: 5900 },
+          { id: 'extra-large-10', label: '특란 10구 (600g)', price: 6500 },
+          { id: 'king-10', label: '왕란 10구 (680g)', price: 7200 },
+        ],
+      };
+    }
+
+    return {
+      id,
+      category,
+      name,
+      summary: `구성: 1개 · 용량: ${weight} · 원산지: 국내산`,
+      price,
+      reviewCount: 0,
+      rating: 0,
+      isAvailable: true,
+      delivery: '내일 오전 7시 이전 도착 예정',
+      deliveryFee: '3,000원 (4만원 이상 무료)',
+      seller: '프레시마켓',
+      storageMethod: '상품별 보관 방법 참고',
+      saleUnit: '1개',
+      weight,
+      origin: '국산',
+      imageUrl: HOME_PRODUCT_IMAGE_URLS[id],
+    };
+  },
 );
 
 export const productMocks: ProductDetail[] = [
