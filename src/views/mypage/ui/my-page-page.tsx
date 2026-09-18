@@ -18,7 +18,7 @@ const appEntryStorageKey = 'ai-pantry:entered-app';
 
 const activityItems = [
   { href: '/mypage/orders', icon: FileText, label: '주문 내역' },
-  { href: undefined, icon: Heart, label: '찜한 상품' },
+  { href: '/mypage/favorites', icon: Heart, label: '찜한 상품' },
   { href: undefined, icon: Bookmark, label: '스크랩 레시피' },
 ] as const;
 

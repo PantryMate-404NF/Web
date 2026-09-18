@@ -12,6 +12,18 @@ const HOME_PRODUCT_DETAIL_INPUTS: Array<[ProductId, string, string, number, stri
   ['low-sugar-plum-syrup', '소스·양념', '마이노멀 저당 매실청', 16000, '550g'],
 ];
 
+const HOME_PRODUCT_IMAGE_URLS: Partial<Record<ProductId, string>> = {
+  'domestic-onion': '/images/home/product-onion.png',
+  'pesticide-free-potato': '/images/home/product-potato.png',
+  'free-range-eggs': '/images/home/product-third.png',
+  'dried-rapeseed-greens': '/images/home/product-rapeseed.png',
+  'blanched-chwinamul': '/images/home/product-chwinamul.png',
+  'bujigaengi-greens': '/images/home/product-sixth.png',
+  'buckwheat-tofu-noodles': '/images/home/product-noodles.png',
+  'garlic-cream-cheese': '/images/home/product-cheese.png',
+  'low-sugar-plum-syrup': '/images/home/product-ninth.png',
+};
+
 const HOME_PRODUCT_DETAILS: ProductDetail[] = HOME_PRODUCT_DETAIL_INPUTS.map(
   ([id, category, name, price, weight]) => {
     if (id === 'free-range-eggs') {
@@ -63,6 +75,7 @@ const HOME_PRODUCT_DETAILS: ProductDetail[] = HOME_PRODUCT_DETAIL_INPUTS.map(
       saleUnit: '1개',
       weight,
       origin: '국산',
+      imageUrl: HOME_PRODUCT_IMAGE_URLS[id],
     };
   },
 );

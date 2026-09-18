@@ -4,6 +4,7 @@ import Image from 'next/image';
 import type { ProductDetail, RelatedProduct } from '@/entities/product/model/types';
 import { ProductCard } from '@/entities/product/ui/product-card';
 import { ProductCartActions } from '@/features/product-cart/ui/product-cart-actions';
+import { ProductFavoriteButton } from '@/features/product-favorite/ui/product-favorite-button';
 import { BackButton } from '@/shared/ui/back-button';
 
 interface ProductDetailPageProps {
@@ -196,14 +197,7 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
 
       <section className="relative flex h-[186px] w-full flex-col gap-2 px-4 py-4">
         <div className="absolute top-0 right-4 flex h-12 items-center">
-          <button
-            aria-label={`${product.name} 찜하기`}
-            aria-pressed="false"
-            className="focus-visible:ring-ring grid h-12 w-10 place-items-center rounded-full focus-visible:ring-2"
-            type="button"
-          >
-            <Image alt="" height={24} src="/icons/product/like-line.svg" width={24} />
-          </button>
+          <ProductFavoriteButton product={product} />
           <button
             aria-label="상품 공유하기"
             className="focus-visible:ring-ring grid h-12 w-10 place-items-center rounded-full focus-visible:ring-2"
