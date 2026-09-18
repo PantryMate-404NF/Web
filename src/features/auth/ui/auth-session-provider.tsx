@@ -16,6 +16,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { AuthHomeState } from '../model/restore-auth-session';
 import { restoreAuthSession } from '../model/restore-auth-session';
 import {
+  createSingleFlight,
   getApplicableRestoreState,
   getStateFreeHref,
   type AuthSessionState,
@@ -52,30 +53,39 @@ function AuthStateQueryCleaner() {
 export function AuthSessionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthSessionState>('loading');
   const sessionRevisionRef = useRef(0);
+  const restoreRef = useRef<(() => Promise<Exclude<AuthSessionState, 'loading'>>) | null>(null);
 
-  const restore = useCallback(async (): Promise<Exclude<AuthSessionState, 'loading'>> => {
-    const restoreRevision = sessionRevisionRef.current;
+  const restore = useCallback(() => {
+    if (!restoreRef.current) {
+      restoreRef.current = createSingleFlight(
+        async (): Promise<Exclude<AuthSessionState, 'loading'>> => {
+          const restoreRevision = sessionRevisionRef.current;
 
-    try {
-      const restoredState = await restoreAuthSession();
-      const applicableState = getApplicableRestoreState(
-        restoreRevision,
-        sessionRevisionRef.current,
-        restoredState,
+          try {
+            const restoredState = await restoreAuthSession();
+            const applicableState = getApplicableRestoreState(
+              restoreRevision,
+              sessionRevisionRef.current,
+              restoredState,
+            );
+
+            if (applicableState) setState(applicableState);
+            return restoredState;
+          } catch {
+            const applicableState = getApplicableRestoreState(
+              restoreRevision,
+              sessionRevisionRef.current,
+              'guest',
+            );
+
+            if (applicableState) setState(applicableState);
+            return 'guest' as const;
+          }
+        },
       );
-
-      if (applicableState) setState(applicableState);
-      return restoredState;
-    } catch {
-      const applicableState = getApplicableRestoreState(
-        restoreRevision,
-        sessionRevisionRef.current,
-        'guest',
-      );
-
-      if (applicableState) setState(applicableState);
-      return 'guest' as const;
     }
+
+    return restoreRef.current();
   }, []);
 
   const setAuthenticatedState = useCallback((nextState: AuthHomeState) => {

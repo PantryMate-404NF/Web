@@ -1,6 +1,8 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
-import { CartRouteContent } from './cart-route-content';
+import { CartPreviewRouteContent, CartRouteContent } from './cart-route-content';
 
 const { useAuthSessionMock, useCartMutationsMock, useCartQueryMock } = vi.hoisted(() => ({
   useAuthSessionMock: vi.fn(),
@@ -8,6 +10,7 @@ const { useAuthSessionMock, useCartMutationsMock, useCartQueryMock } = vi.hoiste
   useCartQueryMock: vi.fn(),
 }));
 
+vi.mock('next/navigation', () => ({ useRouter: () => ({ back: vi.fn() }) }));
 vi.mock('@/features/auth/ui/auth-session-provider', () => ({ useAuthSession: useAuthSessionMock }));
 vi.mock('../model/use-cart-query', () => ({ useCartQuery: useCartQueryMock }));
 vi.mock('../model/use-cart-mutations', () => ({ useCartMutations: useCartMutationsMock }));
@@ -69,5 +72,17 @@ describe('CartRouteContent', () => {
     expect(page.props).toMatchObject({ isUnauthorized: true });
     expect(page.props.errorMessage).toBeUndefined();
     expect(page.props.onRetry).toBeUndefined();
+  });
+
+  it('개발 미리보기 상품을 인증과 API 없이 표시한다', () => {
+    const previewItems = [
+      { id: 'preview', ingredient: '기본 옵션', name: '미리보기 상품', price: 5900, quantity: 1 },
+    ];
+    const markup = renderToStaticMarkup(
+      createElement(CartPreviewRouteContent, { initialItems: previewItems }),
+    );
+
+    expect(markup).toContain('미리보기 상품');
+    expect(markup).not.toContain('로그인이 필요해요');
   });
 });
