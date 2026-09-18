@@ -71,6 +71,8 @@ describe('CartPage design states', () => {
     expect(markup).toContain('11,800원');
     expect(markup).toContain('14,800');
     expect(markup).toContain('결제하기');
+    expect(markup).toContain('src="/icons/cart/info.svg"');
+    expect(markup).not.toContain('alt="배송비 안내"');
   });
 
   it('빈 장바구니에 피그마 빈 상태를 표시한다', () => {

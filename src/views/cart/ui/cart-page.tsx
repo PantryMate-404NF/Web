@@ -382,7 +382,13 @@ export function CartPage({
                 <div className="flex items-center justify-between">
                   <dt className="text-title-4 text-text-secondary flex items-center gap-1 font-medium">
                     배송비
-                    <Image alt="배송비 안내" height={20} src="/icons/cart/info.svg" width={20} />
+                    <Image
+                      alt=""
+                      aria-hidden="true"
+                      height={20}
+                      src="/icons/cart/info.svg"
+                      width={20}
+                    />
                   </dt>
                   <dd className="text-title-4 font-semibold">
                     {hasSelectedItems ? SHIPPING_FEE.toLocaleString() : 0}원
