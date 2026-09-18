@@ -1,0 +1,7 @@
+node_modules
+.next
+.worktrees
+coverage
+public/mockServiceWorker.js
+public/font
+package-lock.json
