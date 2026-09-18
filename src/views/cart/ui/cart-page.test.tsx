@@ -78,7 +78,8 @@ describe('CartPage design states', () => {
   it('빈 장바구니에 피그마 빈 상태를 표시한다', () => {
     const markup = renderToStaticMarkup(<CartPage items={[]} />);
 
-    expect(markup).toContain('empty-cart.png');
+    expect(markup).toContain('/images/pantry/empty-image.svg');
+    expect(markup).not.toContain('empty-cart.png');
     expect(markup).toContain('장바구니가 비어있어요');
     expect(markup).toContain('필요한 식재료를 담고 한 번에');
     expect(markup).not.toContain('레시피 보러 가기');

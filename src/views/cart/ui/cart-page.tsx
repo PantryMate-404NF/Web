@@ -206,7 +206,7 @@ export function CartPage({
             className="h-40 w-40 object-contain"
             height={160}
             priority
-            src="/images/cart/empty-cart.png"
+            src="/images/pantry/empty-image.svg"
             width={160}
           />
           <div className="mt-4 flex flex-col gap-2">
