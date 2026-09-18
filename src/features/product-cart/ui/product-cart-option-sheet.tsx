@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { X } from 'lucide-react';
 import type { RefObject } from 'react';
 
 import type { ProductDetail, ProductOption } from '@/entities/product/model/types';
@@ -39,11 +40,20 @@ export function ProductCartOptionSheet({
       <section
         aria-label={`${product.name} 옵션 선택`}
         aria-modal="true"
-        className="bg-card flex w-full max-w-[var(--layout-mobile-design-frame)] flex-col gap-2 overflow-hidden rounded-t-[20px] pt-4 pb-[max(40px,env(safe-area-inset-bottom))] outline-none"
+        className="bg-card relative flex w-full max-w-[var(--layout-mobile-design-frame)] flex-col gap-2 overflow-hidden rounded-t-[20px] pt-4 pb-[max(40px,env(safe-area-inset-bottom))] outline-none"
         ref={dialogRef}
         role="dialog"
         tabIndex={-1}
       >
+        <button
+          aria-label="옵션 선택 닫기"
+          className="focus-visible:ring-ring absolute top-4 right-4 z-10 grid size-8 place-items-center rounded-full focus-visible:ring-2"
+          onClick={onClose}
+          type="button"
+        >
+          <X aria-hidden="true" className="size-5" />
+        </button>
+
         <div className="flex h-[34px] items-start justify-center" aria-hidden="true">
           <span className="bg-foreground mt-2 h-[5px] w-20 rounded-full" />
         </div>
@@ -61,7 +71,7 @@ export function ProductCartOptionSheet({
                 />
               ) : null}
             </div>
-            <div className="w-72 shrink-0">
+            <div className="min-w-0 flex-1">
               <h2 className="truncate text-[15px] leading-[23px] font-medium">{product.name}</h2>
               <p className="mt-1 text-[18px] leading-[25px] font-bold">
                 {product.price.toLocaleString()}원

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 import { useCartStore } from '@/entities/cart/model/cart-store';
@@ -45,8 +46,9 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
-    const focusableElements = dialog ? getFocusableElements(dialog) : [];
-    dialog?.focus();
+    const firstFocusableElement = dialog ? getFocusableElements(dialog)[0] : undefined;
+    firstFocusableElement?.focus();
+    if (!firstFocusableElement) dialog?.focus();
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
@@ -54,6 +56,8 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
         setIsOpen(false);
         return;
       }
+
+      const focusableElements = dialog ? getFocusableElements(dialog) : [];
 
       if (event.key !== 'Tab' || focusableElements.length === 0) return;
 
@@ -84,11 +88,13 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
   useEffect(() => {
     if (!showToast) return;
 
-    const timeoutId = window.setTimeout(() => setShowToast(false), 2000);
+    const timeoutId = window.setTimeout(() => setShowToast(false), 5000);
     return () => window.clearTimeout(timeoutId);
   }, [showToast]);
 
   function handleAdd() {
+    if (!product.isAvailable) return;
+
     const selectedProducts = selectCartProducts(product, quantities);
     if (selectedProducts.length === 0) return;
 
@@ -102,17 +108,29 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
       {showToast ? (
         <div
           aria-live="polite"
-          className="bg-surface-inverse text-text-inverse shadow-floating fixed bottom-16 left-1/2 z-40 flex h-9 w-[204px] -translate-x-1/2 items-center justify-center rounded-full px-6 text-sm leading-[21px] font-medium whitespace-nowrap"
+          className="bg-surface-inverse text-text-inverse shadow-floating fixed bottom-16 left-1/2 z-40 flex h-9 w-[286px] -translate-x-1/2 items-center justify-between rounded-full px-4 text-sm leading-[21px] font-medium whitespace-nowrap"
           role="status"
         >
-          상품을 장바구니에 담았어요.
+          <span>상품을 장바구니에 담았어요.</span>
+          <Link
+            className="focus-visible:ring-ring rounded-sm font-semibold underline focus-visible:ring-2"
+            href="/cart"
+          >
+            장바구니 보기
+          </Link>
         </div>
       ) : null}
 
       <footer className="bg-background fixed right-0 bottom-0 left-0 z-20 mx-auto h-[52px] w-full max-w-[var(--layout-mobile-design-frame)] px-4 pt-1">
         <div className="flex gap-2">
           <button
-            className="bg-primary/15 text-primary focus-visible:ring-ring h-12 flex-1 rounded-xl text-lg font-semibold focus-visible:ring-2"
+            aria-label={
+              product.isAvailable
+                ? '장바구니 옵션 선택'
+                : '판매 불가 상품은 장바구니에 담을 수 없습니다'
+            }
+            className="bg-primary/15 text-primary focus-visible:ring-ring h-12 flex-1 rounded-xl text-lg font-semibold focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={!product.isAvailable}
             onClick={() => setIsOpen(true)}
             ref={triggerRef}
             type="button"

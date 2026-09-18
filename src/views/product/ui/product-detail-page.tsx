@@ -77,7 +77,7 @@ function ProductInfoRow({ label, value }: ProductInfoRowProps) {
   );
 }
 
-function ProductImage({ product }: { product: ProductDetail }) {
+export function ProductImage({ product }: { product: ProductDetail }) {
   const imageLabel = product.isAvailable
     ? `${product.name} 상품 이미지`
     : `${product.name} 상품 이미지, 판매 중인 상품이 아니에요`;
@@ -93,12 +93,39 @@ function ProductImage({ product }: { product: ProductDetail }) {
           sizes="(max-width: 390px) 100vw, 390px"
           src={product.imageUrl}
         />
-      ) : null}
+      ) : (
+        <div className="text-text-tertiary absolute inset-0 grid place-items-center px-6 text-center text-sm">
+          상품 이미지가 준비 중이에요
+        </div>
+      )}
       {!product.isAvailable ? (
         <div className="bg-overlay/50 absolute inset-0 grid place-items-center px-6 text-center">
           <p className="text-title-3 text-background font-semibold">판매 중인 상품이 아니에요</p>
         </div>
       ) : null}
+    </section>
+  );
+}
+
+export function ProductDetailImages({ product }: { product: ProductDetail }) {
+  if (!product.detailImageUrls?.length) return null;
+
+  return (
+    <section
+      aria-label="상품 상세 이미지"
+      className="border-border flex flex-col gap-6 border-t-8 px-4 py-4"
+    >
+      {product.detailImageUrls.map((imageUrl, index) => (
+        <Image
+          alt={`${product.name} 상세 정보 ${index + 1}`}
+          className={`w-full object-cover ${index === 1 ? 'h-[1220px]' : index === 2 ? 'h-[835px]' : index === 3 ? 'h-[200px]' : 'h-[149px]'}`}
+          height={index === 1 ? 1220 : index === 2 ? 835 : index === 3 ? 200 : 149}
+          key={imageUrl}
+          sizes="(max-width: 390px) calc(100vw - 32px), 358px"
+          src={imageUrl}
+          width={358}
+        />
+      ))}
     </section>
   );
 }
@@ -252,22 +279,7 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
         </dl>
       </section>
 
-      <section
-        aria-label="상품 상세 이미지"
-        className="border-border flex flex-col gap-6 border-t-8 px-4 py-4"
-      >
-        {product.detailImageUrls?.map((imageUrl, index) => (
-          <Image
-            alt={`${product.name} 상세 정보 ${index + 1}`}
-            className={`w-full object-cover ${index === 1 ? 'h-[1220px]' : index === 2 ? 'h-[835px]' : index === 3 ? 'h-[200px]' : 'h-[149px]'}`}
-            height={index === 1 ? 1220 : index === 2 ? 835 : index === 3 ? 200 : 149}
-            key={imageUrl}
-            sizes="(max-width: 390px) calc(100vw - 32px), 358px"
-            src={imageUrl}
-            width={358}
-          />
-        ))}
-      </section>
+      <ProductDetailImages product={product} />
 
       <RelatedProducts
         id="comparison-products"

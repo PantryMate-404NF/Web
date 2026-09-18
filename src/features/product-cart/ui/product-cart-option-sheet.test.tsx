@@ -31,6 +31,7 @@ describe('ProductCartOptionSheet', () => {
     expect(markup).toContain('대란 10구 (520g)');
     expect(markup).toContain('특란 10구 (600g)');
     expect(markup).toContain('왕란 10구 (680g)');
+    expect(markup).toContain('aria-label="옵션 선택 닫기"');
     expect(markup).toContain('장바구니 담기');
   });
 });
