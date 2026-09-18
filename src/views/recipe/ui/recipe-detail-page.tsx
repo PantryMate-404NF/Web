@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { getCartItemCount, type CartProduct, useCartStore } from '@/entities/cart/model/cart-store';
 import { usePantryMutations } from '@/entities/pantry/api/use-pantry-mutations';
 import { useRecipeMutations } from '@/entities/recipe/api/use-recipe-mutations';
+import { useScrappedRecipeStore } from '@/entities/recipe/model/scrapped-recipe-store';
 import { usePantryStore } from '@/entities/pantry/model/pantry-store';
 import type { PantryItem } from '@/entities/pantry/model/types';
 
@@ -206,6 +207,8 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
   const removePantryItems = usePantryStore((state) => state.removeItems);
   const { remove: removePantryItem } = usePantryMutations();
   const { completeCooking } = useRecipeMutations();
+  const scrappedRecipeIds = useScrappedRecipeStore((state) => state.scrappedRecipeIds);
+  const toggleScrap = useScrappedRecipeStore((state) => state.toggleScrap);
   const cartItems = useCartStore((state) => state.items);
   const addProducts = useCartStore((state) => state.addProducts);
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
@@ -219,6 +222,11 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
   const hasSelectedIngredient = selectedIngredientIds.length > 0;
   const cleanupIngredients = getCleanupIngredients(ingredients);
   const cartItemCount = getCartItemCount(cartItems);
+  const isScrapped = scrappedRecipeIds.includes(recipeId);
+
+  useEffect(() => {
+    void useScrappedRecipeStore.persist.rehydrate();
+  }, []);
 
   useEffect(() => {
     const stepsSection = stepsSectionRef.current;
@@ -372,11 +380,18 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
               <Share size={24} strokeWidth={1.5} />
             </button>
             <button
-              aria-label="레시피 저장"
+              aria-label={`레시피 ${isScrapped ? '스크랩 해제' : '스크랩'}`}
+              aria-pressed={isScrapped}
               className="grid size-10 place-items-center text-[var(--primitive-grey-700)]"
+              onClick={() => toggleScrap(recipeId)}
               type="button"
             >
-              <Bookmark size={24} strokeWidth={1.5} />
+              <Bookmark
+                fill={isScrapped ? 'var(--primitive-primary-700)' : 'none'}
+                size={24}
+                stroke={isScrapped ? 'none' : 'currentColor'}
+                strokeWidth={isScrapped ? 0 : 1.5}
+              />
             </button>
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5">

@@ -3,9 +3,11 @@
 import { Bookmark, ChevronRight, ShoppingCart, UserRound } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect } from 'react';
 
 import { useRecipesQuery } from '@/entities/recipe/api/use-recipes-query';
 import { recipeMocks } from '@/entities/recipe/model/mock';
+import { useScrappedRecipeStore } from '@/entities/recipe/model/scrapped-recipe-store';
 import { usePantriesQuery } from '@/entities/pantry/api/use-pantries-query';
 import type { PantryItem } from '@/entities/pantry/model/types';
 import type { Recipe, RecipeTab } from '@/entities/recipe/model/types';
@@ -302,6 +304,8 @@ function SectionAction({ label }: { label: string }) {
 }
 
 export function RecipeCard({ recipe, rank }: { recipe: Recipe; rank?: number }) {
+  const isScrapped = useScrappedRecipeStore((state) => state.scrappedRecipeIds.includes(recipe.id));
+
   return (
     <div className="relative w-[164px] shrink-0">
       <Link className="block" href={`/recipe/${recipe.id}`}>
@@ -341,7 +345,13 @@ export function RecipeCard({ recipe, rank }: { recipe: Recipe; rank?: number }) 
         aria-label="레시피 저장 상태"
         className="bg-card/80 absolute top-2 right-2.5 grid size-8 place-items-center rounded-full"
       >
-        <Bookmark aria-hidden="true" className="size-4" strokeWidth={1.8} />
+        <Bookmark
+          aria-hidden="true"
+          className="size-4"
+          fill={isScrapped ? 'var(--primitive-primary-700)' : 'none'}
+          stroke={isScrapped ? 'none' : 'currentColor'}
+          strokeWidth={isScrapped ? 0 : 1.8}
+        />
       </span>
     </div>
   );
@@ -467,6 +477,10 @@ export function RecipeListPage({
   tab?: RecipeTab;
   mockPantryMode?: RecipePantryMockMode;
 }) {
+  useEffect(() => {
+    void useScrappedRecipeStore.persist.rehydrate();
+  }, []);
+
   const { data: apiRecipes } = useRecipesQuery();
   const sections = getRecipeSections(tab, apiRecipes ?? recipeMocks);
   const { data: pantryItems = [] } = usePantriesQuery();
