@@ -1,5 +1,8 @@
 'use client';
 
+import { useState } from 'react';
+
+import type { CartItem } from '@/entities/cart/model/cart-store';
 import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 
 import { useCartQuery } from '../model/use-cart-query';
@@ -31,6 +34,25 @@ export function CartRouteContent({ apiEnabled }: { apiEnabled?: boolean } = {}) 
         void refetch();
       }}
       onUpdateQuantity={cartMutations.updateQuantity}
+    />
+  );
+}
+
+export function CartPreviewRouteContent({ initialItems }: { initialItems: CartItem[] }) {
+  const [items, setItems] = useState(initialItems);
+
+  return (
+    <CartPage
+      items={items}
+      onRemoveItems={(targetItems) => {
+        const targetIds = new Set(targetItems.map((item) => item.id));
+        setItems((currentItems) => currentItems.filter((item) => !targetIds.has(item.id)));
+      }}
+      onUpdateQuantity={(targetItem, quantity) => {
+        setItems((currentItems) =>
+          currentItems.map((item) => (item.id === targetItem.id ? { ...item, quantity } : item)),
+        );
+      }}
     />
   );
 }

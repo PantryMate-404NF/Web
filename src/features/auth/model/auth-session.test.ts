@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
+  createSingleFlight,
   getApplicableRestoreState,
   getPostAuthenticationRoute,
   getStateFreeHref,
@@ -37,5 +38,37 @@ describe('getApplicableRestoreState', () => {
 
   it('현재 revision의 세션 복구 결과는 적용한다', () => {
     expect(getApplicableRestoreState(1, 1, 'complete')).toBe('complete');
+  });
+});
+
+describe('createSingleFlight', () => {
+  it('진행 중인 세션 복구 요청을 중복 실행하지 않는다', async () => {
+    let resolveRestore: ((value: 'complete') => void) | undefined;
+    const restore = vi.fn(
+      () =>
+        new Promise<'complete'>((resolve) => {
+          resolveRestore = resolve;
+        }),
+    );
+    const restoreOnce = createSingleFlight(restore);
+
+    const firstRequest = restoreOnce();
+    const secondRequest = restoreOnce();
+
+    expect(restore).toHaveBeenCalledTimes(1);
+    expect(secondRequest).toBe(firstRequest);
+
+    resolveRestore?.('complete');
+    await firstRequest;
+  });
+
+  it('이전 요청이 끝나면 다음 세션 복구 요청을 실행한다', async () => {
+    const restore = vi.fn().mockResolvedValue('complete');
+    const restoreOnce = createSingleFlight(restore);
+
+    await restoreOnce();
+    await restoreOnce();
+
+    expect(restore).toHaveBeenCalledTimes(2);
   });
 });

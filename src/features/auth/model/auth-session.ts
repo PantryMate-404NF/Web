@@ -2,6 +2,22 @@ import type { AuthHomeState } from './restore-auth-session';
 
 export type AuthSessionState = 'loading' | 'guest' | AuthHomeState;
 
+/** 동시에 시작된 인증 복구 호출이 하나의 네트워크 요청을 공유하도록 합니다. */
+export function createSingleFlight<T>(action: () => Promise<T>) {
+  let inFlight: Promise<T> | null = null;
+
+  return () => {
+    if (inFlight) return inFlight;
+
+    const request = action().finally(() => {
+      if (inFlight === request) inFlight = null;
+    });
+    inFlight = request;
+
+    return request;
+  };
+}
+
 /** 명시적 인증 상태 변경 이후에는 이전 복구 요청의 결과를 무시합니다. */
 export function getApplicableRestoreState<T extends Exclude<AuthSessionState, 'loading'>>(
   restoreRevision: number,
