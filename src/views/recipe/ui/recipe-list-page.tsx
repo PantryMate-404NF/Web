@@ -166,6 +166,10 @@ export function filterRecipesByQuery(recipes: Recipe[], query: string): Recipe[]
   return recipes.filter((recipe) => recipe.name.toLocaleLowerCase().includes(normalizedQuery));
 }
 
+export function getRecipeContentMode(query: string): 'search' | 'list' {
+  return query.trim() ? 'search' : 'list';
+}
+
 export function getRecipeSearchResultDisplay(recipes: Recipe[]): 'results' | 'empty' {
   return recipes.length === 0 ? 'empty' : 'results';
 }
@@ -582,6 +586,7 @@ export function RecipeListPage({
   const recipes = apiRecipes ?? recipeMocks;
   const sections = getRecipeSections(tab, recipes);
   const searchedRecipes = filterRecipesByQuery(recipes, searchQuery);
+  const contentMode = getRecipeContentMode(searchQuery);
   const { data: pantryItems = [] } = usePantriesQuery();
   const recipePantryItems = getRecipePantryItems(pantryItems, mockPantryMode);
   const displayMode = getRecipeDisplayMode(recipePantryItems);
@@ -592,20 +597,24 @@ export function RecipeListPage({
   return (
     <main className="mobile-page bg-background text-foreground flex min-h-dvh flex-col">
       <RecipeHeader onQueryChange={setSearchQuery} query={searchQuery} />
-      {searchQuery.trim() ? (
+      {contentMode === 'search' ? (
         <RecipeSearchResults recipes={searchedRecipes} />
-      ) : displayMode === 'pantry' ? (
-        <PantryRecipeIntro
-          imminentIngredients={imminentIngredients}
-          pantryIngredients={pantryIngredients}
-          recipes={pantryRecipes}
-        />
-      ) : null}
-      <div className="flex flex-1 flex-col gap-8 px-4 pt-2 pb-8">
-        {sections.map((section, index) => (
-          <RecipeRail key={section.title} section={section} sectionIndex={index} />
-        ))}
-      </div>
+      ) : (
+        <>
+          {displayMode === 'pantry' ? (
+            <PantryRecipeIntro
+              imminentIngredients={imminentIngredients}
+              pantryIngredients={pantryIngredients}
+              recipes={pantryRecipes}
+            />
+          ) : null}
+          <div className="flex flex-1 flex-col gap-8 px-4 pt-2 pb-8">
+            {sections.map((section, index) => (
+              <RecipeRail key={section.title} section={section} sectionIndex={index} />
+            ))}
+          </div>
+        </>
+      )}
       <BottomNavigation />
     </main>
   );
