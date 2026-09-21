@@ -30,12 +30,20 @@ const apiToFoodType: Record<PreferredFoodType, string> = {
 };
 
 function toHouseholdSize(familyMemberCount: number): string {
+  if (familyMemberCount === 2 || familyMemberCount === 3) {
+    return '2~3인 가구';
+  }
+
   return familyMemberCount >= 5 ? '5인 이상 가구' : `${familyMemberCount}인 가구`;
 }
 
 function toFamilyMemberCount(householdSize: string | null): number {
   if (!householdSize) {
     throw new Error('가족 구성원 수를 선택해야 합니다.');
+  }
+
+  if (householdSize === '2~3인 가구') {
+    return 2;
   }
 
   return householdSize === '5인 이상 가구' ? 5 : Number.parseInt(householdSize, 10);

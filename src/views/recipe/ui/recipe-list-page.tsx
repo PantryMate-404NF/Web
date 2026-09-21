@@ -1,9 +1,9 @@
 'use client';
 
-import { Bookmark, ChevronRight, ShoppingCart, UserRound } from 'lucide-react';
+import { Bookmark, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useRecipesQuery } from '@/entities/recipe/api/use-recipes-query';
 import { recipeMocks } from '@/entities/recipe/model/mock';
@@ -141,6 +141,11 @@ export const RECIPE_RAIL_TYPOGRAPHY = {
   titleClassName: 'text-title-3 font-semibold',
 } as const;
 
+export const RECIPE_SEARCH_EMPTY_COPY = {
+  title: '검색 결과가 없어요.',
+  descriptionLines: ['다른 검색어를 입력하거나', '맞춤법을 확인해보세요'],
+} as const;
+
 export function getRecipeTab(tab?: string): RecipeTab {
   return tab === 'imminent' ? 'imminent' : 'main';
 }
@@ -151,6 +156,22 @@ export function getRecipeRoute(tab: RecipeTab): string {
 
 export function getIngredientSelectionRoute(): string {
   return '/recipe/ingredients';
+}
+
+export function filterRecipesByQuery(recipes: Recipe[], query: string): Recipe[] {
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+
+  if (!normalizedQuery) return recipes;
+
+  return recipes.filter((recipe) => recipe.name.toLocaleLowerCase().includes(normalizedQuery));
+}
+
+export function getRecipeContentMode(query: string): 'search' | 'list' {
+  return query.trim() ? 'search' : 'list';
+}
+
+export function getRecipeSearchResultDisplay(recipes: Recipe[]): 'results' | 'empty' {
+  return recipes.length === 0 ? 'empty' : 'results';
 }
 
 export function getRecipeDisplayMode(items: PantryItem[]): RecipeDisplayMode {
@@ -261,18 +282,42 @@ export function getRecipeSections(
   ];
 }
 
-function RecipeHeader() {
+function RecipeHeader({
+  query,
+  onQueryChange,
+}: {
+  query: string;
+  onQueryChange: (query: string) => void;
+}) {
   return (
-    <header className="flex h-16 items-center justify-between pr-4 pl-6">
-      <Link
-        aria-label="마이페이지"
-        className="bg-muted grid size-11 place-items-center rounded-full"
-        href="/mypage"
-      >
-        <UserRound aria-hidden="true" className="text-muted-foreground size-5" />
-      </Link>
+    <header className="flex h-16 items-center justify-between px-4">
+      <label className="focus-within:ring-ring flex h-12 w-[274px] items-center rounded-full border border-[var(--primitive-grey-300)] px-1.5 focus-within:ring-2">
+        <span className="grid size-10 shrink-0 place-items-center">
+          <Image
+            alt=""
+            aria-hidden="true"
+            height={24}
+            src="/images/recipe/search-icon.svg"
+            width={24}
+          />
+        </span>
+        <span className="sr-only">레시피 검색</span>
+        <input
+          className="min-w-0 flex-1 bg-transparent text-base leading-6 outline-none placeholder:text-[var(--primitive-grey-400)]"
+          onChange={(event) => onQueryChange(event.target.value)}
+          placeholder="검색"
+          type="search"
+          value={query}
+        />
+      </label>
       <Link aria-label="장바구니" className="grid size-10 place-items-center p-2" href="/cart">
-        <ShoppingCart aria-hidden="true" className="size-6" strokeWidth={1.8} />
+        <Image
+          alt=""
+          aria-hidden="true"
+          height={24}
+          src="/images/recipe/shopping-cart-icon.svg"
+          width={24}
+        />
       </Link>
     </header>
   );
@@ -303,19 +348,30 @@ function SectionAction({ label }: { label: string }) {
   );
 }
 
-export function RecipeCard({ recipe, rank }: { recipe: Recipe; rank?: number }) {
+export function RecipeCard({
+  recipe,
+  rank,
+  variant = 'rail',
+}: {
+  recipe: Recipe;
+  rank?: number;
+  variant?: 'rail' | 'search';
+}) {
   const isScrapped = useScrappedRecipeStore((state) => state.scrappedRecipeIds.includes(recipe.id));
+  const isSearchCard = variant === 'search';
 
   return (
-    <div className="relative w-[164px] shrink-0">
+    <div className={`relative shrink-0 ${isSearchCard ? 'w-[171px]' : 'w-[164px]'}`}>
       <Link className="block" href={`/recipe/${recipe.id}`}>
-        <div className="relative h-[164px] overflow-hidden rounded-lg">
+        <div
+          className={`relative overflow-hidden rounded-lg ${isSearchCard ? 'h-[171px]' : 'h-[164px]'}`}
+        >
           <Image
             alt=""
             aria-hidden
             className="object-cover"
             fill
-            sizes="164px"
+            sizes={isSearchCard ? '171px' : '164px'}
             src={recipeImageSrc}
           />
         </div>
@@ -336,7 +392,7 @@ export function RecipeCard({ recipe, rank }: { recipe: Recipe; rank?: number }) 
               </span>
             ) : null}
           </div>
-          <p className="text-tertiary truncate text-[13px] leading-5">
+          <p className="truncate text-xs leading-5 font-normal text-[var(--primitive-grey-400)]">
             {recipe.category} · {recipe.cookTime}
           </p>
         </div>
@@ -354,6 +410,51 @@ export function RecipeCard({ recipe, rank }: { recipe: Recipe; rank?: number }) 
         />
       </span>
     </div>
+  );
+}
+
+function RecipeSearchEmptyState() {
+  return (
+    <section
+      aria-label="검색 결과 없음"
+      className="absolute top-[269px] left-1/2 flex w-[184px] -translate-x-1/2 flex-col items-center gap-4 text-center"
+    >
+      <Image
+        alt=""
+        aria-hidden="true"
+        className="rounded-xl object-cover"
+        height={160}
+        src="/images/pantry/empty-image.svg"
+        width={160}
+      />
+      <div className="text-disabled text-title-4 w-full leading-6">
+        <h2 className="font-semibold">{RECIPE_SEARCH_EMPTY_COPY.title}</h2>
+        <p className="font-normal">{RECIPE_SEARCH_EMPTY_COPY.descriptionLines[0]}</p>
+        <p className="font-normal">{RECIPE_SEARCH_EMPTY_COPY.descriptionLines[1]}</p>
+      </div>
+    </section>
+  );
+}
+
+function RecipeSearchResults({ recipes }: { recipes: Recipe[] }) {
+  if (getRecipeSearchResultDisplay(recipes) === 'empty') {
+    return <RecipeSearchEmptyState />;
+  }
+
+  return (
+    <section aria-label="레시피 검색 결과" className="px-4 pt-4 pb-8">
+      <h1 className="py-4 text-base leading-6 text-[var(--primitive-grey-600)]">
+        레시피 검색 결과{' '}
+        <strong className="font-semibold text-[var(--primitive-primary-700)]">
+          {recipes.length}개
+        </strong>
+      </h1>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-6">
+        {recipes.map((recipe) => (
+          <RecipeCard key={recipe.id} recipe={recipe} variant="search" />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -477,12 +578,16 @@ export function RecipeListPage({
   tab?: RecipeTab;
   mockPantryMode?: RecipePantryMockMode;
 }) {
+  const [searchQuery, setSearchQuery] = useState('');
   useEffect(() => {
     void useScrappedRecipeStore.persist.rehydrate();
   }, []);
 
   const { data: apiRecipes } = useRecipesQuery();
-  const sections = getRecipeSections(tab, apiRecipes ?? recipeMocks);
+  const recipes = apiRecipes ?? recipeMocks;
+  const sections = getRecipeSections(tab, recipes);
+  const searchedRecipes = filterRecipesByQuery(recipes, searchQuery);
+  const contentMode = getRecipeContentMode(searchQuery);
   const { data: pantryItems = [] } = usePantriesQuery();
   const recipePantryItems = getRecipePantryItems(pantryItems, mockPantryMode);
   const displayMode = getRecipeDisplayMode(recipePantryItems);
@@ -492,19 +597,25 @@ export function RecipeListPage({
 
   return (
     <main className="mobile-page bg-background text-foreground flex min-h-dvh flex-col">
-      <RecipeHeader />
-      {displayMode === 'pantry' ? (
-        <PantryRecipeIntro
-          imminentIngredients={imminentIngredients}
-          pantryIngredients={pantryIngredients}
-          recipes={pantryRecipes}
-        />
-      ) : null}
-      <div className="flex flex-1 flex-col gap-8 px-4 py-4 pb-8">
-        {sections.map((section, index) => (
-          <RecipeRail key={section.title} section={section} sectionIndex={index} />
-        ))}
-      </div>
+      <RecipeHeader onQueryChange={setSearchQuery} query={searchQuery} />
+      {contentMode === 'search' ? (
+        <RecipeSearchResults recipes={searchedRecipes} />
+      ) : (
+        <>
+          {displayMode === 'pantry' ? (
+            <PantryRecipeIntro
+              imminentIngredients={imminentIngredients}
+              pantryIngredients={pantryIngredients}
+              recipes={pantryRecipes}
+            />
+          ) : null}
+          <div className="flex flex-1 flex-col gap-8 px-4 pt-2 pb-8">
+            {sections.map((section, index) => (
+              <RecipeRail key={section.title} section={section} sectionIndex={index} />
+            ))}
+          </div>
+        </>
+      )}
       <BottomNavigation />
     </main>
   );

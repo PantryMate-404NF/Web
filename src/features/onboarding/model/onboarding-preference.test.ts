@@ -26,6 +26,22 @@ describe('toUserPreferenceUpdateRequest', () => {
       tastePreferences: { salty: 5, spicy: 2, sweet: 4 },
     });
   });
+
+  it('2~3인 가구 그룹을 대표값 2로 저장한다', () => {
+    const request = toUserPreferenceUpdateRequest(
+      {
+        allergies: [],
+        favoriteFoods: [],
+        foodTypes: [],
+        householdSize: '2~3인 가구',
+        tastePreferences: { 단맛: 3, 매운맛: 3, 짠맛: 3 },
+      },
+      1,
+      false,
+    );
+
+    expect(request.familyMemberCount).toBe(2);
+  });
 });
 
 describe('fromUserPreference', () => {
@@ -45,11 +61,25 @@ describe('fromUserPreference', () => {
         allergies: ['우유'],
         favoriteFoods: ['불고기', '김치찌개', '카레라이스'],
         foodTypes: ['한식', '아시안'],
-        householdSize: '2인 가구',
+        householdSize: '2~3인 가구',
         tastePreferences: { 단맛: 4, 매운맛: 2, 짠맛: 5 },
       },
       step: 4,
     });
+  });
+
+  it('3명으로 저장된 가구 구성원도 2~3인 가구 선택값으로 복원한다', () => {
+    const { answers } = fromUserPreference({
+      allergies: [],
+      familyMemberCount: 3,
+      favoriteFoods: [],
+      onboardingCompleted: false,
+      onboardingStep: 1,
+      preferredFoodTypes: [],
+      tastePreferences: null,
+    });
+
+    expect(answers.householdSize).toBe('2~3인 가구');
   });
 
   it('4명으로 저장된 가구 구성원을 4인 가구 선택값으로 복원한다', () => {

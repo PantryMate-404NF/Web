@@ -49,3 +49,15 @@ export interface RelatedProduct {
   price: number;
   unitPrice: string;
 }
+
+export interface SearchProduct {
+  id: string;
+  detailProductId?: ProductId;
+  imageUrl: string;
+  name: string;
+  price: number;
+  unit: string;
+  shippingLabel: string;
+  isAvailable: boolean;
+  searchKeywords: string[];
+}
