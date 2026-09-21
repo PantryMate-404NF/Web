@@ -4,17 +4,33 @@ import { pantryItems } from '@/entities/pantry/model/mock';
 import { recipeMocks } from '@/entities/recipe/model/mock';
 
 import {
+  filterRecipesByQuery,
   getPantryRecipeRecommendations,
   getRecipePantryItems,
   getRecipeDisplayMode,
   getImminentIngredients,
   getIngredientSelectionRoute,
   getRecipeRoute,
+  getRecipeSearchResultDisplay,
   getRecipeSections,
+  RECIPE_SEARCH_EMPTY_COPY,
   RECIPE_RAIL_TYPOGRAPHY,
 } from './recipe-list-page';
 
 describe('getRecipeSections', () => {
+  it('uses the empty-search copy when no recipe matches the query', () => {
+    expect(getRecipeSearchResultDisplay([])).toBe('empty');
+    expect(RECIPE_SEARCH_EMPTY_COPY).toEqual({
+      title: '검색 결과가 없어요.',
+      description: '다른 검색어를 입력하거나 맞춤법을 확인해 보세요.',
+    });
+  });
+
+  it('filters recipes by a trimmed, case-insensitive recipe name query', () => {
+    expect(filterRecipesByQuery(recipeMocks, '  김치찌개 ')).toEqual([recipeMocks[0]]);
+    expect(filterRecipesByQuery(recipeMocks, '')).toEqual(recipeMocks);
+  });
+
   it('uses five pantry fixtures with three imminent items when mock mode is requested', () => {
     const items = getRecipePantryItems([], 'imminent');
 

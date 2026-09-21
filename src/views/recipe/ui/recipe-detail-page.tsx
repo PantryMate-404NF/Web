@@ -488,7 +488,7 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
               style={{ borderColor: 'var(--primitive-primary-500)' }}
               type="button"
             >
-              전체 담기
+              부족한 재료 담기
             </button>
           </div>
         </section>
