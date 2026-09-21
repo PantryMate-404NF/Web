@@ -13,4 +13,6 @@ export type UserProfile = {
   onboardingCompleted: boolean;
   createdAt: string;
   updatedAt: string;
+  birthDate: string;
+  phoneNumber: string;
 };

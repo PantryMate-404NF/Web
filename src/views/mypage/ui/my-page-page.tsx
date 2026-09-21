@@ -16,6 +16,11 @@ import { getMyPageDisplayName } from '../model/my-page-profile';
 
 const appEntryStorageKey = 'ai-pantry:entered-app';
 
+/** 온보딩 미완료 로그인 사용자만 홈의 설정 안내로 이동할 수 있습니다. */
+export function getOnboardingSetupHref(state: string) {
+  return state === 'onboarding' ? '/' : null;
+}
+
 const activityItems = [
   { href: '/mypage/orders', icon: FileText, label: '주문 내역' },
   { href: '/mypage/favorites', icon: Heart, label: '찜한 상품' },
@@ -83,6 +88,7 @@ export function MyPagePage() {
   const redirectPath = isLoggingOut ? null : getMyPageAccessRoute(state);
   const [logoutError, setLogoutError] = useState(false);
   const displayName = getMyPageDisplayName(nickname);
+  const onboardingSetupHref = getOnboardingSetupHref(state);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -154,18 +160,20 @@ export function MyPagePage() {
       </section>
 
       <div className="flex flex-1 flex-col gap-2 py-4">
-        <section className="mx-4 rounded-xl border-[1.5px] border-solid !border-[color:var(--primitive-primary-500)] bg-[var(--primitive-primary-100)] p-4">
-          <h1 className="text-base leading-6 font-semibold">아직 등록된 정보가 없어요</h1>
-          <p className="text-text-secondary text-sm leading-5 font-medium">
-            맞춤 레시피를 받기 위해 설정이 필요해요
-          </p>
-          <Link
-            className="bg-primary mt-4 flex h-10 items-center justify-center rounded-xl text-base leading-6 font-semibold"
-            href="/onboarding"
-          >
-            설정하기
-          </Link>
-        </section>
+        {onboardingSetupHref ? (
+          <section className="mx-4 rounded-xl border-[1.5px] border-solid !border-[color:var(--primitive-primary-500)] bg-[var(--primitive-primary-100)] p-4">
+            <h1 className="text-base leading-6 font-semibold">아직 등록된 정보가 없어요</h1>
+            <p className="text-text-secondary text-sm leading-5 font-medium">
+              맞춤 레시피를 받기 위해 설정이 필요해요
+            </p>
+            <Link
+              className="bg-primary mt-4 flex h-10 items-center justify-center rounded-xl text-base leading-6 font-semibold"
+              href={onboardingSetupHref}
+            >
+              설정하기
+            </Link>
+          </section>
+        ) : null}
 
         <section className="px-4 py-2" aria-labelledby="activity-title">
           <h2 className="text-base leading-6 font-semibold" id="activity-title">
