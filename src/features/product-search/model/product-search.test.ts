@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import { productSearchMocks } from '@/entities/product/model/search-mock';
 
-import { findProductsByQuery, toCartProduct } from './product-search';
+import {
+  findProductsByQuery,
+  getProductSearchViewState,
+  searchMockProducts,
+  toCartProduct,
+} from './product-search';
 
 describe('findProductsByQuery', () => {
   it('returns all egg products for the related Korean search terms', () => {
@@ -30,5 +35,23 @@ describe('toCartProduct', () => {
 
     expect(soldOutProduct).toBeDefined();
     expect(toCartProduct(soldOutProduct!)).toBeNull();
+  });
+});
+
+describe('getProductSearchViewState', () => {
+  it('distinguishes every search result state', () => {
+    expect(getProductSearchViewState({ query: '' })).toBe('idle');
+    expect(getProductSearchViewState({ isPending: true, query: '달걀' })).toBe('loading');
+    expect(getProductSearchViewState({ hasError: true, query: '달걀' })).toBe('error');
+    expect(getProductSearchViewState({ query: '달걀', resultCount: 0 })).toBe('empty');
+    expect(getProductSearchViewState({ query: '달걀', resultCount: 8 })).toBe('success');
+  });
+});
+
+describe('searchMockProducts', () => {
+  it('provides an error boundary that can be reproduced before API integration', async () => {
+    await expect(searchMockProducts('달걀', { previewState: 'error' })).rejects.toThrow(
+      '상품 검색 결과를 불러오지 못했어요.',
+    );
   });
 });

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { SearchProduct } from '@/entities/product/model/types';
 
 interface SearchProductCardProps {
+  eager?: boolean;
   onAdd: (product: SearchProduct) => void;
   product: SearchProduct;
 }
@@ -27,7 +28,7 @@ function ProductDetails({ product }: { product: SearchProduct }) {
   );
 }
 
-export function SearchProductCard({ onAdd, product }: SearchProductCardProps) {
+export function SearchProductCard({ eager = false, onAdd, product }: SearchProductCardProps) {
   const detailsId = `${product.id}-details`;
 
   return (
@@ -37,7 +38,7 @@ export function SearchProductCard({ onAdd, product }: SearchProductCardProps) {
           <Link
             aria-describedby={detailsId}
             aria-label={`${product.name} 상품 상세 보기`}
-            className="focus-visible:ring-ring block size-full focus-visible:ring-2 focus-visible:ring-inset"
+            className="focus-visible:ring-ring relative block size-full focus-visible:ring-2 focus-visible:ring-inset"
             href={`/product/${product.detailProductId}`}
           >
             <Image
@@ -45,6 +46,7 @@ export function SearchProductCard({ onAdd, product }: SearchProductCardProps) {
               aria-hidden="true"
               className="object-cover"
               fill
+              loading={eager ? 'eager' : undefined}
               sizes="(max-width: 389px) calc((100vw - 48px) / 2), 171px"
               src={product.imageUrl}
             />
@@ -55,6 +57,7 @@ export function SearchProductCard({ onAdd, product }: SearchProductCardProps) {
             aria-hidden="true"
             className="object-cover"
             fill
+            loading={eager ? 'eager' : undefined}
             sizes="(max-width: 389px) calc((100vw - 48px) / 2), 171px"
             src={product.imageUrl}
           />
