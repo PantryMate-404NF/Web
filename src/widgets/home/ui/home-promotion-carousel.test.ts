@@ -5,11 +5,14 @@ import { describe, expect, it } from 'vitest';
 import { getCarouselPlaybackControl, HomePromotionCarousel } from './home-promotion-carousel';
 
 describe('HomePromotionCarousel', () => {
-  it('플러스 영역을 프로모션 더보기 화면으로 연결한다', () => {
+  it('두 프로모션을 슬라이드 트랙에 렌더링하고 더보기 화면으로 연결한다', () => {
     const markup = renderToStaticMarkup(createElement(HomePromotionCarousel));
 
     expect(markup).toContain('href="/promotion"');
-    expect(markup).toContain('/ 4');
+    expect(markup).toContain('/ 2');
+    expect(markup).toContain('banner-seasonal-food.png');
+    expect(markup).toContain('banner-sokcho-kimchi.png');
+    expect(markup).toContain('transition-transform');
   });
 });
 
