@@ -28,7 +28,7 @@ describe('getRecipeSections', () => {
     expect(getRecipeSearchResultDisplay([])).toBe('empty');
     expect(RECIPE_SEARCH_EMPTY_COPY).toEqual({
       title: '검색 결과가 없어요.',
-      description: '다른 검색어를 입력하거나 맞춤법을 확인해 보세요.',
+      descriptionLines: ['다른 검색어를 입력하거나', '맞춤법을 확인해보세요'],
     });
   });
 

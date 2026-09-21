@@ -143,7 +143,7 @@ export const RECIPE_RAIL_TYPOGRAPHY = {
 
 export const RECIPE_SEARCH_EMPTY_COPY = {
   title: '검색 결과가 없어요.',
-  description: '다른 검색어를 입력하거나 맞춤법을 확인해 보세요.',
+  descriptionLines: ['다른 검색어를 입력하거나', '맞춤법을 확인해보세요'],
 } as const;
 
 export function getRecipeTab(tab?: string): RecipeTab {
@@ -429,7 +429,8 @@ function RecipeSearchEmptyState() {
       />
       <div className="text-disabled text-title-4 w-full leading-6">
         <h2 className="font-semibold">{RECIPE_SEARCH_EMPTY_COPY.title}</h2>
-        <p className="font-normal">{RECIPE_SEARCH_EMPTY_COPY.description}</p>
+        <p className="font-normal">{RECIPE_SEARCH_EMPTY_COPY.descriptionLines[0]}</p>
+        <p className="font-normal">{RECIPE_SEARCH_EMPTY_COPY.descriptionLines[1]}</p>
       </div>
     </section>
   );
