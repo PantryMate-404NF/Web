@@ -143,7 +143,7 @@ export const RECIPE_RAIL_TYPOGRAPHY = {
 
 export const RECIPE_SEARCH_EMPTY_COPY = {
   title: '검색 결과가 없어요.',
-  description: '다른 검색어를 입력하거나 맞춤법을 확인해 보세요.',
+  descriptionLines: ['다른 검색어를 입력하거나', '맞춤법을 확인해보세요'],
 } as const;
 
 export function getRecipeTab(tab?: string): RecipeTab {
@@ -164,6 +164,10 @@ export function filterRecipesByQuery(recipes: Recipe[], query: string): Recipe[]
   if (!normalizedQuery) return recipes;
 
   return recipes.filter((recipe) => recipe.name.toLocaleLowerCase().includes(normalizedQuery));
+}
+
+export function getRecipeContentMode(query: string): 'search' | 'list' {
+  return query.trim() ? 'search' : 'list';
 }
 
 export function getRecipeSearchResultDisplay(recipes: Recipe[]): 'results' | 'empty' {
@@ -425,7 +429,8 @@ function RecipeSearchEmptyState() {
       />
       <div className="text-disabled text-title-4 w-full leading-6">
         <h2 className="font-semibold">{RECIPE_SEARCH_EMPTY_COPY.title}</h2>
-        <p className="font-normal">{RECIPE_SEARCH_EMPTY_COPY.description}</p>
+        <p className="font-normal">{RECIPE_SEARCH_EMPTY_COPY.descriptionLines[0]}</p>
+        <p className="font-normal">{RECIPE_SEARCH_EMPTY_COPY.descriptionLines[1]}</p>
       </div>
     </section>
   );
@@ -582,6 +587,7 @@ export function RecipeListPage({
   const recipes = apiRecipes ?? recipeMocks;
   const sections = getRecipeSections(tab, recipes);
   const searchedRecipes = filterRecipesByQuery(recipes, searchQuery);
+  const contentMode = getRecipeContentMode(searchQuery);
   const { data: pantryItems = [] } = usePantriesQuery();
   const recipePantryItems = getRecipePantryItems(pantryItems, mockPantryMode);
   const displayMode = getRecipeDisplayMode(recipePantryItems);
@@ -592,20 +598,24 @@ export function RecipeListPage({
   return (
     <main className="mobile-page bg-background text-foreground flex min-h-dvh flex-col">
       <RecipeHeader onQueryChange={setSearchQuery} query={searchQuery} />
-      {searchQuery.trim() ? (
+      {contentMode === 'search' ? (
         <RecipeSearchResults recipes={searchedRecipes} />
-      ) : displayMode === 'pantry' ? (
-        <PantryRecipeIntro
-          imminentIngredients={imminentIngredients}
-          pantryIngredients={pantryIngredients}
-          recipes={pantryRecipes}
-        />
-      ) : null}
-      <div className="flex flex-1 flex-col gap-8 px-4 pt-2 pb-8">
-        {sections.map((section, index) => (
-          <RecipeRail key={section.title} section={section} sectionIndex={index} />
-        ))}
-      </div>
+      ) : (
+        <>
+          {displayMode === 'pantry' ? (
+            <PantryRecipeIntro
+              imminentIngredients={imminentIngredients}
+              pantryIngredients={pantryIngredients}
+              recipes={pantryRecipes}
+            />
+          ) : null}
+          <div className="flex flex-1 flex-col gap-8 px-4 pt-2 pb-8">
+            {sections.map((section, index) => (
+              <RecipeRail key={section.title} section={section} sectionIndex={index} />
+            ))}
+          </div>
+        </>
+      )}
       <BottomNavigation />
     </main>
   );

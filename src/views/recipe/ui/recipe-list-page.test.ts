@@ -11,6 +11,7 @@ import {
   getImminentIngredients,
   getIngredientSelectionRoute,
   getRecipeRoute,
+  getRecipeContentMode,
   getRecipeSearchResultDisplay,
   getRecipeSections,
   RECIPE_SEARCH_EMPTY_COPY,
@@ -18,11 +19,16 @@ import {
 } from './recipe-list-page';
 
 describe('getRecipeSections', () => {
+  it('shows only the search screen while a non-empty query is entered', () => {
+    expect(getRecipeContentMode('달걀')).toBe('search');
+    expect(getRecipeContentMode('   ')).toBe('list');
+  });
+
   it('uses the empty-search copy when no recipe matches the query', () => {
     expect(getRecipeSearchResultDisplay([])).toBe('empty');
     expect(RECIPE_SEARCH_EMPTY_COPY).toEqual({
       title: '검색 결과가 없어요.',
-      description: '다른 검색어를 입력하거나 맞춤법을 확인해 보세요.',
+      descriptionLines: ['다른 검색어를 입력하거나', '맞춤법을 확인해보세요'],
     });
   });
 
