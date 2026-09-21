@@ -27,6 +27,33 @@ describe('OnboardingFlow', () => {
     expect(renderToStaticMarkup(<OnboardingFlow />)).toContain('4인 가구');
   });
 
+  it('단계 수 대신 온보딩 전체 건너뛰기 버튼을 렌더링한다', () => {
+    navigationState.searchParams = new URLSearchParams('preview=1');
+
+    const markup = renderToStaticMarkup(<OnboardingFlow />);
+
+    expect(markup).toContain('>건너뛰기</button>');
+    expect(markup).not.toContain('>1/5</span>');
+  });
+
+  it('첫 단계의 가구 선택지를 피그마 문구로 렌더링한다', () => {
+    navigationState.searchParams = new URLSearchParams('preview=1');
+
+    const markup = renderToStaticMarkup(<OnboardingFlow />);
+
+    expect(markup).toContain('2~3인 가구');
+    expect(markup).not.toContain('>2인 가구</label>');
+    expect(markup).not.toContain('>3인 가구</label>');
+  });
+
+  it('피그마 원본 뒤로가기 아이콘을 렌더링한다', () => {
+    navigationState.searchParams = new URLSearchParams('preview=1');
+
+    const markup = renderToStaticMarkup(<OnboardingFlow />);
+
+    expect(markup).toContain('src="/icons/navigation/back.svg"');
+  });
+
   it('온보딩 정보를 불러오는 동안 상태 안내를 렌더링한다', () => {
     const markup = renderToStaticMarkup(<OnboardingFlow />);
 
@@ -42,6 +69,16 @@ describe('TastePreferenceSelector', () => {
     );
 
     expect(markup).toContain('peer-focus-visible:ring-2');
+  });
+
+  it('선택된 표정을 어둡게 만드는 multiply 효과를 사용하지 않는다', () => {
+    const markup = renderToStaticMarkup(
+      <TastePreferenceSelector name="짠맛" onChange={vi.fn()} scaleSrc="/taste.svg" value={3} />,
+    );
+
+    expect(markup).toContain('mix-blend-color');
+    expect(markup).not.toContain('mix-blend-multiply');
+    expect(markup).not.toContain('opacity-80');
   });
 });
 
