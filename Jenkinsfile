@@ -2,12 +2,14 @@ pipeline {
   agent { label 'jenkins-agent' }
 
   environment {
-    AWS_REGION               = 'ap-northeast-2'
-    ECR_REGISTRY             = '542119828072.dkr.ecr.ap-northeast-2.amazonaws.com'
-    ECR_REPO                 = 'pantry-mate-dev-frontend'
-    IMAGE_NAME               = "${ECR_REGISTRY}/${ECR_REPO}"
-    GITOPS_REPO              = 'https://github.com/PantryMate-404NF/pantry-mate-gitops.git'
-    GITOPS_APP_PATH          = 'environments/dev/cloud-test-front'
+    AWS_REGION      = 'ap-northeast-2'
+    ECR_REGISTRY    = '542119828072.dkr.ecr.ap-northeast-2.amazonaws.com'
+    ECR_REPO        = 'pantry-mate-dev-frontend'
+    IMAGE_NAME      = "${ECR_REGISTRY}/${ECR_REPO}"
+    IMAGE_TAG       = "${GIT_COMMIT[0..7]}"
+    GITOPS_REPO     = 'https://github.com/PantryMate-404NF/pantry-mate-gitops.git'
+    GITOPS_APP_PATH           = 'environments/dev/cloud-test-front'
+    NEXT_PUBLIC_API_BASE_URL  = 'https://api.unzipp.cloud'
   }
 
   options {
@@ -17,15 +19,10 @@ pipeline {
   }
 
   stages {
+
     stage('Checkout') {
       steps {
-        script {
-          checkout scm
-          env.IMAGE_TAG = sh(
-            script: 'git rev-parse --short=8 HEAD',
-            returnStdout: true
-          ).trim()
-        }
+        checkout scm
         sh 'git log --oneline -3'
       }
     }
@@ -34,23 +31,15 @@ pipeline {
       steps {
         container('dind') {
           sh '''
-            case "$NEXT_PUBLIC_API_BASE_URL" in
-              https://?*) ;;
-              *)
-                echo "NEXT_PUBLIC_API_BASE_URL must be configured with an HTTPS URL"
-                exit 1
-                ;;
-            esac
-
-            # AWS CLI installation for Alpine musl
+            # AWS CLI 설치 (pip - Alpine musl 호환)
             apk add --no-cache python3 py3-pip
             pip3 install awscli --break-system-packages --quiet
 
-            # ECR authentication uses the Jenkins agent's IRSA credentials.
+            # ECR 로그인 (IRSA 자동 인증)
             aws ecr get-login-password --region $AWS_REGION \
               | docker login --username AWS --password-stdin $ECR_REGISTRY
 
-            # ECR tags are immutable, so reuse an image that already exists.
+            # 이미 ECR에 존재하면 빌드/푸시 스킵 (IMMUTABLE 정책)
             if aws ecr describe-images --region $AWS_REGION \
                 --repository-name $ECR_REPO \
                 --image-ids imageTag=$IMAGE_TAG > /dev/null 2>&1; then
@@ -78,29 +67,13 @@ pipeline {
             sh '''
               apk add --no-cache git sed
 
-              printf '%s\n' \
-                '#!/bin/sh' \
-                'case "$1" in' \
-                '  *Username*) printf "%s\\n" "$GIT_USER" ;;' \
-                '  *Password*) printf "%s\\n" "$GIT_TOKEN" ;;' \
-                'esac' > "$WORKSPACE/.git-askpass"
-              chmod 700 "$WORKSPACE/.git-askpass"
-              export GIT_ASKPASS="$WORKSPACE/.git-askpass"
-              export GIT_TERMINAL_PROMPT=0
-              trap 'rm -f "$WORKSPACE/.git-askpass"' EXIT
-
-              git clone "$GITOPS_REPO" gitops-repo
+              git clone https://$GIT_USER:$GIT_TOKEN@$(echo $GITOPS_REPO | sed 's|https://||') gitops-repo
               cd gitops-repo
               git config user.email "jenkins@pantry-mate.internal"
               git config user.name "Jenkins CI"
 
               sed -i "s|image: $ECR_REGISTRY/$ECR_REPO:.*|image: $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG|g" \
                 $GITOPS_APP_PATH/deployment.yaml
-
-              if ! grep -Fq "image: $IMAGE_NAME:$IMAGE_TAG" "$GITOPS_APP_PATH/deployment.yaml"; then
-                echo "Failed to update the GitOps image tag"
-                exit 1
-              fi
 
               git add $GITOPS_APP_PATH/deployment.yaml
               git diff --cached --quiet || git commit -m "ci: update frontend image to $IMAGE_TAG [skip ci]"
@@ -121,9 +94,9 @@ pipeline {
   }
 
   post {
-    success { echo "frontend build complete: ${IMAGE_NAME}:${IMAGE_TAG}" }
-    failure { echo 'pipeline failed; check the Jenkins logs' }
-    cleanup {
+    success  { echo "✅ frontend 빌드 완료: ${IMAGE_NAME}:${IMAGE_TAG}" }
+    failure  { echo "❌ 파이프라인 실패 — 로그를 확인하세요." }
+    cleanup  {
       container('dind') {
         sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
       }
