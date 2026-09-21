@@ -1,6 +1,5 @@
 'use client';
 
-import { ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -27,7 +26,7 @@ import {
 } from '../model/onboarding-flow';
 import { fromUserPreference, toUserPreferenceUpdateRequest } from '../model/onboarding-preference';
 
-const householdOptions = ['1인 가구', '2인 가구', '3인 가구', '4인 가구', '5인 이상 가구'];
+const householdOptions = ['1인 가구', '2~3인 가구', '4인 가구', '5인 이상 가구'];
 
 const allergyOptions = [
   '알류(가금류)',
@@ -145,7 +144,7 @@ function SelectionChip({
   onChange: () => void;
 }) {
   return (
-    <label className="has-checked:border-primary text-title-4 flex h-10 cursor-pointer items-center justify-center rounded-full border px-5 font-medium transition-colors has-checked:bg-[var(--primitive-primary-300)]">
+    <label className="has-checked:border-primary text-body-3 flex cursor-pointer items-center justify-center rounded-full border px-4 py-1.5 font-normal transition-colors has-checked:bg-[var(--primitive-primary-300)] has-checked:font-medium">
       <input checked={checked} className="sr-only" onChange={onChange} type="checkbox" />
       {label}
     </label>
@@ -161,8 +160,6 @@ function OnboardingHeader({
   onSkip: () => void;
   step: OnboardingStep;
 }) {
-  const isSkippable = step === 3 || step === 4;
-
   return (
     <header className="flex h-16 items-center gap-4 px-4">
       <button
@@ -171,7 +168,14 @@ function OnboardingHeader({
         onClick={onBack}
         type="button"
       >
-        <ArrowLeft aria-hidden="true" className="size-6" />
+        <Image
+          alt=""
+          aria-hidden="true"
+          className="size-6"
+          height={24}
+          src="/icons/navigation/back.svg"
+          width={24}
+        />
       </button>
       <div className="flex items-center gap-8">
         <div
@@ -184,17 +188,13 @@ function OnboardingHeader({
         >
           <div className="bg-primary h-full rounded-full" style={{ width: `${step * 20}%` }} />
         </div>
-        {isSkippable ? (
-          <button
-            className="text-title-4 focus-visible:outline-ring shrink-0 font-medium focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"
-            onClick={onSkip}
-            type="button"
-          >
-            건너뛰기
-          </button>
-        ) : (
-          <span className="text-title-4 shrink-0 font-medium">{step}/5</span>
-        )}
+        <button
+          className="text-title-4 focus-visible:outline-ring shrink-0 font-medium focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"
+          onClick={onSkip}
+          type="button"
+        >
+          건너뛰기
+        </button>
       </div>
     </header>
   );
@@ -286,7 +286,7 @@ export function TastePreferenceSelector({
             width={212}
           />
           <span
-            className="pointer-events-none absolute top-0 z-10 size-[19px] -translate-x-1/2 rounded-full bg-[var(--primitive-primary-400)] opacity-80 mix-blend-multiply"
+            className="pointer-events-none absolute top-0 z-10 size-[19px] -translate-x-1/2 rounded-full bg-[var(--primitive-primary-400)] mix-blend-color"
             style={{ left: getTasteSelectionPosition(value) }}
           />
         </div>
@@ -400,10 +400,8 @@ export function OnboardingFlow() {
     router.replace('/');
   }
 
-  async function handleSkip() {
-    const nextStep = getNextOnboardingStep(step);
-
-    if (nextStep && (await saveOnboarding(nextStep, false))) setStep(nextStep);
+  function handleSkip() {
+    router.replace('/');
   }
 
   const canAdvance = canAdvanceOnboardingStep(step, answers);
@@ -458,11 +456,11 @@ export function OnboardingFlow() {
           <StepTitle helper="여러 개 선택할 수 있어요.">
             알레르기가 있는 식품을
             <br />
-            선택해 주세요.
+            선택해주세요.
           </StepTitle>
           <fieldset className="mt-10 px-7">
             <legend className="text-title-4 font-semibold">알레르기 종류</legend>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-2.5 flex flex-wrap gap-2">
               <SelectionChip
                 checked={answers.allergies.includes(NO_ALLERGY_OPTION)}
                 label={NO_ALLERGY_OPTION}
@@ -514,11 +512,11 @@ export function OnboardingFlow() {
       {step === 4 ? (
         <>
           <StepTitle helper="최소 3개 선택" titleWidth="max-w-[262px]">
-            좋아하는 음식을 3개 이상 선택해 주세요.
+            좋아하는 음식을 3개 이상 선택해주세요.
           </StepTitle>
           <fieldset className="mt-10 px-7">
             <legend className="text-title-4 font-semibold">음식 종류</legend>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-2.5 flex flex-wrap gap-2">
               {favoriteFoodOptions.map((option) => (
                 <SelectionChip
                   checked={answers.favoriteFoods.includes(option)}
@@ -534,7 +532,7 @@ export function OnboardingFlow() {
 
       {step === 5 ? (
         <>
-          <StepTitle titleWidth="w-[241px]">선호하는 맛의 정도를 선택해 주세요.</StepTitle>
+          <StepTitle titleWidth="w-[241px]">선호하는 맛의 정도를 선택해주세요.</StepTitle>
           <div className="mt-14 space-y-12 px-7">
             {tastePreferences.map((taste) => (
               <TastePreferenceSelector
@@ -554,7 +552,7 @@ export function OnboardingFlow() {
         </>
       ) : null}
 
-      <div className="fixed inset-x-0 bottom-[78px] z-10 mx-auto w-full max-w-[390px] px-4">
+      <div className="fixed inset-x-0 bottom-14 z-10 mx-auto w-full max-w-[390px] px-4">
         {saveError ? (
           <p className="text-body-4 text-destructive mb-2 text-center" role="alert">
             {saveError}
