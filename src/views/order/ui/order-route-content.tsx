@@ -9,12 +9,14 @@ import { OrderPage } from './order-page';
 interface OrderRouteContentProps {
   apiEnabled?: boolean;
   cartId?: number;
+  orderReturnTo?: string;
   previewItems?: CartItem[];
   selectedItemIds: string[];
 }
 
 export function OrderRouteContent({
   apiEnabled,
+  orderReturnTo = '/order',
   previewItems,
   selectedItemIds,
 }: OrderRouteContentProps) {
@@ -25,14 +27,22 @@ export function OrderRouteContent({
   const { data, error, isPending, refetch } = useCartQuery(shouldQuery);
 
   if (previewItems) {
-    return <OrderPage items={previewItems} selectedItemIds={selectedItemIds} />;
+    return (
+      <OrderPage
+        items={previewItems}
+        orderReturnTo={orderReturnTo}
+        selectedItemIds={selectedItemIds}
+      />
+    );
   }
 
-  if (isAuthLoading) return <OrderPage isLoading selectedItemIds={selectedItemIds} />;
+  if (isAuthLoading)
+    return <OrderPage isLoading orderReturnTo={orderReturnTo} selectedItemIds={selectedItemIds} />;
   if (!shouldUseApi) {
     return (
       <OrderPage
         errorMessage="로그인 후 주문서를 이용해 주세요."
+        orderReturnTo={orderReturnTo}
         selectedItemIds={selectedItemIds}
       />
     );
@@ -44,6 +54,7 @@ export function OrderRouteContent({
       errorMessage={error instanceof Error ? error.message : undefined}
       isLoading={isPending}
       items={data?.items ?? []}
+      orderReturnTo={orderReturnTo}
       onRetry={() => {
         void refetch();
       }}

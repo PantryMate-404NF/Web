@@ -5,6 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRef, useState } from 'react';
 
+import { buildAddressListHref } from '@/entities/address/model/address';
+import { selectSelectedAddress, useAddressStore } from '@/entities/address/model/address-store';
 import { useCartStore } from '@/entities/cart/model/cart-store';
 import type { CartItem } from '@/entities/cart/model/cart-store';
 import { createOrder } from '@/entities/order/api/create-order';
@@ -82,16 +84,19 @@ function TossPaymentsBadge() {
 export function OrderSheet({
   cartId,
   items,
+  orderReturnTo = '/order',
   selectedCartItemIds = [],
 }: {
   cartId?: number;
   items: CartItem[];
+  orderReturnTo?: string;
   selectedCartItemIds?: number[];
 }) {
   const [isOrdererExpanded, setIsOrdererExpanded] = useState(false);
   const [isPaymentPending, setIsPaymentPending] = useState(false);
   const [selectedAgreements, setSelectedAgreements] = useState<string[]>([]);
   const [paymentNotice, setPaymentNotice] = useState('');
+  const selectedAddress = useAddressStore(selectSelectedAddress);
   const [executePayment] = useState(() =>
     createPaymentExecutor({
       createOrder,
@@ -194,11 +199,13 @@ export function OrderSheet({
         </h2>
         <div className="flex h-[49px] items-end justify-between gap-3">
           <p className="text-text-secondary h-full w-[259px] text-[15px] leading-[23px]">
-            {DELIVERY_MOCK.address}
+            {selectedAddress
+              ? `${selectedAddress.addressLine1}, ${selectedAddress.addressLine2} (${selectedAddress.postalCode})`
+              : DELIVERY_MOCK.address}
           </p>
           <Link
             className="border-border-strong text-text-secondary focus-visible:ring-ring shrink-0 rounded-full border px-3 py-1 text-sm leading-[21px] font-medium focus-visible:ring-2"
-            href="/mypage/delivery"
+            href={buildAddressListHref(orderReturnTo)}
           >
             변경
           </Link>
@@ -352,6 +359,7 @@ export function OrderPage({
   isLoading = false,
   items,
   onRetry,
+  orderReturnTo = '/order',
   selectedItemIds,
 }: {
   cartId?: number;
@@ -359,6 +367,7 @@ export function OrderPage({
   isLoading?: boolean;
   items?: CartItem[];
   onRetry?: () => void;
+  orderReturnTo?: string;
   selectedItemIds: string[];
 }) {
   const cartItems = useCartStore((state) => state.items);
@@ -392,6 +401,7 @@ export function OrderPage({
     <OrderSheet
       cartId={cartId}
       items={orderItems}
+      orderReturnTo={orderReturnTo}
       selectedCartItemIds={getSelectedCartItemIds(orderItems)}
     />
   );
