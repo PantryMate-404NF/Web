@@ -43,6 +43,28 @@ function FavoriteProductCard({ product }: { product: ProductDetail }) {
   );
 }
 
+export function favoritesEmptyState() {
+  return (
+    <section
+      aria-label="찜한 상품 없음"
+      className="absolute top-[269px] left-1/2 flex w-[184px] -translate-x-1/2 flex-col items-center gap-4 text-center"
+    >
+      <Image
+        alt=""
+        aria-hidden="true"
+        className="rounded-xl object-cover"
+        height={160}
+        src="/images/pantry/empty-image.svg"
+        width={160}
+      />
+      <div className="text-disabled text-title-4 w-full leading-6">
+        <h2 className="font-semibold">찜한 상품이 없어요</h2>
+        <p className="font-normal">마음에 드는 상품을 추가해 보세요</p>
+      </div>
+    </section>
+  );
+}
+
 export function FavoriteProductsPage() {
   const favoriteProductIds = useFavoriteProductStore(selectFavoriteProductIds);
   const hasHydrated = useFavoriteProductStore((state) => state.hasHydrated);
@@ -63,7 +85,9 @@ export function FavoriteProductsPage() {
         <div className="py-16 text-center" role="status">
           <span className="sr-only">찜한 상품을 불러오는 중입니다.</span>
         </div>
-      ) : favoriteProducts.length > 0 ? (
+      ) : favoriteProducts.length === 0 ? (
+        favoritesEmptyState()
+      ) : (
         <section
           aria-label="찜한 상품 목록"
           className="grid grid-cols-2 gap-x-4 gap-y-6 px-4 pt-2 pb-8"
@@ -71,10 +95,6 @@ export function FavoriteProductsPage() {
           {favoriteProducts.map((product) => (
             <FavoriteProductCard key={product.id} product={product} />
           ))}
-        </section>
-      ) : (
-        <section className="flex min-h-[360px] items-center justify-center px-4 text-center">
-          <p className="text-text-secondary text-sm">찜한 상품이 없어요.</p>
         </section>
       )}
     </main>
