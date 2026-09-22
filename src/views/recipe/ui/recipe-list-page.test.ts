@@ -12,6 +12,9 @@ import {
   getIngredientSelectionRoute,
   getRecipeRoute,
   getRecipeContentMode,
+  getRecipeMoreRoute,
+  getRecipeSectionById,
+  getRecipeViewState,
   getRecipeSearchResultDisplay,
   getRecipeSections,
   RECIPE_SEARCH_EMPTY_COPY,
@@ -30,6 +33,11 @@ describe('getRecipeSections', () => {
       title: '검색 결과가 없어요.',
       descriptionLines: ['다른 검색어를 입력하거나', '맞춤법을 확인해보세요'],
     });
+  });
+
+  it('prioritizes an API failure over the mock recipe fallback', () => {
+    expect(getRecipeViewState(new Error('레시피 조회 실패'))).toBe('error');
+    expect(getRecipeViewState(null)).toBe('content');
   });
 
   it('filters recipes by a trimmed, case-insensitive recipe name query', () => {
@@ -70,6 +78,11 @@ describe('getRecipeSections', () => {
 
   it('routes the main ingredient cards to the ingredient selection flow', () => {
     expect(getIngredientSelectionRoute()).toBe('/recipe/ingredients');
+  });
+
+  it('uses a section-specific route and title for each recipe rail more link', () => {
+    expect(getRecipeMoreRoute('popular')).toBe('/recipe/more?section=popular');
+    expect(getRecipeSectionById('scrapped')?.title).toBe('스크랩 수가 말해주는 레시피');
   });
 
   it('uses the final recipe rail labels instead of temporary sections', () => {
