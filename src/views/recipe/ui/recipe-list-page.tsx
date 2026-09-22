@@ -13,7 +13,10 @@ import type { PantryItem } from '@/entities/pantry/model/types';
 import type { Recipe, RecipeTab } from '@/entities/recipe/model/types';
 import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
 
-interface RecipeRailSection {
+export type RecipeSectionId = 'popular' | 'scrapped' | 'shared' | 'completed' | 'random';
+
+export interface RecipeRailSection {
+  id: RecipeSectionId;
   title: string;
   description: string;
   recipes: Recipe[];
@@ -158,6 +161,10 @@ export function getIngredientSelectionRoute(): string {
   return '/recipe/ingredients';
 }
 
+export function getRecipeMoreRoute(sectionId: RecipeSectionId): string {
+  return `/recipe/more?section=${sectionId}`;
+}
+
 export function filterRecipesByQuery(recipes: Recipe[], query: string): Recipe[] {
   const normalizedQuery = query.trim().toLocaleLowerCase();
 
@@ -255,31 +262,45 @@ export function getRecipeSections(
 
   return [
     {
+      id: 'popular',
       title: '후기 많은 인기 레시피',
       description: '직접 만들어본 분들의 후기로 검증된 레시피예요.',
       recipes,
     },
     {
+      id: 'scrapped',
       title: '스크랩 수가 말해주는 레시피',
       description: '저장해두고 계속 찾게 되는 레시피예요.',
       recipes,
     },
     {
+      id: 'shared',
       title: '가장 많이 공유된 레시피',
       description: '주변에 알리고 싶은 공유 랭킹 레시피를 모았어요.',
       recipes,
     },
     {
+      id: 'completed',
       title: '끝까지 만들기 좋은 레시피',
       description: '실제로 레시피를 완성한 후보들로 추려봤어요.',
       recipes,
     },
     {
+      id: 'random',
       title: '오늘의 랜덤 레시피',
       description: '팬트리 메이트가 오늘을 위해 골라봤어요.',
       recipes,
     },
   ];
+}
+
+export function getRecipeSectionById(
+  sectionId: string | undefined,
+  sourceRecipes = recipeMocks,
+): RecipeRailSection {
+  const sections = getRecipeSections('main', sourceRecipes);
+
+  return sections.find((section) => section.id === sectionId) ?? sections[0];
 }
 
 function RecipeHeader({
@@ -335,12 +356,12 @@ export function RecipeActionIcon() {
   );
 }
 
-function SectionAction({ label }: { label: string }) {
+function SectionAction({ section }: { section: RecipeRailSection }) {
   return (
     <Link
-      aria-label={`${label} 레시피 더보기`}
+      aria-label={`${section.title} 레시피 더보기`}
       className={RECIPE_ACTION_LAYOUT.containerClassName}
-      href="/recipe"
+      href={getRecipeMoreRoute(section.id)}
     >
       <span className={RECIPE_ACTION_LAYOUT.textClassName}>더보기</span>
       <RecipeActionIcon />
@@ -472,7 +493,7 @@ function RecipeRail({
           <h2 className={RECIPE_RAIL_TYPOGRAPHY.titleClassName}>{section.title}</h2>
           <p className={RECIPE_RAIL_TYPOGRAPHY.descriptionClassName}>{section.description}</p>
         </div>
-        <SectionAction label={section.title} />
+        <SectionAction section={section} />
       </div>
       <div className="-mx-4 flex [scrollbar-width:none] gap-2 overflow-x-auto px-4 pb-1">
         {section.recipes.map((recipe, recipeIndex) => (

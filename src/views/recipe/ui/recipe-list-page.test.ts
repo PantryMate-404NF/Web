@@ -12,6 +12,8 @@ import {
   getIngredientSelectionRoute,
   getRecipeRoute,
   getRecipeContentMode,
+  getRecipeMoreRoute,
+  getRecipeSectionById,
   getRecipeSearchResultDisplay,
   getRecipeSections,
   RECIPE_SEARCH_EMPTY_COPY,
@@ -70,6 +72,11 @@ describe('getRecipeSections', () => {
 
   it('routes the main ingredient cards to the ingredient selection flow', () => {
     expect(getIngredientSelectionRoute()).toBe('/recipe/ingredients');
+  });
+
+  it('uses a section-specific route and title for each recipe rail more link', () => {
+    expect(getRecipeMoreRoute('popular')).toBe('/recipe/more?section=popular');
+    expect(getRecipeSectionById('scrapped')?.title).toBe('스크랩 수가 말해주는 레시피');
   });
 
   it('uses the final recipe rail labels instead of temporary sections', () => {
