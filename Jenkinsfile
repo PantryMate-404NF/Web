@@ -6,7 +6,6 @@ pipeline {
     ECR_REGISTRY    = '542119828072.dkr.ecr.ap-northeast-2.amazonaws.com'
     ECR_REPO        = 'pantry-mate-dev-frontend'
     IMAGE_NAME      = "${ECR_REGISTRY}/${ECR_REPO}"
-    IMAGE_TAG       = "${GIT_COMMIT.take(8)}"
     GITOPS_REPO     = 'https://github.com/PantryMate-404NF/pantry-mate-gitops.git'
     GITOPS_APP_PATH           = 'environments/dev/cloud-test-front'
     NEXT_PUBLIC_API_BASE_URL  = 'https://api.unzipp.cloud'
@@ -23,6 +22,9 @@ pipeline {
     stage('Checkout') {
       steps {
         checkout scm
+        script {
+          env.IMAGE_TAG = sh(returnStdout: true, script: 'git rev-parse --short=8 HEAD').trim()
+        }
         sh 'git log --oneline -3'
       }
     }
