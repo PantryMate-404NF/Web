@@ -11,8 +11,11 @@ import {
 } from '@/features/payment/model/payment-redirect';
 import { ApiError } from '@/shared/api/api-error';
 
+import { PaymentCompleteView } from './payment-complete-view';
+
 interface PaymentSuccessPageProps {
   amount?: string;
+  initialStatus?: 'confirming' | 'done';
   orderId?: string;
   paymentKey?: string;
 }
@@ -20,9 +23,14 @@ interface PaymentSuccessPageProps {
 type ConfirmState =
   { status: 'confirming' } | { status: 'done' } | { message: string; status: 'error' };
 
-export function PaymentSuccessPage({ amount, orderId, paymentKey }: PaymentSuccessPageProps) {
-  const [state, setState] = useState<ConfirmState>({ status: 'confirming' });
-  const hasConfirmedRef = useRef(false);
+export function PaymentSuccessPage({
+  amount,
+  initialStatus = 'confirming',
+  orderId,
+  paymentKey,
+}: PaymentSuccessPageProps) {
+  const [state, setState] = useState<ConfirmState>({ status: initialStatus });
+  const hasConfirmedRef = useRef(initialStatus === 'done');
 
   useEffect(() => {
     if (hasConfirmedRef.current) return;
@@ -56,6 +64,8 @@ export function PaymentSuccessPage({ amount, orderId, paymentKey }: PaymentSucce
     void runConfirmation();
   }, [amount, orderId, paymentKey]);
 
+  if (state.status === 'done') return <PaymentCompleteView />;
+
   return (
     <main className="mobile-page bg-background flex min-h-dvh flex-col items-center justify-center px-6 text-center">
       {state.status === 'confirming' ? (
@@ -63,19 +73,6 @@ export function PaymentSuccessPage({ amount, orderId, paymentKey }: PaymentSucce
           <div className="border-primary size-12 animate-spin rounded-full border-4 border-t-transparent" />
           <h1 className="text-title-2 mt-6 font-semibold">결제를 확인하고 있어요</h1>
           <p className="text-text-secondary mt-2 text-sm">화면을 닫지 말고 잠시만 기다려 주세요.</p>
-        </>
-      ) : null}
-
-      {state.status === 'done' ? (
-        <>
-          <h1 className="text-title-2 font-semibold">결제가 완료됐어요</h1>
-          <p className="text-text-secondary mt-2 text-sm">주문과 재고 반영이 완료되었습니다.</p>
-          <Link
-            className="bg-primary text-primary-foreground mt-8 rounded-xl px-6 py-3 font-semibold"
-            href="/"
-          >
-            홈으로 이동
-          </Link>
         </>
       ) : null}
 
