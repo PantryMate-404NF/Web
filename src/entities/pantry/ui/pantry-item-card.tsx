@@ -1,6 +1,6 @@
 /** 팬트리 식재료 카드의 이미지·상태·보관 방법 표시 담당함 */
 
-import { Image as ImageIcon, Package } from 'lucide-react';
+import { Package } from 'lucide-react';
 import Image from 'next/image';
 
 import type {
@@ -86,20 +86,14 @@ function PantryImageCard({
     <article className="text-foreground bg-card shadow-card relative flex h-[156px] min-w-0 flex-col rounded-xl p-3">
       <div className="flex items-start justify-between">
         <div className="bg-placeholder relative size-20 overflow-hidden rounded-sm">
-          {item.imageUrl ? (
-            <Image
-              alt={item.imageAlt}
-              className="object-cover"
-              fill
-              sizes="80px"
-              src={item.imageUrl}
-            />
-          ) : (
-            <ImageIcon
-              aria-label={item.imageAlt}
-              className="text-muted-foreground absolute inset-0 m-auto size-6"
-            />
-          )}
+          <Image
+            alt={item.imageAlt}
+            className="object-cover"
+            fill
+            sizes="80px"
+            src={item.imageUrl ?? '/images/pantry/pantry-basic.svg'}
+            unoptimized={item.imageUrl?.startsWith('blob:')}
+          />
         </div>
         <span
           className={`flex h-5 items-center rounded-full px-2 text-xs leading-[18px] font-semibold ${item.expirationStatus === 'EXPIRED' ? 'bg-destructive/10 text-destructive' : item.expirationStatus === 'IMMINENT' ? 'bg-primary/20 text-status-warning' : 'bg-muted text-muted-foreground'}`}
