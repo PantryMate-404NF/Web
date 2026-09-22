@@ -21,4 +21,9 @@ describe('MyPagePage', () => {
     expect(myPageSource).toContain('href="/mypage/edit"');
     expect(myPageSource).not.toContain('href="/mypage/profile/edit"');
   });
+
+  it('links address management to the address list route without replacing delivery tracking', () => {
+    expect(myPageSource).toContain("{ href: '/mypage/addresses', label: '배송지 관리' }");
+    expect(myPageSource).not.toContain("{ href: '/mypage/delivery', label: '배송지 관리' }");
+  });
 });

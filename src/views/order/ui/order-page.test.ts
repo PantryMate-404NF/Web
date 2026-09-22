@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ back: vi.fn(), push: vi.fn() }),
+  usePathname: () => '/order',
+  useSearchParams: () => new URLSearchParams('preview=1&items=onion'),
 }));
 
 import type { CartItem } from '@/entities/cart/model/cart-store';
@@ -17,7 +19,12 @@ const orderItems: CartItem[] = [
 
 describe('OrderSheet', () => {
   it('주문서 정보와 비활성 결제 CTA를 렌더링한다', () => {
-    const markup = renderToStaticMarkup(createElement(OrderSheet, { items: orderItems }));
+    const markup = renderToStaticMarkup(
+      createElement(OrderSheet, {
+        items: orderItems,
+        orderReturnTo: '/order?preview=1&items=onion',
+      }),
+    );
 
     expect(markup).toContain('주문자 정보');
     expect(markup).toContain('배송지');
@@ -25,6 +32,9 @@ describe('OrderSheet', () => {
     expect(markup).toContain('결제 수단');
     expect(markup).toContain('22,100');
     expect(markup).toContain('disabled=""');
+    expect(markup).toContain(
+      'href="/mypage/addresses?returnTo=%2Forder%3Fpreview%3D1%26items%3Donion"',
+    );
   });
 
   it('피그마 기준 섹션 높이와 구분선을 유지한다', () => {
