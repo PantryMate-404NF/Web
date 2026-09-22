@@ -374,12 +374,6 @@
   border-color: var(--border);
 }
 
-button:not(:disabled),
-a[href],
-[role='button']:not([aria-disabled='true']) {
-  cursor: pointer;
-}
-
 html {
   background: var(--background);
 }
