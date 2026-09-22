@@ -1,6 +1,15 @@
 'use client';
 
-import { ChevronDown, ChevronLeft, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronLeft,
+  Paperclip,
+  Pencil,
+  Plus,
+  Search,
+  SquarePen,
+  Trash2,
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { RefObject } from 'react';
@@ -132,6 +141,38 @@ export function PantryEmptyState() {
   );
 }
 
+export function PantryAddOptions({ onReceiptUpload }: { onReceiptUpload: () => void }) {
+  return (
+    <div
+      aria-label="재료 추가 방식"
+      className="bg-card absolute top-11 right-0 z-20 flex w-max min-w-[152px] flex-col rounded-xl py-2 pr-4 pl-2 shadow-[0_4px_4px_rgb(26_26_26/16%),0_0_2px_rgb(26_26_26/12%)]"
+      role="menu"
+    >
+      <button
+        className="text-label-2 flex h-10 items-center gap-0.5 whitespace-nowrap"
+        onClick={onReceiptUpload}
+        role="menuitem"
+        type="button"
+      >
+        <span className="grid size-10 place-items-center">
+          <Paperclip aria-hidden="true" className="size-6" />
+        </span>
+        영수증 업로드
+      </button>
+      <Link
+        className="text-label-2 flex h-10 items-center gap-0.5 whitespace-nowrap"
+        href="/pantry?state=register"
+        role="menuitem"
+      >
+        <span className="grid size-10 place-items-center">
+          <SquarePen aria-hidden="true" className="size-6" />
+        </span>
+        직접 등록하기
+      </Link>
+    </div>
+  );
+}
+
 export function PantryFilterEmptyState() {
   return (
     <section aria-live="polite" className="text-muted-foreground px-4 pt-24 text-center">
@@ -213,13 +254,20 @@ export function PantryPage({
   const menuRef = useRef<HTMLDivElement>(null);
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const deleteDialogRef = useRef<HTMLElement>(null);
-  const addItemLinkRef = useRef<HTMLAnchorElement>(null);
+  const addItemButtonRef = useRef<HTMLButtonElement>(null);
+  const receiptInputRef = useRef<HTMLInputElement>(null);
+  const [isAddOptionsOpen, setIsAddOptionsOpen] = useState(false);
   const visibleItems = getVisiblePantryItems(currentItems, query, storage, sort);
   const viewState = getPantryViewState({ items: currentItems, errorMessage, isLoading });
 
   function closeDeleteDialog() {
     setDeleteItem(null);
     menuTriggerRef.current?.focus();
+  }
+
+  function openReceiptFilePicker() {
+    setIsAddOptionsOpen(false);
+    receiptInputRef.current?.click();
   }
 
   useEffect(() => {
@@ -293,6 +341,19 @@ export function PantryPage({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [deleteItem]);
 
+  useEffect(() => {
+    if (!isAddOptionsOpen) return;
+
+    function closeAddOptions(event: KeyboardEvent) {
+      if (event.key !== 'Escape') return;
+      setIsAddOptionsOpen(false);
+      addItemButtonRef.current?.focus();
+    }
+
+    window.addEventListener('keydown', closeAddOptions);
+    return () => window.removeEventListener('keydown', closeAddOptions);
+  }, [isAddOptionsOpen]);
+
   if (viewState === 'loading') return <PantryLoadingSkeleton variant={cardVariant} />;
   if (viewState === 'error')
     return (
@@ -322,16 +383,28 @@ export function PantryPage({
               value={query}
             />
           </label>
-          <Button
-            asChild
-            className="ml-[18px] size-10 shrink-0 rounded-full p-0 has-[>svg]:p-0"
-            size="icon"
-          >
-            <Link href="/pantry?state=register" ref={addItemLinkRef}>
+          <div className="relative ml-[18px] shrink-0">
+            <Button
+              aria-expanded={isAddOptionsOpen}
+              aria-haspopup="menu"
+              className="size-10 rounded-full p-0 has-[>svg]:p-0"
+              onClick={() => setIsAddOptionsOpen((isOpen) => !isOpen)}
+              ref={addItemButtonRef}
+              size="icon"
+              type="button"
+            >
               <Plus className="size-6" />
               <span className="sr-only">재료 추가</span>
-            </Link>
-          </Button>
+            </Button>
+            {isAddOptionsOpen ? <PantryAddOptions onReceiptUpload={openReceiptFilePicker} /> : null}
+            <input
+              accept="image/*"
+              aria-label="영수증 이미지 업로드"
+              className="sr-only"
+              ref={receiptInputRef}
+              type="file"
+            />
+          </div>
         </div>
       </header>
 
@@ -470,7 +543,7 @@ export function PantryPage({
               const deletedItemId = deleteItem.id;
               void removePantryItem.mutateAsync(deletedItemId).then(() => {
                 setDeleteItem(null);
-                requestAnimationFrame(() => addItemLinkRef.current?.focus());
+                requestAnimationFrame(() => addItemButtonRef.current?.focus());
               });
             }}
           />

@@ -12,6 +12,7 @@ import {
   PantryDeleteDialog,
   PantryEmptyState,
   PantryErrorState,
+  PantryAddOptions,
   PantryPage,
 } from './pantry-page';
 
@@ -138,6 +139,29 @@ describe('getPantryMenuPosition', () => {
       left: 224,
       top: 255,
     });
+  });
+});
+
+describe('PantryAddOptions', () => {
+  it('opens the image picker for receipt upload and keeps manual registration on the register route', () => {
+    const onReceiptUpload = vi.fn();
+    const options = PantryAddOptions({ onReceiptUpload });
+    const [receiptUploadButton, manualRegistrationLink] = Children.toArray(options.props.children);
+
+    expect(isValidElement<{ onClick?: () => void }>(receiptUploadButton)).toBe(true);
+    expect(isValidElement<{ href?: string }>(manualRegistrationLink)).toBe(true);
+
+    if (
+      !isValidElement<{ onClick?: () => void }>(receiptUploadButton) ||
+      !isValidElement<{ href?: string }>(manualRegistrationLink)
+    ) {
+      throw new Error('팬트리 추가 메뉴 항목을 찾을 수 없습니다.');
+    }
+
+    receiptUploadButton.props.onClick?.();
+
+    expect(onReceiptUpload).toHaveBeenCalledOnce();
+    expect(manualRegistrationLink.props.href).toBe('/pantry?state=register');
   });
 });
 

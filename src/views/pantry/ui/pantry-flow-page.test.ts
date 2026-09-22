@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  areIngredientFormsSubmittable,
   formatPantryDate,
   getCalendarSelection,
   getPantryExpirationPresentation,
   getCalendarMonthCells,
+  getPantryImageInputProps,
   getPantryMockState,
   isIngredientFormSubmittable,
 } from './pantry-flow-page';
@@ -29,6 +31,33 @@ describe('isIngredientFormSubmittable', () => {
     expect(isIngredientFormSubmittable('', null)).toBe(false);
     expect(isIngredientFormSubmittable('대파', null)).toBe(false);
     expect(isIngredientFormSubmittable('대파', 'REFRIGERATED')).toBe(true);
+  });
+});
+
+describe('areIngredientFormsSubmittable', () => {
+  it('requires every added ingredient to have both a name and storage method', () => {
+    expect(
+      areIngredientFormsSubmittable([
+        { name: '토마토', storageType: 'REFRIGERATED' },
+        { name: '', storageType: 'FROZEN' },
+      ]),
+    ).toBe(false);
+    expect(
+      areIngredientFormsSubmittable([
+        { name: '토마토', storageType: 'REFRIGERATED' },
+        { name: '대파', storageType: 'FROZEN' },
+      ]),
+    ).toBe(true);
+  });
+});
+
+describe('getPantryImageInputProps', () => {
+  it('uses the outward camera for a new photo and the regular picker for an existing image', () => {
+    expect(getPantryImageInputProps('camera')).toEqual({
+      accept: 'image/*',
+      capture: 'environment',
+    });
+    expect(getPantryImageInputProps('gallery')).toEqual({ accept: 'image/*' });
   });
 });
 

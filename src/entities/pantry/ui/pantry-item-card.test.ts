@@ -26,6 +26,15 @@ describe('getExpirationBadgeLabel', () => {
 });
 
 describe('PantryItemCard image-card icons', () => {
+  it('uses the pantry basic thumbnail when a manually registered item has no photo', () => {
+    const itemWithoutImage = { ...pantryItems[0], imageUrl: undefined };
+    const markup = renderToStaticMarkup(
+      createElement(PantryItemCard, { item: itemWithoutImage, variant: 'image' }),
+    );
+
+    expect(markup).toContain('/images/pantry/pantry-basic.svg');
+  });
+
   it('uses the pantry SVG assets at their specified dimensions', () => {
     const refrigeratedMarkup = renderToStaticMarkup(
       createElement(PantryItemCard, { item: pantryItems[2], variant: 'image' }),

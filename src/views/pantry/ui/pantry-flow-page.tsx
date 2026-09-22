@@ -2,23 +2,26 @@
 
 /** 팬트리 조회와 등록·수정·목업 화면 흐름을 조합함 */
 
-import { useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, ChevronLeft } from 'lucide-react';
+import { Camera, CheckCircle2, ChevronLeft, ImagePlus, Info, Plus, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { getPantryExpirationPresentation } from '@/entities/pantry/model/expiration';
-import { upsertPantryItem, usePantryStore } from '@/entities/pantry/model/pantry-store';
+import { usePantryMutations } from '@/entities/pantry/api/use-pantry-mutations';
+import {
+  toCreatePantryItemRequest,
+  toUpdatePantryItemRequest,
+} from '@/entities/pantry/api/pantry-request';
+import { usePantryStore } from '@/entities/pantry/model/pantry-store';
 import { getPantryCardVariant } from '@/entities/pantry/model/types';
 import type {
   PantryCardVariant,
   PantryItem,
   PantryStorageType,
 } from '@/entities/pantry/model/types';
-import { PANTRY_QUERY_KEY, usePantryQuery } from '@/views/pantry/model/use-pantry-query';
+import { usePantryQuery } from '@/views/pantry/model/use-pantry-query';
 import { PantryPage } from '@/views/pantry/ui/pantry-page';
 
 export type PantryMockState =
@@ -52,6 +55,220 @@ export function isIngredientFormSubmittable(
   storageType: PantryStorageType | null,
 ) {
   return ingredientName.trim().length > 0 && storageType !== null;
+}
+
+export function getPantryImageInputProps(source: 'camera' | 'gallery') {
+  return source === 'camera'
+    ? { accept: 'image/*', capture: 'environment' as const }
+    : { accept: 'image/*' };
+}
+
+type IngredientDateField = 'expiration' | 'consumption';
+
+interface IngredientDraft {
+  consumptionDate: string;
+  expirationDate: string;
+  id: string;
+  imageUrl: string;
+  name: string;
+  storageType: PantryStorageType | null;
+}
+
+function createIngredientDraft(id: string, item?: PantryItem): IngredientDraft {
+  return {
+    consumptionDate: item?.consumptionDate ?? '',
+    expirationDate: item?.expirationDate ?? '',
+    id,
+    imageUrl: item?.imageUrl ?? '',
+    name: item?.name ?? '',
+    storageType: item?.storageType ?? null,
+  };
+}
+
+export function areIngredientFormsSubmittable(
+  ingredients: Array<Pick<IngredientDraft, 'name' | 'storageType'>>,
+) {
+  return (
+    ingredients.length > 0 &&
+    ingredients.every(({ name, storageType }) => isIngredientFormSubmittable(name, storageType))
+  );
+}
+
+interface IngredientFieldsProps {
+  ingredient: IngredientDraft;
+  index: number;
+  onOpenCalendar: (
+    ingredientId: string,
+    field: IngredientDateField,
+    date: string,
+    trigger: HTMLButtonElement,
+  ) => void;
+  onOpenImagePicker: (ingredientId: string) => void;
+  onRemove: (ingredientId: string) => void;
+  onUpdate: (ingredientId: string, patch: Partial<IngredientDraft>) => void;
+}
+
+function IngredientFields({
+  ingredient,
+  index,
+  onOpenCalendar,
+  onOpenImagePicker,
+  onRemove,
+  onUpdate,
+}: IngredientFieldsProps) {
+  const inputId = `pantry-ingredient-name-${ingredient.id}`;
+
+  return (
+    <section
+      aria-labelledby={`${inputId}-label`}
+      className={index === 0 ? '' : 'border-border mt-8 border-t pt-8'}
+    >
+      <div className="grid grid-cols-[80px_minmax(0,1fr)] items-start gap-3">
+        <button
+          aria-label={`${index + 1}번째 식재료 이미지 추가`}
+          className="bg-surface-secondary border-border relative grid size-20 overflow-hidden rounded-sm border"
+          onClick={() => onOpenImagePicker(ingredient.id)}
+          type="button"
+        >
+          {ingredient.imageUrl ? (
+            <Image
+              alt="선택한 식재료 이미지"
+              className="object-cover"
+              fill
+              sizes="80px"
+              src={ingredient.imageUrl}
+              unoptimized={ingredient.imageUrl.startsWith('blob:')}
+            />
+          ) : (
+            <Image
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 m-auto"
+              height={24}
+              src="/icons/pantry/camera.svg"
+              unoptimized
+              width={24}
+            />
+          )}
+        </button>
+
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-start justify-between gap-2">
+            <label
+              className="text-title-4 flex items-start gap-1.5 font-medium"
+              htmlFor={inputId}
+              id={`${inputId}-label`}
+            >
+              식재료명
+              <span aria-hidden="true" className="text-destructive text-sm leading-[14px]">
+                *
+              </span>
+            </label>
+            {index > 0 ? (
+              <button
+                aria-label={`${index + 1}번째 재료 삭제`}
+                className="text-disabled -mt-2 -mr-2 grid size-8 place-items-center"
+                onClick={() => onRemove(ingredient.id)}
+                type="button"
+              >
+                <X aria-hidden="true" className="size-5" />
+              </button>
+            ) : null}
+          </div>
+          <span className="relative">
+            <input
+              className="bg-surface-secondary text-title-4 focus-visible:ring-ring placeholder:text-disabled h-12 w-full rounded-xl border px-4 pr-14 font-normal outline-none focus-visible:ring-2"
+              id={inputId}
+              maxLength={20}
+              name="ingredientName"
+              onChange={(event) => onUpdate(ingredient.id, { name: event.target.value })}
+              placeholder="식재료명을 입력해주세요"
+              value={ingredient.name}
+            />
+            <span className="absolute top-1/2 right-4 -translate-y-1/2 text-sm leading-[21px] [color:var(--text-disabled)]">
+              {ingredient.name.length}/20
+            </span>
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-5 flex flex-col gap-5">
+        {(
+          [
+            ['유통기한', 'expiration', ingredient.expirationDate],
+            ['소비기한', 'consumption', ingredient.consumptionDate],
+          ] as const
+        ).map(([label, field, date]) => (
+          <div className="flex flex-col gap-1" key={field}>
+            <p className="text-title-4 font-medium">{label}</p>
+            <button
+              aria-label={`${label} 선택`}
+              className="bg-surface-secondary text-title-4 focus-visible:ring-ring flex h-12 w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2"
+              onClick={(event) => onOpenCalendar(ingredient.id, field, date, event.currentTarget)}
+              type="button"
+            >
+              <span className="grid size-10 shrink-0 place-items-center">
+                <Image
+                  alt=""
+                  aria-hidden="true"
+                  height={24}
+                  src="/icons/pantry/calendar.svg"
+                  unoptimized
+                  width={24}
+                />
+              </span>
+              <span className={date ? '' : 'text-disabled'}>{date || 'YYYY-MM-DD'}</span>
+            </button>
+            <p className="text-disabled flex items-center gap-1 text-xs leading-[18px]">
+              <Info aria-hidden="true" className="size-4" />
+              식재료에 표기된 날짜 유형을 선택해주세요
+            </p>
+          </div>
+        ))}
+
+        <fieldset>
+          <legend className="text-title-4 flex items-start gap-1.5 font-medium">
+            보관방법
+            <span aria-hidden="true" className="text-destructive text-sm leading-[14px]">
+              *
+            </span>
+          </legend>
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            {(
+              [
+                ['냉장', 'REFRIGERATED', '/icons/pantry/refrigerated.svg', 'h-[15px] w-[11px]'],
+                ['냉동', 'FROZEN', '/icons/pantry/frozen.svg', 'h-4 w-[14px]'],
+                ['실온', 'ROOM_TEMP', '/icons/pantry/room-temperature.svg', 'size-4'],
+              ] as const
+            ).map(([label, storageType, iconSrc, iconClassName]) => (
+              <button
+                aria-pressed={ingredient.storageType === storageType}
+                className={
+                  ingredient.storageType === storageType
+                    ? 'bg-primary/15 border-primary text-title-4 flex h-12 items-center justify-center gap-1.5 rounded-lg border font-medium'
+                    : 'bg-surface-secondary text-disabled text-title-4 flex h-12 items-center justify-center gap-1.5 rounded-lg border font-medium'
+                }
+                key={storageType}
+                onClick={() => onUpdate(ingredient.id, { storageType })}
+                type="button"
+              >
+                <Image
+                  alt=""
+                  aria-hidden="true"
+                  className={iconClassName}
+                  height={16}
+                  src={iconSrc}
+                  unoptimized
+                  width={16}
+                />
+                {label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      </div>
+    </section>
+  );
 }
 
 export function getCalendarMonthCells(year: number, monthIndex: number) {
@@ -88,66 +305,76 @@ interface IngredientFormMockProps {
 
 function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const storedItems = usePantryStore((state) => state.items);
-  const upsertItem = usePantryStore((state) => state.upsertItem);
+  const { create, update } = usePantryMutations();
   const currentItems = items ?? storedItems;
   const editingItem = mode === 'edit' ? currentItems.find((item) => item.id === itemId) : undefined;
-  const [ingredientName, setIngredientName] = useState(editingItem?.name ?? '');
-  const [storageType, setStorageType] = useState<PantryStorageType | null>(
-    editingItem?.storageType ?? null,
-  );
-  const [expirationDate, setExpirationDate] = useState(editingItem?.expirationDate ?? '');
-  const [consumptionDate, setConsumptionDate] = useState(editingItem?.consumptionDate ?? '');
-  const [activeDateField, setActiveDateField] = useState<'expiration' | 'consumption'>(
-    'expiration',
-  );
+  const initialIngredient = createIngredientDraft(editingItem?.id ?? 'ingredient-1', editingItem);
+  const [ingredients, setIngredients] = useState<IngredientDraft[]>([initialIngredient]);
+  const [activeDateField, setActiveDateField] = useState<{
+    field: IngredientDateField;
+    ingredientId: string;
+  }>({ field: 'expiration', ingredientId: initialIngredient.id });
   const initialCalendarSelection = getCalendarSelection('');
   const [visibleMonth, setVisibleMonth] = useState(initialCalendarSelection.visibleMonth);
   const [selectedDay, setSelectedDay] = useState(initialCalendarSelection.selectedDay);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
+  const [activeImageIngredientId, setActiveImageIngredientId] = useState(initialIngredient.id);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const calendarDialogRef = useRef<HTMLElement>(null);
   const calendarTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const isEdit = mode === 'edit';
-  const canSubmit =
-    isIngredientFormSubmittable(ingredientName, storageType) && (!isEdit || Boolean(editingItem));
+  const primaryIngredient = ingredients[0];
+  const ingredientName = primaryIngredient.name;
+  const storageType = primaryIngredient.storageType;
+  const expirationDate = primaryIngredient.expirationDate;
+  const consumptionDate = primaryIngredient.consumptionDate;
+  const imageUrl = primaryIngredient.imageUrl;
+  const canSubmit = areIngredientFormsSubmittable(ingredients) && (!isEdit || Boolean(editingItem));
+  const isSubmitting = create.isPending || update.isPending;
   const calendarCells = getCalendarMonthCells(visibleMonth.year, visibleMonth.monthIndex);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canSubmit || !storageType || (isEdit && !editingItem)) return;
+    if (!canSubmit || (isEdit && !editingItem)) return;
 
-    const expirationPresentation = getPantryExpirationPresentation(consumptionDate);
+    const requests = ingredients.map((ingredient) => ({
+      ...ingredient,
+      storageType: ingredient.storageType ?? 'REFRIGERATED',
+    }));
 
-    const nextItem: PantryItem = {
-      id: editingItem?.id ?? `manual-${Date.now()}`,
-      name: ingredientName.trim(),
-      ...expirationPresentation,
-      expirationDate: expirationDate || undefined,
-      consumptionDate: consumptionDate || undefined,
-      availability: 'AVAILABLE',
-      imageAlt: `${ingredientName.trim()} 이미지`,
-      storageType,
-      registrationSource: editingItem?.registrationSource ?? 'MANUAL',
-      createdAt: editingItem?.createdAt ?? new Date().toISOString(),
-      imageUrl: editingItem?.imageUrl,
-    };
+    setSubmitError(null);
 
-    upsertItem(nextItem);
-    queryClient.setQueryData<PantryItem[]>(PANTRY_QUERY_KEY, (cachedItems) =>
-      upsertPantryItem(cachedItems ?? currentItems, nextItem),
-    );
-    router.push('/pantry');
+    try {
+      if (isEdit && editingItem) {
+        await update.mutateAsync({
+          pantryItemId: editingItem.id,
+          payload: toUpdatePantryItemRequest(requests[0]),
+        });
+      } else {
+        await Promise.all(
+          requests.map((ingredient) => create.mutateAsync(toCreatePantryItemRequest(ingredient))),
+        );
+      }
+
+      router.push('/pantry');
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : '식재료 등록에 실패했어요.');
+    }
   }
 
   function openCalendar(
-    field: 'expiration' | 'consumption',
+    ingredientId: string,
+    field: IngredientDateField,
     date: string,
     trigger: HTMLButtonElement,
   ) {
     const selection = getCalendarSelection(date);
     calendarTriggerRef.current = trigger;
-    setActiveDateField(field);
+    setActiveDateField({ field, ingredientId });
     setVisibleMonth(selection.visibleMonth);
     setSelectedDay(selection.selectedDay);
     setIsCalendarOpen(true);
@@ -162,6 +389,38 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
     const nextMonth = new Date(visibleMonth.year, visibleMonth.monthIndex + offset, 1);
     setVisibleMonth({ year: nextMonth.getFullYear(), monthIndex: nextMonth.getMonth() });
     setSelectedDay(1);
+  }
+
+  function selectIngredientImage(event: React.ChangeEvent<HTMLInputElement>) {
+    const image = event.currentTarget.files?.[0];
+    if (!image) return;
+
+    updateIngredient(activeImageIngredientId, { imageUrl: URL.createObjectURL(image) });
+    setIsImagePickerOpen(false);
+    event.currentTarget.value = '';
+  }
+
+  function updateIngredient(ingredientId: string, patch: Partial<IngredientDraft>) {
+    setIngredients((currentIngredients) =>
+      currentIngredients.map((ingredient) =>
+        ingredient.id === ingredientId ? { ...ingredient, ...patch } : ingredient,
+      ),
+    );
+  }
+
+  function updatePrimaryIngredient(patch: Partial<IngredientDraft>) {
+    updateIngredient(primaryIngredient.id, patch);
+  }
+
+  function addIngredient() {
+    const nextIngredient = createIngredientDraft(`ingredient-${Date.now()}`);
+    setIngredients((currentIngredients) => [...currentIngredients, nextIngredient]);
+  }
+
+  function removeIngredient(ingredientId: string) {
+    setIngredients((currentIngredients) =>
+      currentIngredients.filter((ingredient) => ingredient.id !== ingredientId),
+    );
   }
 
   useEffect(() => {
@@ -203,7 +462,7 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
 
   return (
     <main className="mobile-page bg-background min-h-dvh pb-10">
-      <header className="flex h-16 w-full items-center gap-0.5">
+      <header className="relative flex h-16 w-full items-center">
         <Link
           aria-label="이전 페이지"
           className="grid size-10 shrink-0 place-items-center"
@@ -211,44 +470,58 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
         >
           <ChevronLeft aria-hidden="true" className="size-6" />
         </Link>
-        <h1 className="text-title-3 font-semibold">식재료 관리</h1>
+        <h1 className="text-title-3 absolute left-1/2 -translate-x-1/2 font-semibold">
+          {isEdit ? '식재료 수정' : '식재료 등록'}
+        </h1>
       </header>
 
-      <form className="mx-4 mt-2 w-[calc(100%_-_32px)]" onSubmit={handleSubmit}>
-        <div className="flex h-20 items-start justify-between">
+      <form className="mx-4 mt-11 w-[calc(100%_-_32px)]" onSubmit={handleSubmit}>
+        <div className="grid grid-cols-[80px_minmax(0,1fr)] items-start gap-3">
           <button
             aria-label="식재료 이미지 추가"
-            className="relative size-20 overflow-hidden rounded-sm"
+            className="bg-surface-secondary border-border relative grid size-20 overflow-hidden rounded-sm border"
+            onClick={() => {
+              setActiveImageIngredientId(primaryIngredient.id);
+              setIsImagePickerOpen(true);
+            }}
             type="button"
           >
-            <Image
-              alt="식재료 이미지 추가"
-              className="object-cover"
-              fill
-              sizes="80px"
-              src="/images/pantry/ingredient-image-placeholder.png"
-            />
-          </button>
-
-          <button
-            className="bg-surface-secondary text-muted-foreground flex h-[42px] items-center rounded-sm border pr-2.5 text-sm leading-[21px] font-medium"
-            type="button"
-          >
-            <span className="grid size-10 place-items-center">
+            {imageUrl ? (
+              <Image
+                alt="선택한 식재료 이미지"
+                className="object-cover"
+                fill
+                sizes="80px"
+                src={imageUrl}
+                unoptimized={imageUrl.startsWith('blob:')}
+              />
+            ) : (
               <Image
                 alt=""
                 aria-hidden="true"
+                className="absolute inset-0 m-auto"
                 height={24}
                 src="/icons/pantry/camera.svg"
                 unoptimized
                 width={24}
               />
-            </span>
-            영수증 찍기
+            )}
           </button>
-        </div>
+          <input
+            {...getPantryImageInputProps('camera')}
+            className="sr-only"
+            onChange={selectIngredientImage}
+            ref={cameraInputRef}
+            type="file"
+          />
+          <input
+            {...getPantryImageInputProps('gallery')}
+            className="sr-only"
+            onChange={selectIngredientImage}
+            ref={galleryInputRef}
+            type="file"
+          />
 
-        <div className="mt-6 flex flex-col gap-6">
           <div className="flex flex-col gap-1.5">
             <label
               className="text-title-4 flex items-start gap-1.5 font-medium"
@@ -261,11 +534,11 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
             </label>
             <span className="relative">
               <input
-                className="bg-surface-secondary text-title-4 focus-visible:ring-ring placeholder:text-disabled h-[52px] w-full rounded-xl border px-4 pr-14 font-normal outline-none focus-visible:ring-2"
+                className="bg-surface-secondary text-title-4 focus-visible:ring-ring placeholder:text-disabled h-12 w-full rounded-xl border px-4 pr-14 font-normal outline-none focus-visible:ring-2"
                 id="pantry-ingredient-name"
                 maxLength={20}
                 name="ingredientName"
-                onChange={(event) => setIngredientName(event.target.value)}
+                onChange={(event) => updatePrimaryIngredient({ name: event.target.value })}
                 placeholder="식재료명을 입력해주세요"
                 value={ingredientName}
               />
@@ -274,14 +547,21 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
               </span>
             </span>
           </div>
+        </div>
 
-          <div className="flex flex-col gap-1.5">
+        <div className="mt-5 flex flex-col gap-5">
+          <div className="flex flex-col gap-1">
             <p className="text-title-4 font-medium">유통기한</p>
             <button
               aria-label="유통기한 선택"
-              className="bg-surface-secondary text-title-4 focus-visible:ring-ring flex h-[52px] w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2"
+              className="bg-surface-secondary text-title-4 focus-visible:ring-ring flex h-12 w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2"
               onClick={(event) => {
-                openCalendar('expiration', expirationDate, event.currentTarget);
+                openCalendar(
+                  primaryIngredient.id,
+                  'expiration',
+                  expirationDate,
+                  event.currentTarget,
+                );
               }}
               type="button"
             >
@@ -296,18 +576,27 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
                 />
               </span>
               <span className={expirationDate ? '' : 'text-disabled'}>
-                {expirationDate || '상품에 표시된 기한을 입력해주세요'}
+                {expirationDate || 'YYYY-MM-DD'}
               </span>
             </button>
+            <p className="text-disabled flex items-center gap-1 text-xs leading-[18px]">
+              <Info aria-hidden="true" className="size-4" />
+              식재료에 표기된 날짜 유형을 선택해주세요
+            </p>
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1">
             <p className="text-title-4 font-medium">소비기한</p>
             <button
               aria-label="소비기한 선택"
-              className="bg-surface-secondary text-title-4 focus-visible:ring-ring flex h-[52px] w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2"
+              className="bg-surface-secondary text-title-4 focus-visible:ring-ring flex h-12 w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2"
               onClick={(event) => {
-                openCalendar('consumption', consumptionDate, event.currentTarget);
+                openCalendar(
+                  primaryIngredient.id,
+                  'consumption',
+                  consumptionDate,
+                  event.currentTarget,
+                );
               }}
               type="button"
             >
@@ -322,14 +611,23 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
                 />
               </span>
               <span className={consumptionDate ? '' : 'text-disabled'}>
-                {consumptionDate || '상품에 표시된 기한을 입력해주세요'}
+                {consumptionDate || 'YYYY-MM-DD'}
               </span>
             </button>
+            <p className="text-disabled flex items-center gap-1 text-xs leading-[18px]">
+              <Info aria-hidden="true" className="size-4" />
+              식재료에 표기된 날짜 유형을 선택해주세요
+            </p>
           </div>
 
           <fieldset>
-            <legend className="text-title-4 font-medium">보관방법</legend>
-            <div className="mt-1.5 grid grid-cols-3 gap-2">
+            <legend className="text-title-4 flex items-start gap-1.5 font-medium">
+              보관방법
+              <span aria-hidden="true" className="text-destructive text-sm leading-[14px]">
+                *
+              </span>
+            </legend>
+            <div className="mt-2 grid grid-cols-3 gap-2">
               {(
                 [
                   ['냉장', 'REFRIGERATED', '/icons/pantry/refrigerated.svg', 'h-[15px] w-[11px]'],
@@ -340,11 +638,11 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
                 <button
                   className={
                     storageType === type
-                      ? 'bg-primary/15 border-primary text-title-4 flex h-[52px] items-center justify-center gap-1.5 rounded-sm border font-medium'
-                      : 'bg-surface-secondary text-disabled text-title-4 flex h-[52px] items-center justify-center gap-1.5 rounded-sm border font-medium'
+                      ? 'bg-primary/15 border-primary text-title-4 flex h-12 items-center justify-center gap-1.5 rounded-lg border font-medium'
+                      : 'bg-surface-secondary text-disabled text-title-4 flex h-12 items-center justify-center gap-1.5 rounded-lg border font-medium'
                   }
                   key={type}
-                  onClick={() => setStorageType(type)}
+                  onClick={() => updatePrimaryIngredient({ storageType: type })}
                   aria-pressed={storageType === type}
                   type="button"
                 >
@@ -364,16 +662,50 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
           </fieldset>
         </div>
 
+        {ingredients.slice(1).map((ingredient, index) => (
+          <IngredientFields
+            ingredient={ingredient}
+            index={index + 1}
+            key={ingredient.id}
+            onOpenCalendar={openCalendar}
+            onOpenImagePicker={(ingredientId) => {
+              setActiveImageIngredientId(ingredientId);
+              setIsImagePickerOpen(true);
+            }}
+            onRemove={removeIngredient}
+            onUpdate={updateIngredient}
+          />
+        ))}
+
+        {!isEdit ? (
+          <button
+            className="text-disabled mx-auto mt-20 flex flex-col items-center gap-2 text-sm leading-[21px] font-medium"
+            onClick={addIngredient}
+            type="button"
+          >
+            <span className="bg-surface-disabled grid size-[52px] place-items-center rounded-full">
+              <Plus aria-hidden="true" className="size-[31px]" />
+            </span>
+            재료 추가
+          </button>
+        ) : null}
+
+        {submitError ? (
+          <p className="text-destructive mt-6 text-center text-sm" role="alert">
+            {submitError}
+          </p>
+        ) : null}
+
         <Button
           className={
             canSubmit
-              ? 'text-title-3 mt-[83px] h-[60px] w-full rounded-xl font-semibold'
-              : 'bg-surface-disabled text-title-3 mt-[83px] h-[60px] w-full rounded-xl font-semibold [color:var(--text-disabled)] disabled:opacity-100'
+              ? 'text-title-3 mt-[76px] h-[60px] w-full rounded-xl font-semibold'
+              : 'bg-surface-disabled text-title-3 mt-[76px] h-[60px] w-full rounded-xl font-semibold [color:var(--text-disabled)] disabled:opacity-100'
           }
-          disabled={!canSubmit}
+          disabled={!canSubmit || isSubmitting}
           type="submit"
         >
-          {isEdit ? '수정하기' : '등록하기'}
+          {isSubmitting ? '등록 중...' : isEdit ? '수정하기' : '등록하기'}
         </Button>
       </form>
       {isCalendarOpen && (
@@ -498,14 +830,65 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
                   visibleMonth.monthIndex,
                   selectedDay,
                 );
-                if (activeDateField === 'expiration') setExpirationDate(selectedDate);
-                else setConsumptionDate(selectedDate);
+                updateIngredient(
+                  activeDateField.ingredientId,
+                  activeDateField.field === 'expiration'
+                    ? { expirationDate: selectedDate }
+                    : { consumptionDate: selectedDate },
+                );
                 closeCalendar();
               }}
               type="button"
             >
               선택 완료
             </Button>
+          </section>
+        </div>
+      )}
+      {isImagePickerOpen && (
+        <div
+          className="bg-overlay/40 fixed inset-0 z-20 flex items-end"
+          onClick={() => setIsImagePickerOpen(false)}
+          role="presentation"
+        >
+          <section
+            aria-labelledby="image-picker-title"
+            aria-modal="true"
+            className="bg-card w-full rounded-t-3xl px-4 pt-3 pb-8"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+          >
+            <div className="bg-surface-disabled mx-auto h-1.5 w-12 rounded-full" />
+            <h2 className="text-title-3 mt-6 font-semibold" id="image-picker-title">
+              사진 등록
+            </h2>
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <Button
+                className="h-14 rounded-xl font-semibold"
+                onClick={() => cameraInputRef.current?.click()}
+                type="button"
+                variant="outline"
+              >
+                <Camera aria-hidden="true" className="size-5" />
+                사진 촬영
+              </Button>
+              <Button
+                className="h-14 rounded-xl font-semibold"
+                onClick={() => galleryInputRef.current?.click()}
+                type="button"
+                variant="outline"
+              >
+                <ImagePlus aria-hidden="true" className="size-5" />
+                앨범에서 선택
+              </Button>
+            </div>
+            <button
+              className="text-disabled mt-4 h-10 w-full text-sm font-medium"
+              onClick={() => setIsImagePickerOpen(false)}
+              type="button"
+            >
+              취소
+            </button>
           </section>
         </div>
       )}
