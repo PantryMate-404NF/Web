@@ -6,7 +6,7 @@ pipeline {
     ECR_REGISTRY    = '542119828072.dkr.ecr.ap-northeast-2.amazonaws.com'
     ECR_REPO        = 'pantry-mate-dev-frontend'
     IMAGE_NAME      = "${ECR_REGISTRY}/${ECR_REPO}"
-    IMAGE_TAG       = "${GIT_COMMIT[0..7]}"
+    IMAGE_TAG       = "${GIT_COMMIT.take(8)}"
     GITOPS_REPO     = 'https://github.com/PantryMate-404NF/pantry-mate-gitops.git'
     GITOPS_APP_PATH           = 'environments/dev/cloud-test-front'
     NEXT_PUBLIC_API_BASE_URL  = 'https://api.unzipp.cloud'
@@ -39,7 +39,7 @@ pipeline {
             aws ecr get-login-password --region $AWS_REGION \
               | docker login --username AWS --password-stdin $ECR_REGISTRY
 
-            # 이미 ECR에 존재하면 빌드/푸시 스킵 (IMMUTABLE 정책)
+            # 이미 ECR에 존재하면 빌드/푸시 스킵
             if aws ecr describe-images --region $AWS_REGION \
                 --repository-name $ECR_REPO \
                 --image-ids imageTag=$IMAGE_TAG > /dev/null 2>&1; then
@@ -50,6 +50,18 @@ pipeline {
                 -t $IMAGE_NAME:$IMAGE_TAG .
               docker push $IMAGE_NAME:$IMAGE_TAG
             fi
+
+            # latest 태그를 동일 manifest에 추가 (재빌드 없이 ECR API로 재태깅)
+            MANIFEST=$(aws ecr batch-get-image \
+              --region $AWS_REGION \
+              --repository-name $ECR_REPO \
+              --image-ids imageTag=$IMAGE_TAG \
+              --query 'images[0].imageManifest' --output text)
+            aws ecr put-image \
+              --region $AWS_REGION \
+              --repository-name $ECR_REPO \
+              --image-tag latest \
+              --image-manifest "$MANIFEST" || true
           '''
         }
       }
@@ -94,8 +106,8 @@ pipeline {
   }
 
   post {
-    success  { echo "✅ frontend 빌드 완료: ${IMAGE_NAME}:${IMAGE_TAG}" }
-    failure  { echo "❌ 파이프라인 실패 — 로그를 확인하세요." }
+    success  { echo "frontend 빌드 완료: ${IMAGE_NAME}:${IMAGE_TAG}" }
+    failure  { echo "파이프라인 실패 — 로그를 확인하세요." }
     cleanup  {
       container('dind') {
         sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
