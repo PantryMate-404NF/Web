@@ -11,6 +11,7 @@ import { useScrappedRecipeStore } from '@/entities/recipe/model/scrapped-recipe-
 import { usePantriesQuery } from '@/entities/pantry/api/use-pantries-query';
 import type { PantryItem } from '@/entities/pantry/model/types';
 import type { Recipe, RecipeTab } from '@/entities/recipe/model/types';
+import { SystemErrorState } from '@/shared/ui/system-error-state';
 import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
 
 export type RecipeSectionId = 'popular' | 'scrapped' | 'shared' | 'completed' | 'random';
@@ -175,6 +176,10 @@ export function filterRecipesByQuery(recipes: Recipe[], query: string): Recipe[]
 
 export function getRecipeContentMode(query: string): 'search' | 'list' {
   return query.trim() ? 'search' : 'list';
+}
+
+export function getRecipeViewState(error: unknown): 'content' | 'error' {
+  return error ? 'error' : 'content';
 }
 
 export function getRecipeSearchResultDisplay(recipes: Recipe[]): 'results' | 'empty' {
@@ -604,7 +609,7 @@ export function RecipeListPage({
     void useScrappedRecipeStore.persist.rehydrate();
   }, []);
 
-  const { data: apiRecipes } = useRecipesQuery();
+  const { data: apiRecipes, error, refetch } = useRecipesQuery();
   const recipes = apiRecipes ?? recipeMocks;
   const sections = getRecipeSections(tab, recipes);
   const searchedRecipes = filterRecipesByQuery(recipes, searchQuery);
@@ -615,6 +620,16 @@ export function RecipeListPage({
   const imminentIngredients = getImminentIngredients(recipePantryItems);
   const pantryIngredients = getAvailablePantryIngredients(recipePantryItems);
   const pantryRecipes = getPantryRecipeRecommendations(recipePantryItems);
+
+  if (getRecipeViewState(error) === 'error') {
+    return (
+      <main className="mobile-page bg-background text-foreground flex min-h-dvh flex-col">
+        <RecipeHeader onQueryChange={setSearchQuery} query={searchQuery} />
+        <SystemErrorState onRetry={() => void refetch()} title="레시피를 불러오지 못했어요" />
+        <BottomNavigation />
+      </main>
+    );
+  }
 
   return (
     <main className="mobile-page bg-background text-foreground flex min-h-dvh flex-col">

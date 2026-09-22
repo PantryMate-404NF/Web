@@ -14,6 +14,7 @@ import {
   getRecipeContentMode,
   getRecipeMoreRoute,
   getRecipeSectionById,
+  getRecipeViewState,
   getRecipeSearchResultDisplay,
   getRecipeSections,
   RECIPE_SEARCH_EMPTY_COPY,
@@ -32,6 +33,11 @@ describe('getRecipeSections', () => {
       title: '검색 결과가 없어요.',
       descriptionLines: ['다른 검색어를 입력하거나', '맞춤법을 확인해보세요'],
     });
+  });
+
+  it('prioritizes an API failure over the mock recipe fallback', () => {
+    expect(getRecipeViewState(new Error('레시피 조회 실패'))).toBe('error');
+    expect(getRecipeViewState(null)).toBe('content');
   });
 
   it('filters recipes by a trimmed, case-insensitive recipe name query', () => {
