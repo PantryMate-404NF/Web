@@ -22,6 +22,24 @@ describe('payment redirect pages', () => {
     expect(markup).toContain('결제를 확인하고 있어요');
   });
 
+  it('승인 완료 후 주문 정보와 주문 내역 이동을 표시한다', () => {
+    const markup = renderToStaticMarkup(
+      createElement(PaymentSuccessPage, {
+        initialStatus: 'done',
+      }),
+    );
+
+    expect(markup).toContain('주문이 완료되었어요');
+    expect(markup).toContain('주문번호');
+    expect(markup).toContain('1547521567248');
+    expect(markup).toContain('하인즈 토마토 케찹(342g)');
+    expect(markup).toContain('주문자 정보');
+    expect(markup).toContain('배송 요청사항');
+    expect(markup).toContain('결제 금액');
+    expect(markup).toContain('href="/mypage/orders/20260901"');
+    expect(markup).toContain('/icons/payment/success-check.svg');
+  });
+
   it('사용자가 결제를 취소하면 안전한 고정 안내를 표시한다', () => {
     const markup = renderToStaticMarkup(
       createElement(PaymentFailPage, {
