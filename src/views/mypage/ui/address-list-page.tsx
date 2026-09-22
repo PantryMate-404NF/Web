@@ -22,7 +22,7 @@ function AddressDetails({ address }: { address: DeliveryAddress }) {
           </div>
           <p className="truncate text-sm leading-[21px] font-medium">{address.phoneNumber}</p>
         </div>
-        <p className="text-text-secondary line-clamp-2 text-sm leading-[21px] font-medium">
+        <p className="text-text-secondary line-clamp-2 h-[42px] shrink-0 text-sm leading-[21px] font-medium">
           {address.addressLine1} {address.addressLine2} ({address.postalCode})
         </p>
       </div>
@@ -46,7 +46,7 @@ function AddressCard({
     return (
       <Link className={cardClassName} href={returnTo} onClick={() => onSelect?.(address.id)}>
         <AddressDetails address={address} />
-        <span className="text-text-tertiary h-10 shrink-0 content-center self-end text-[13px] leading-5 font-bold">
+        <span className="text-text-tertiary flex size-10 shrink-0 items-end justify-center self-end text-[13px] leading-5 font-bold">
           선택
         </span>
       </Link>
@@ -58,7 +58,7 @@ function AddressCard({
       <AddressDetails address={address} />
       <button
         aria-label={`${address.recipientName} 배송지 수정 (준비 중)`}
-        className="text-text-tertiary h-10 shrink-0 self-end text-[13px] leading-5 font-bold"
+        className="text-text-tertiary flex size-10 shrink-0 items-end justify-center self-end text-[13px] leading-5 font-bold"
         disabled
         type="button"
       >

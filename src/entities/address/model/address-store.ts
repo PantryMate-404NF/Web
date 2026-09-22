@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { addDeliveryAddress, type DeliveryAddress } from './address';
+import { addDeliveryAddress, deliveryAddressMocks, type DeliveryAddress } from './address';
 
 type AddressState = {
   addresses: DeliveryAddress[];
@@ -10,8 +10,8 @@ type AddressState = {
 };
 
 export const useAddressStore = create<AddressState>((set) => ({
-  addresses: [],
-  selectedAddressId: undefined,
+  addresses: [...deliveryAddressMocks],
+  selectedAddressId: deliveryAddressMocks.find((address) => address.isDefault)?.id,
   addAddress: (address) =>
     set((state) => ({
       addresses: addDeliveryAddress(state.addresses, address),

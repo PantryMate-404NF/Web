@@ -38,6 +38,9 @@ describe('AddressListPage', () => {
     expect(markup).not.toContain('min-h-[137px]');
     expect(markup).toContain('gap-5 pt-3');
     expect(markup).toContain('h-[60px]');
+    expect(markup).toContain('size-10 shrink-0');
+    expect(markup).toContain('items-end justify-center self-end');
+    expect(markup).toContain('h-[42px]');
     expect(markup).toContain('서울특별시 신선하구 맛있동 425 행복빌라, 101호 (13485)');
   });
 

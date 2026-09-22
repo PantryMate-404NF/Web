@@ -106,6 +106,7 @@ export function AddressFormPage({ returnTo }: { returnTo?: string }) {
               id={recipientId}
               onChange={(event) => updateField('recipientName', event.target.value)}
               placeholder="이름을 입력해주세요."
+              required
               value={form.recipientName}
             />
           </div>
@@ -119,6 +120,7 @@ export function AddressFormPage({ returnTo }: { returnTo?: string }) {
               inputMode="tel"
               onChange={(event) => updateField('phoneNumber', event.target.value)}
               placeholder="휴대폰 번호를 입력해주세요."
+              required
               value={form.phoneNumber}
             />
           </div>
@@ -129,6 +131,7 @@ export function AddressFormPage({ returnTo }: { returnTo?: string }) {
           <div className="flex gap-2">
             <input
               aria-label="우편번호"
+              aria-required="true"
               className={`${inputClassName} min-w-0 flex-1`}
               id={postalCodeId}
               readOnly
@@ -144,6 +147,7 @@ export function AddressFormPage({ returnTo }: { returnTo?: string }) {
           </div>
           <input
             aria-label="기본 주소"
+            aria-required="true"
             className={inputClassName}
             id={addressId}
             readOnly
@@ -155,6 +159,7 @@ export function AddressFormPage({ returnTo }: { returnTo?: string }) {
             id={detailAddressId}
             onChange={(event) => updateField('addressLine2', event.target.value)}
             placeholder="상세 주소를 입력해주세요."
+            required
             value={form.addressLine2}
           />
 

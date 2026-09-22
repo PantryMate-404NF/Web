@@ -21,6 +21,8 @@ describe('AddressFormPage', () => {
     expect(markup).toContain('취소');
     expect(markup).toContain('확인');
     expect(markup).toContain('disabled=""');
+    expect(markup.match(/required=""/g)).toHaveLength(3);
+    expect(markup.match(/aria-required="true"/g)).toHaveLength(2);
   });
 
   it('피그마 자산과 세로 간격으로 빈 배송지 폼을 구성한다', () => {
