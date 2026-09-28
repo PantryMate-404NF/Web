@@ -25,7 +25,7 @@ describe('DeliveryTrackingPage', () => {
     expect(markup).toContain('href="/mypage/orders"');
   });
 
-  it('구매 상품과 배송 상세 사이에 Grey-50 배경색의 8px 구분선을 표시한다', () => {
+  it('구매 상품과 배송 상세 사이에 Grey-100 배경색의 8px 구분선을 표시한다', () => {
     const markup = renderToStaticMarkup(<DeliveryTrackingPage />);
     const purchaseProducts = markup.match(
       /<section[^>]*aria-labelledby="purchase-product-title">([\s\S]*?)<\/section>/,
@@ -33,7 +33,7 @@ describe('DeliveryTrackingPage', () => {
 
     expect(purchaseProducts).not.toContain('border-b-8');
     expect(markup).toContain(
-      '<div aria-hidden="true" class="h-2 w-full bg-[var(--primitive-grey-50)]"></div>',
+      '<div aria-hidden="true" class="h-2 w-full bg-[var(--primitive-grey-100)]"></div>',
     );
   });
 

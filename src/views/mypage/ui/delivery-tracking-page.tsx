@@ -109,7 +109,7 @@ function PurchaseProducts() {
           ))}
         </ul>
       </section>
-      <div aria-hidden="true" className="h-2 w-full bg-[var(--primitive-grey-50)]" />
+      <div aria-hidden="true" className="h-2 w-full bg-[var(--primitive-grey-100)]" />
     </>
   );
 }
