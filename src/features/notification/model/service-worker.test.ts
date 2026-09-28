@@ -4,12 +4,20 @@ import { resolve } from 'node:path';
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { firebaseConfig } from '@/shared/config/firebase';
-
 type ServiceWorkerEventHandler = (event: Record<string, unknown>) => void;
 type BackgroundMessageHandler = (payload: {
   data?: Record<string, string>;
 }) => Promise<void> | void;
+
+const firebaseConfig = {
+  apiKey: 'test-api-key',
+  authDomain: 'pantry.test.firebaseapp.com',
+  projectId: 'pantry-test',
+  storageBucket: 'pantry-test.firebasestorage.app',
+  messagingSenderId: '123456789',
+  appId: '1:123456789:web:test-app',
+  measurementId: 'G-TEST',
+};
 
 function loadServiceWorker() {
   const listeners = new Map<string, ServiceWorkerEventHandler>();
@@ -42,15 +50,21 @@ function loadServiceWorker() {
       listeners.set(type, handler);
     },
     clients,
+    firebaseConfig,
     location: { origin: 'https://pantry.test' },
     registration: { showNotification },
   };
   const source = readFileSync(resolve(process.cwd(), 'public/sw.js'), 'utf8');
+  const importScripts = vi.fn((...scripts: string[]) => {
+    if (scripts.includes('/firebase-config.js')) {
+      self.firebaseConfig = firebaseConfig;
+    }
+  });
 
   runInNewContext(source, {
     URL,
     firebase,
-    importScripts: vi.fn(),
+    importScripts,
     self,
   });
 
@@ -58,6 +72,7 @@ function loadServiceWorker() {
     backgroundMessageHandler: () => backgroundMessageHandler,
     client,
     clients,
+    importScripts,
     initializedFirebaseConfig: () => initializedFirebaseConfig,
     listeners,
     showNotification,
@@ -76,6 +91,7 @@ describe('PWA service worker notifications', () => {
     const worker = loadServiceWorker();
 
     expect(worker.initializedFirebaseConfig()).toEqual(firebaseConfig);
+    expect(worker.importScripts).toHaveBeenCalledWith('/firebase-config.js');
   });
 
   it('shows only pantry reminder data notifications with the provided title and body', async () => {

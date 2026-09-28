@@ -1,18 +1,20 @@
 import { getApps, initializeApp } from 'firebase/app';
 
-/** Firebase 웹 설정은 클라이언트 공개값이며, 앱과 서비스워커에서 같은 프로젝트를 사용합니다. */
-export const firebaseConfig = {
-  apiKey: 'AIzaSyASuGz-p106XMMnRLlOdZ22LVd8T1Raptg',
-  authDomain: 'pantry--mate.firebaseapp.com',
-  projectId: 'pantry--mate',
-  storageBucket: 'pantry--mate.firebasestorage.app',
-  messagingSenderId: '309150824223',
-  appId: '1:309150824223:web:d77bde3adc16bd7783622a',
-  measurementId: 'G-WV1QMZNSPV',
-} as const;
+import { createFirebaseConfig, hasFirebaseMessagingConfig } from './firebase-config';
 
-export const firebaseApp =
-  getApps().find((app) => app.name === '[DEFAULT]') ?? initializeApp(firebaseConfig);
+/** Firebase 웹 설정과 VAPID 공개 키는 환경별로 주입합니다. */
+export const firebaseConfig = createFirebaseConfig({
+  NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+});
 
-export const firebaseVapidKey =
-  'BOS__IMHVCkIVZw8tjkSFZOaAu9gXcDsrXDGBfZS5EgMA3tYa3-Z9VLHBCV4Q9zyNN5aXDrGpkOUrBkPNtIzXNE';
+export const firebaseApp = hasFirebaseMessagingConfig(firebaseConfig)
+  ? (getApps().find((app) => app.name === '[DEFAULT]') ?? initializeApp(firebaseConfig))
+  : null;
+
+export const firebaseVapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ?? '';

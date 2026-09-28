@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { getAppsMock, initializeAppMock, getMessagingMock, getTokenMock, isSupportedMock } =
   vi.hoisted(() => ({
@@ -21,9 +21,22 @@ vi.mock('firebase/messaging', () => ({
 }));
 
 describe('push client', () => {
+  beforeEach(() => {
+    vi.stubEnv('NEXT_PUBLIC_FIREBASE_API_KEY', 'test-api-key');
+    vi.stubEnv('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN', 'pantry.test.firebaseapp.com');
+    vi.stubEnv('NEXT_PUBLIC_FIREBASE_PROJECT_ID', 'pantry-test');
+    vi.stubEnv('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET', 'pantry-test.firebasestorage.app');
+    vi.stubEnv('NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID', '123456789');
+    vi.stubEnv('NEXT_PUBLIC_FIREBASE_APP_ID', '1:123456789:web:test-app');
+    vi.stubEnv('NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID', 'G-TEST');
+    vi.stubEnv('NEXT_PUBLIC_FIREBASE_VAPID_KEY', 'test-vapid-key');
+  });
+
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
     vi.clearAllMocks();
+    vi.resetModules();
   });
 
   it('returns no token during server rendering without importing browser messaging behavior', async () => {
@@ -108,6 +121,19 @@ describe('push client', () => {
     await expect(requestPushPermissionAndGetToken()).resolves.toBeNull();
     expect(requestPermission).not.toHaveBeenCalled();
     expect(getTokenMock).not.toHaveBeenCalled();
+  });
+
+  it('does not request notification permission when Firebase environment settings are missing', async () => {
+    vi.stubEnv('NEXT_PUBLIC_FIREBASE_API_KEY', '');
+    const requestPermission = vi.fn();
+    vi.stubGlobal('window', { PushManager: class PushManager {}, indexedDB: {} });
+    vi.stubGlobal('navigator', { serviceWorker: { register: vi.fn() } });
+    vi.stubGlobal('Notification', { permission: 'default', requestPermission });
+
+    const { requestPushPermissionAndGetToken } = await import('./push-client');
+
+    await expect(requestPushPermissionAndGetToken()).resolves.toBeNull();
+    expect(requestPermission).not.toHaveBeenCalled();
   });
 
   it('starts the permission request synchronously before awaiting Firebase support checks', async () => {

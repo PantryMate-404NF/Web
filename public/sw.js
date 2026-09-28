@@ -10,16 +10,9 @@ importScripts(
   'https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/12.19.0/firebase-messaging-compat.js',
 );
+importScripts('/firebase-config.js');
 
-const firebaseConfig = {
-  apiKey: 'AIzaSyASuGz-p106XMMnRLlOdZ22LVd8T1Raptg',
-  authDomain: 'pantry--mate.firebaseapp.com',
-  projectId: 'pantry--mate',
-  storageBucket: 'pantry--mate.firebasestorage.app',
-  messagingSenderId: '309150824223',
-  appId: '1:309150824223:web:d77bde3adc16bd7783622a',
-  measurementId: 'G-WV1QMZNSPV',
-};
+const firebaseConfig = self.firebaseConfig;
 
 if (firebase.apps.length === 0) {
   firebase.initializeApp(firebaseConfig);
