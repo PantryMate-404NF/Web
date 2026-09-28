@@ -16,8 +16,9 @@ describe('OrderHistoryPage', () => {
     expect(markup).toContain('주문취소/환불');
     const orderStatusMarkup = markup.match(/<ol[^>]*>([\s\S]*?)<\/ol>/)?.[1];
     expect(orderStatusMarkup?.replaceAll(/<[^>]+>/g, '')).toBe(
-      '0결제완료1배송준비0배송 중3배송완료',
+      '1결제완료0배송준비0배송 중3배송완료',
     );
+    expect(markup).toMatch(/<a[^>]*href="\/mypage\/delivery"[^>]*>배송준비<\/a>/);
     expect(markup).toContain('1547521567248');
     expect(markup).toContain('/images/order/copy-icon.svg');
     expect(markup).toContain('width="30"');
@@ -29,8 +30,7 @@ describe('OrderHistoryPage', () => {
     expect(markup).toContain('class="size-[76px] shrink-0 rounded-xl object-cover"');
     expect(markup).toContain('하인즈 토마토 케찹(342g)');
     expect(markup).toContain('href="/mypage/orders/20260901"');
-    expect(markup).toContain('배송조회');
-    expect(markup).toContain('href="/mypage/delivery"');
+    expect(markup).not.toContain('배송조회');
     expect(markup).not.toContain('장바구니 담기');
     expect(markup).toContain('mt-6');
     expect(markup).toContain('w-10');

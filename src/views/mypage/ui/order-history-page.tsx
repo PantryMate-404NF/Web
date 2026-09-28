@@ -7,8 +7,8 @@ import { ORDER_HISTORY_MOCK, type OrderHistoryMock } from '@/entities/order/mode
 import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
 
 const orderStatuses = [
-  { label: '결제완료', count: 0 },
-  { label: '배송준비', count: 1 },
+  { label: '결제완료', count: 1 },
+  { label: '배송준비', count: 0 },
   { label: '배송 중', count: 0 },
   { label: '배송완료', count: 3 },
 ] as const;
@@ -30,19 +30,23 @@ function OrderStatusSummary() {
               <div className="inline-flex w-10 flex-col items-center gap-[5px]">
                 <strong
                   className={`text-2xl leading-9 font-semibold ${
-                    index === 1 ? 'text-[var(--primitive-primary-700)]' : 'text-foreground'
+                    index === 0 ? 'text-[var(--primitive-primary-700)]' : 'text-foreground'
                   }`}
                 >
                   {status.count}
                 </strong>
                 <span
                   className={`text-xs leading-4 whitespace-nowrap ${
-                    index === 1
+                    index === 0
                       ? 'font-semibold text-[var(--primitive-primary-700)]'
                       : 'text-foreground font-medium'
                   }`}
                 >
-                  {status.label}
+                  {status.label === '배송준비' ? (
+                    <Link href="/mypage/delivery">{status.label}</Link>
+                  ) : (
+                    status.label
+                  )}
                 </span>
               </div>
               {index < orderStatuses.length - 1 ? (
@@ -118,12 +122,6 @@ function OrderHistoryItem({ order }: { order: OrderHistoryMock }) {
           </li>
         ))}
       </ul>
-      <Link
-        className="text-foreground mt-4 flex h-10 w-full items-center justify-center rounded-sm bg-[var(--primitive-primary-300)] text-base leading-6 font-semibold"
-        href="/mypage/delivery"
-      >
-        배송조회
-      </Link>
     </li>
   );
 }
