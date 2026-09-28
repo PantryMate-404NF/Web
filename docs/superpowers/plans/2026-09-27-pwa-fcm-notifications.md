@@ -70,18 +70,18 @@
 **Files:**
 
 - Create: `src/features/notification/ui/device-token-registration.tsx`
-- Test: `src/features/notification/ui/device-token-registration.test.tsx`
+- Use tests: `src/features/notification/model/notification-registration.test.ts`
 - Modify: `src/features/auth/ui/auth-session-provider.tsx`
 - Modify: `src/views/mypage/ui/my-page-page.tsx`
-- Test: `src/views/mypage/ui/my-page-page.test.ts` (or existing dedicated test)
+- Test: `src/views/mypage/ui/my-page-notification.test.ts`
 
 **Interfaces:**
 
 - Consumes: Task 1 `registerDeviceToken` and Task 2 `getTokenForGrantedPermission`, `requestPushPermissionAndGetToken`.
 - Produces: a side-effect-only registration component that registers after auth state becomes `complete` or `onboarding`; a Mypage action lets a signed-in user explicitly request permission and register.
 
-- [ ] **Step 1: Write failing tests** asserting guest/loading state does not register, authenticated state with granted permission registers, and explicit Mypage action requests permission and reports the resulting state without breaking the page.
-- [ ] **Step 2: Run** the two targeted test files; expected: missing component/action behavior fails.
+- [ ] **Step 1: Write failing tests** asserting guest/loading state does not register, authenticated state with granted permission registers, explicit opt-in distinguishes supported/denied/dismissed states, and the Mypage action is rendered.
+- [ ] **Step 2: Run** `npm test -- src/features/notification/model/notification-registration.test.ts src/views/mypage/ui/my-page-notification.test.ts`; expected: helper import fails and Mypage has no notification action.
 - [ ] **Step 3: Implement** the side-effect component inside `AuthSessionProvider` and an `알림 받기` control under Mypage account management. Keep all failures non-blocking and show concise inline status only after a user action.
 - [ ] **Step 4: Run** the targeted tests; expected: auth and opt-in behavior passes.
 
@@ -90,7 +90,7 @@
 **Files:**
 
 - Modify: `public/sw.js`
-- Test: `public/sw.test.ts`
+- Test: `src/features/notification/model/service-worker.test.ts`
 
 **Interfaces:**
 
@@ -98,7 +98,7 @@
 - Produces: a `PANTRY_REMINDER` notification whose click focuses/navigates an existing same-origin client or opens a new same-origin window.
 
 - [ ] **Step 1: Write failing service-worker harness tests** that execute the actual `public/sw.js` with stubbed `self`, `clients`, and Firebase compat objects. Assert ignored message types show no notification; pantry reminder shows its data; a same-origin path navigates to that route; an external/malformed link falls back to `/pantry`.
-- [ ] **Step 2: Run** `npm test -- public/sw.test.ts`; expected: the current service worker has no messaging/click handlers and fails these behavior assertions.
+- [ ] **Step 2: Run** `npm test -- src/features/notification/model/service-worker.test.ts`; expected: the current service worker has no messaging/click handlers and fails these behavior assertions.
 - [ ] **Step 3: Implement** compat Firebase Messaging initialization using the provided public Firebase config, `onBackgroundMessage`, `showNotification()`, and same-origin-only `notificationclick` routing.
 - [ ] **Step 4: Run** the targeted test; expected: all service-worker behavior cases pass.
 

@@ -9,6 +9,10 @@ import { useRouter } from 'next/navigation';
 import { getMyProfile } from '@/entities/user/api/get-my-profile';
 import { logout } from '@/features/auth/api/logout';
 import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
+import {
+  getNotificationPermissionMessage,
+  requestAndRegisterDeviceToken,
+} from '@/features/notification/model/notification-registration';
 import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
 
 import { getMyPageAccessRoute } from '../model/my-page-access';
@@ -45,11 +49,13 @@ function SettingsRow({
   label,
   destructive = false,
   onClick,
+  disabled = false,
 }: {
   href?: string;
   label: string;
   destructive?: boolean;
   onClick?: () => void;
+  disabled?: boolean;
 }) {
   const content = (
     <>
@@ -65,7 +71,12 @@ function SettingsRow({
       {content}
     </Link>
   ) : (
-    <button className={`${className} w-full text-left`} onClick={onClick} type="button">
+    <button
+      className={`${className} w-full text-left disabled:opacity-60`}
+      disabled={disabled}
+      onClick={onClick}
+      type="button"
+    >
       {content}
     </button>
   );
@@ -87,8 +98,19 @@ export function MyPagePage() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const redirectPath = isLoggingOut ? null : getMyPageAccessRoute(state);
   const [logoutError, setLogoutError] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState<string | null>(null);
+  const [isSettingUpNotifications, setIsSettingUpNotifications] = useState(false);
   const displayName = getMyPageDisplayName(nickname);
   const onboardingSetupHref = getOnboardingSetupHref(state);
+
+  const handleEnableNotifications = async () => {
+    if (isSettingUpNotifications) return;
+
+    setIsSettingUpNotifications(true);
+    const result = await requestAndRegisterDeviceToken();
+    setNotificationMessage(getNotificationPermissionMessage(result));
+    setIsSettingUpNotifications(false);
+  };
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -215,6 +237,16 @@ export function MyPagePage() {
             {accountItems.map((item) => (
               <SettingsRow {...item} key={item.label} />
             ))}
+            <SettingsRow
+              disabled={isSettingUpNotifications}
+              label={isSettingUpNotifications ? '알림 설정 중' : '알림 받기'}
+              onClick={() => void handleEnableNotifications()}
+            />
+            {notificationMessage ? (
+              <p className="text-text-secondary px-4 text-sm leading-5" role="status">
+                {notificationMessage}
+              </p>
+            ) : null}
           </div>
         </section>
 

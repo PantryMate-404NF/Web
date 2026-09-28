@@ -25,7 +25,7 @@
 
 `src/features/notification/api/register-device-token.ts`는 공통 `request()`로 `{ fcmToken }`을 전송한다. 현재 access token은 `AuthSessionProvider`의 `restoreAuthSession()` 중 재발급되어 메모리에 저장되므로, 세션 복구 후에만 이 API를 호출한다.
 
-`src/features/notification/ui/device-token-registration.tsx`는 인증 상태가 `complete` 또는 `onboarding`인 경우에만 토큰 등록을 요청한다. 권한이 `granted`이면 앱 시작 시 자동 등록한다. `default` 권한에서는 팝업을 자동으로 열지 않고, 이후 설정 화면의 명시적 사용자 동작으로 권한 요청을 연결할 수 있는 함수만 제공한다. `denied`, 미지원, 토큰 발급 실패, API 실패는 비차단으로 처리하고 콘솔 오류를 사용자에게 노출하지 않는다.
+`src/features/notification/ui/device-token-registration.tsx`는 인증 상태가 `complete` 또는 `onboarding`인 경우에만 토큰 등록을 요청한다. 권한이 `granted`이면 앱 시작 시 자동 등록한다. `default` 권한에서는 팝업을 자동으로 열지 않고, 마이페이지의 `알림 받기` 버튼을 누른 경우에만 권한을 요청한다. `denied`, 미지원, 토큰 발급 실패, API 실패는 비차단으로 처리하고 인증 흐름을 막지 않는다.
 
 ### 서비스워커 메시지·클릭 처리
 
@@ -33,11 +33,9 @@
 
 `notificationclick`에서는 알림을 닫고 `link`를 `self.location.origin` 기준으로 해석한다. origin이 다르거나 경로가 `/`로 시작하지 않으면 `/pantry`로 대체한다. 동일 origin의 브라우저 탭이 있으면 해당 탭을 `navigate()` 후 `focus()`하고, 없으면 `clients.openWindow()`로 연다.
 
-### 환경 변수와 보안
+### Firebase 설정과 보안
 
-Firebase 웹 설정값과 VAPID 공개키는 `NEXT_PUBLIC_FIREBASE_*` 환경 변수로 전달한다. 이 값들은 브라우저에 포함되는 공개 식별자다. Firebase Admin SDK 자격증명·서비스 계정 키는 프론트엔드에 절대 추가하지 않는다.
-
-Next.js의 `NEXT_PUBLIC_*` 값은 빌드 시점에 포함되므로 로컬 `.env.local`, `.env.example`, Jenkins Docker build argument, 배포 환경에 같은 이름을 설정해야 한다. 서비스워커는 정적 파일이므로 필요한 공개 Firebase config를 파일 안에 명시한다.
+사용자가 제공한 Firebase 웹 설정값과 VAPID 공개키를 클라이언트 코드와 서비스워커에 설정한다. 이 값들은 브라우저에 포함되는 공개 식별자다. Firebase Admin SDK 자격증명·서비스 계정 키는 프론트엔드에 절대 추가하지 않는다. 현재 배포 환경에서 같은 Firebase 프로젝트를 사용하므로 별도 Jenkins 빌드 인자는 추가하지 않는다.
 
 ## API 계약
 
@@ -57,9 +55,10 @@ Content-Type: application/json
 - `src/features/notification/model/push-client.ts`: 지원 여부·권한·FCM 토큰 발급
 - `src/features/notification/api/register-device-token.ts`: 기기 토큰 등록 API
 - `src/features/notification/ui/device-token-registration.tsx`: 인증 완료 후 비차단 등록 트리거
-- `src/app/providers.tsx`: 인증 Provider 내부에 트리거 마운트
+- `src/features/auth/ui/auth-session-provider.tsx`: 인증 Provider 내부에 토큰 등록 트리거 마운트
+- `src/views/mypage/ui/my-page-page.tsx`: 사용자 동작으로 알림 권한을 요청하는 버튼
 - `public/sw.js`: FCM background message 및 notification click 처리
-- `.env.example`: Firebase/VAPID 공개 설정 키 목록
+- Firebase 웹 설정값은 `src/shared/config/firebase.ts`와 `public/sw.js`에서 동일하게 유지한다.
 
 ## 오류 처리
 
@@ -74,11 +73,11 @@ Content-Type: application/json
 
 ## 테스트 전략
 
-- Firebase 설정이 누락되거나 SSR 환경일 때 안전하게 미지원 상태를 반환하는지 테스트한다.
+- SSR 또는 브라우저 Push API 미지원 환경에서 FCM 동작을 안전하게 생략하는지 테스트한다.
 - 권한별로 토큰 발급과 API 호출 여부를 테스트한다.
 - `fcmToken` 요청 body와 인증 공통 클라이언트 사용을 테스트한다.
 - 알림 payload의 타입과 내부 링크 정규화 함수를 테스트한다.
-- 인증 상태가 로그인 전에는 등록하지 않고, 로그인 후에는 등록을 시도하는지 컴포넌트 테스트한다.
+- 세션 등록 로직이 guest/loading 상태를 무시하고 인증된 상태에서만 등록하는지, 마이페이지 opt-in 동작이 노출되는지 테스트한다.
 
 ## 범위 밖
 

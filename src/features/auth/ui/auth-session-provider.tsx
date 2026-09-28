@@ -13,6 +13,8 @@ import {
 import type { ReactNode } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
+import { DeviceTokenRegistration } from '@/features/notification/ui/device-token-registration';
+
 import type { AuthHomeState } from '../model/restore-auth-session';
 import { restoreAuthSession } from '../model/restore-auth-session';
 import {
@@ -113,6 +115,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthSessionContext.Provider value={value}>
+      <DeviceTokenRegistration state={state} />
       <Suspense fallback={null}>
         <AuthStateQueryCleaner />
       </Suspense>
