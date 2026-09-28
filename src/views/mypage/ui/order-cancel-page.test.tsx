@@ -8,6 +8,7 @@ vi.mock('next/navigation', () => ({
 import {
   getAgreementCheckClassName,
   getCancellationReasonBorderColor,
+  getCancellationReasonRadioClasses,
   OrderCancelPage,
 } from './order-cancel-page';
 
@@ -19,7 +20,8 @@ describe('OrderCancelPage', () => {
     expect(markup).toContain('단순 변심');
     expect(markup).toContain('환불 예정 금액');
     expect(markup).toContain('disabled=""');
-    expect(markup).toContain('border-t-8');
+    expect(markup).toContain('h-2 w-full bg-[var(--primitive-grey-100)]');
+    expect(markup).not.toContain('border-t-8');
     expect(markup).toContain('size-[22px]');
     expect(markup).toContain('rounded-full');
   });
@@ -27,6 +29,17 @@ describe('OrderCancelPage', () => {
   it('선택한 취소 사유에는 primitive primary-500 테두리를 적용한다', () => {
     expect(getCancellationReasonBorderColor(true)).toBe('var(--primitive-primary-500)');
     expect(getCancellationReasonBorderColor(false)).toBe('var(--border-default)');
+  });
+
+  it('선택된 취소 사유 라디오는 노란색 바깥 원과 흰색 가운데 원을 표시한다', () => {
+    expect(getCancellationReasonRadioClasses(true)).toEqual({
+      outer: 'bg-primary',
+      inner: 'bg-background',
+    });
+    expect(getCancellationReasonRadioClasses(false)).toEqual({
+      outer: 'border border-border',
+      inner: '',
+    });
   });
 
   it('동의 체크는 기본 회색, 선택 시 primitive primary-500 배경을 적용한다', () => {
