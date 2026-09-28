@@ -9,6 +9,7 @@ import { OrderPage } from './order-page';
 interface OrderRouteContentProps {
   apiEnabled?: boolean;
   cartId?: number;
+  localPreview?: boolean;
   orderReturnTo?: string;
   previewItems?: CartItem[];
   selectedItemIds: string[];
@@ -16,6 +17,7 @@ interface OrderRouteContentProps {
 
 export function OrderRouteContent({
   apiEnabled,
+  localPreview = false,
   orderReturnTo = '/order',
   previewItems,
   selectedItemIds,
@@ -25,6 +27,10 @@ export function OrderRouteContent({
   const shouldUseApi = apiEnabled ?? (authState === 'complete' || authState === 'onboarding');
   const shouldQuery = shouldUseApi && !previewItems;
   const { data, error, isPending, refetch } = useCartQuery(shouldQuery);
+
+  if (localPreview) {
+    return <OrderPage orderReturnTo={orderReturnTo} selectedItemIds={selectedItemIds} />;
+  }
 
   if (previewItems) {
     return (

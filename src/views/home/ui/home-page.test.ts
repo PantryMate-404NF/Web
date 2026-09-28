@@ -1,6 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock('@/features/product-cart/model/use-add-product-to-cart', () => ({
+  useAddProductToCart: () => ({ addProduct: vi.fn(), isPending: false, reset: vi.fn() }),
+}));
 
 import {
   getHomeMockState,

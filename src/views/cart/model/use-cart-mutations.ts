@@ -4,9 +4,9 @@ import type { CartResponseDto } from '@/entities/cart/api/cart.dto';
 import { deleteCartItem } from '@/entities/cart/api/delete-cart-item';
 import { updateCartItem } from '@/entities/cart/api/update-cart-item';
 import type { CartItem } from '@/entities/cart/model/cart-store';
+import { CART_QUERY_KEY } from '@/entities/cart/model/query-key';
 
 import { removeCartItemsFromCache, updateCartItemInCache } from './cart-cache';
-import { CART_QUERY_KEY } from './use-cart-query';
 
 function getCartItemId(item: CartItem) {
   const cartItemId = item.cartItemId ?? Number(item.id);

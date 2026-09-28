@@ -1,7 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { getSafeLoginReturnTo } from '@/features/auth/model/login-return-to';
 import { getSocialLoginUrl } from '@/views/auth/model/social-login';
+
+import { SocialLoginLink } from './social-login-link';
 
 const loginProviders = [
   {
@@ -18,11 +21,17 @@ const loginProviders = [
   },
 ] as const;
 
-export function LoginPage() {
+export function LoginPage({ returnTo }: { returnTo?: string } = {}) {
+  const safeReturnTo = getSafeLoginReturnTo(returnTo);
+
   return (
     <main className="mobile-page mobile-page--padded bg-background min-h-dvh pt-[calc(env(safe-area-inset-top)+12px)]">
       <header className="flex h-10 justify-end">
-        <Link aria-label="로그인 닫기" className="grid size-10 place-items-center" href="/">
+        <Link
+          aria-label="로그인 닫기"
+          className="grid size-10 place-items-center"
+          href={safeReturnTo ?? '/'}
+        >
           <Image alt="" height={40} priority src="/images/auth/close.svg" width={40} />
         </Link>
       </header>
@@ -33,14 +42,14 @@ export function LoginPage() {
 
       <div className="mt-[143px] space-y-1">
         {loginProviders.map(({ className, iconSrc, label, provider }) => (
-          <a
-            className={`text-label-2 relative flex h-14 w-full items-center rounded-md px-5 font-semibold ${className}`}
+          <SocialLoginLink
+            className={className}
             href={getSocialLoginUrl(provider)}
+            iconSrc={iconSrc}
             key={provider}
-          >
-            <Image alt="" className="size-5" height={20} src={iconSrc} width={20} />
-            <span className="absolute inset-0 grid place-items-center">{label}</span>
-          </a>
+            label={label}
+            returnTo={safeReturnTo}
+          />
         ))}
       </div>
 

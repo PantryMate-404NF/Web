@@ -21,6 +21,8 @@ export interface ProductOption {
 
 export interface ProductDetail {
   id: ProductId;
+  commerceProductId?: number;
+  mockCommerceProductId?: number;
   detailImageUrls?: string[];
   imageUrl?: string;
   thumbnailUrl?: string;

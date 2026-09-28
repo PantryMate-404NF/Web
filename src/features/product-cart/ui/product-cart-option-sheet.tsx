@@ -6,7 +6,10 @@ import type { ProductDetail, ProductOption } from '@/entities/product/model/type
 import type { ProductOptionQuantities } from '@/features/product-cart/model/product-cart-selection';
 
 interface ProductCartOptionSheetProps {
+  actionLabel?: string;
   dialogRef?: RefObject<HTMLElement | null>;
+  errorMessage?: string;
+  isPending?: boolean;
   onAdd: () => void;
   onClose: () => void;
   onQuantityChange: (optionId: string, amount: number) => void;
@@ -19,7 +22,10 @@ function getProductOptions(product: ProductDetail): ProductOption[] {
 }
 
 export function ProductCartOptionSheet({
+  actionLabel = '장바구니 담기',
   dialogRef,
+  errorMessage,
+  isPending = false,
   onAdd,
   onClose,
   onQuantityChange,
@@ -104,7 +110,7 @@ export function ProductCartOptionSheet({
                     <button
                       aria-label={`${option.label} 수량 줄이기`}
                       className="bg-surface-secondary focus-visible:ring-ring grid size-7 place-items-center rounded-[8px] outline-none focus-visible:ring-2 disabled:opacity-50"
-                      disabled={quantity === 0}
+                      disabled={isPending || quantity === 0}
                       onClick={() => onQuantityChange(option.id, -1)}
                       type="button"
                     >
@@ -119,6 +125,7 @@ export function ProductCartOptionSheet({
                     <button
                       aria-label={`${option.label} 수량 늘리기`}
                       className="bg-surface-selected text-surface-selected-foreground focus-visible:ring-ring grid size-7 place-items-center rounded-[8px] outline-none focus-visible:ring-2"
+                      disabled={isPending}
                       onClick={() => onQuantityChange(option.id, 1)}
                       type="button"
                     >
@@ -132,13 +139,18 @@ export function ProductCartOptionSheet({
         </div>
 
         <div className="px-4">
+          {errorMessage ? (
+            <p className="text-destructive mb-2 text-center text-sm" role="alert">
+              {errorMessage}
+            </p>
+          ) : null}
           <button
             className="bg-primary text-primary-foreground focus-visible:ring-ring h-[60px] w-full rounded-xl text-lg font-semibold focus-visible:ring-2 disabled:opacity-50"
-            disabled={selectedCount === 0}
+            disabled={selectedCount === 0 || isPending}
             onClick={onAdd}
             type="button"
           >
-            장바구니 담기
+            {isPending ? '처리 중' : actionLabel}
           </button>
         </div>
       </section>

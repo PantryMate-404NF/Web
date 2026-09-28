@@ -4,6 +4,7 @@ import type { ProductDetail, ProductOption } from '@/entities/product/model/type
 
 import {
   createInitialOptionQuantities,
+  getSelectedProductQuantity,
   selectCartProducts,
   updateOptionQuantity,
 } from './product-cart-selection';
@@ -35,6 +36,10 @@ const product: ProductDetail = {
 };
 
 describe('product cart selection', () => {
+  it('선택한 옵션 수량의 합계를 API 수량으로 계산한다', () => {
+    expect(getSelectedProductQuantity({ first: 2, second: 1, third: 0 })).toBe(3);
+  });
+
   it('첫 번째 옵션만 수량 1로 초기화한다', () => {
     expect(createInitialOptionQuantities(options)).toEqual({
       'extra-large-10': 0,

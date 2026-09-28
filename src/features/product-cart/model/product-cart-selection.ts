@@ -18,6 +18,10 @@ export function updateOptionQuantity(
   };
 }
 
+export function getSelectedProductQuantity(quantities: ProductOptionQuantities): number {
+  return Object.values(quantities).reduce((total, quantity) => total + quantity, 0);
+}
+
 export function selectCartProducts(
   product: ProductDetail,
   quantities: ProductOptionQuantities,

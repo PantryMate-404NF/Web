@@ -56,3 +56,7 @@ export function CartPreviewRouteContent({ initialItems }: { initialItems: CartIt
     />
   );
 }
+
+export function CartLocalPreviewRouteContent() {
+  return <CartPage />;
+}

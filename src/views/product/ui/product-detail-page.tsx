@@ -1,5 +1,6 @@
 import { ChevronRight, Star } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 import type { ProductDetail, RelatedProduct } from '@/entities/product/model/types';
 import { ProductCard } from '@/entities/product/ui/product-card';
@@ -214,6 +215,19 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
       <header className="bg-background relative flex h-10 items-center px-2">
         <BackButton />
         <h1 className="text-title-3 absolute left-1/2 -translate-x-1/2 font-semibold">상품 상세</h1>
+        <Link
+          aria-label="장바구니로 이동"
+          className="focus-visible:ring-ring ml-auto grid size-10 place-items-center rounded-full focus-visible:ring-2"
+          href="/cart"
+        >
+          <Image
+            alt=""
+            aria-hidden="true"
+            height={22}
+            src="/icons/home/product-cart.svg"
+            width={22}
+          />
+        </Link>
       </header>
 
       <ProductSectionNavigation />
