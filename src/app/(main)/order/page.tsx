@@ -27,6 +27,7 @@ export default async function OrderRoute({ searchParams }: OrderPageProps) {
   return (
     <OrderRouteContent
       cartId={Number.isInteger(parsedCartId) ? parsedCartId : undefined}
+      localPreview={process.env.NODE_ENV === 'development' && preview === 'local'}
       previewItems={previewItems}
       orderReturnTo={orderReturnTo}
       selectedItemIds={selectedItemIds}

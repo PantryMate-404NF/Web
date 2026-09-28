@@ -17,7 +17,7 @@ describe('cart mutations', () => {
 
     await updateCartItem(10, 3);
 
-    expect(orderPaymentRequestMock).toHaveBeenCalledWith('/carts/items/10', {
+    expect(orderPaymentRequestMock).toHaveBeenCalledWith('/cart/items/10', {
       body: { quantity: 3 },
       method: 'PATCH',
     });
@@ -29,7 +29,7 @@ describe('cart mutations', () => {
 
     await deleteCartItem(10);
 
-    expect(orderPaymentRequestMock).toHaveBeenCalledWith('/carts/items/10', {
+    expect(orderPaymentRequestMock).toHaveBeenCalledWith('/cart/items/10', {
       method: 'DELETE',
       responseType: 'none',
     });

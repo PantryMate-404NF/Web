@@ -1,5 +1,14 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
+import { useCartStore } from '@/entities/cart/model/cart-store';
+import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
+import { useAddProductToCart } from '@/features/product-cart/model/use-add-product-to-cart';
+import { CART_WRITE_MODE } from '@/shared/config/cart-write-mode';
 
 import type { HomeProductItem } from '../model/home-content';
 import { HomeSectionHeading } from './home-section-heading';
@@ -17,8 +26,67 @@ export function HomeProductRail({
   productNameTone,
   title,
 }: HomeProductRailProps) {
+  const router = useRouter();
+  const addPreviewProducts = useCartStore((state) => state.addProducts);
+  const { restore, state: authState } = useAuthSession();
+  const { addProduct, isPending, reset } = useAddProductToCart();
+  const [pendingProductId, setPendingProductId] = useState<string>();
+  const [statusMessage, setStatusMessage] = useState<string>();
+
+  async function handleCartClick(product: HomeProductItem) {
+    reset();
+    setPendingProductId(product.id);
+    setStatusMessage(undefined);
+
+    try {
+      if (CART_WRITE_MODE === 'preview') {
+        addPreviewProducts([
+          {
+            id: `${product.id}:default`,
+            ingredient: product.unit,
+            name: product.name,
+            price: product.price,
+            thumbnailUrl: product.imageSrc,
+          },
+        ]);
+        router.push('/cart?preview=local');
+        return;
+      }
+
+      if (CART_WRITE_MODE === 'disabled') return;
+
+      const apiProductId =
+        CART_WRITE_MODE === 'mock-api' ? product.mockCommerceProductId : product.commerceProductId;
+      if (!apiProductId) {
+        setStatusMessage('상품 API 정보가 아직 준비되지 않았어요.');
+        return;
+      }
+
+      const resolvedAuthState = authState === 'loading' ? await restore() : authState;
+
+      if (resolvedAuthState === 'guest') {
+        router.push('/login?returnTo=%2F');
+        return;
+      }
+
+      await addProduct({ productId: apiProductId, quantity: 1 });
+      router.push('/cart');
+    } catch (caughtError) {
+      setStatusMessage(
+        caughtError instanceof Error ? caughtError.message : '장바구니에 담지 못했어요.',
+      );
+    } finally {
+      setPendingProductId(undefined);
+    }
+  }
+
   return (
     <section className="pl-4">
+      {statusMessage ? (
+        <p className="text-destructive mb-2 pr-4 text-sm" role="alert">
+          {statusMessage}
+        </p>
+      ) : null}
       <div className="pr-0">
         <HomeSectionHeading
           description={description}
@@ -46,18 +114,39 @@ export function HomeProductRail({
                   src={product.imageSrc}
                 />
               </Link>
-              <span
-                aria-hidden="true"
-                className="bg-background/80 absolute top-2 right-2 grid size-8 place-items-center rounded-full"
+              <button
+                aria-label={
+                  pendingProductId === product.id
+                    ? `${product.name} 장바구니 처리 중`
+                    : `${product.name} 장바구니에 담고 이동`
+                }
+                className="bg-background/80 focus-visible:ring-ring absolute top-2 right-2 grid size-8 place-items-center rounded-full focus-visible:ring-2 disabled:opacity-50"
+                disabled={
+                  CART_WRITE_MODE === 'disabled' ||
+                  (CART_WRITE_MODE === 'api' && !product.commerceProductId) ||
+                  isPending ||
+                  pendingProductId !== undefined
+                }
+                onClick={() => {
+                  void handleCartClick(product);
+                }}
+                type="button"
               >
-                <Image
-                  alt=""
-                  aria-hidden="true"
-                  height={16}
-                  src="/icons/home/product-cart.svg"
-                  width={16}
-                />
-              </span>
+                {pendingProductId === product.id ? (
+                  <span
+                    aria-hidden="true"
+                    className="border-primary size-4 animate-spin rounded-full border-2 border-t-transparent"
+                  />
+                ) : (
+                  <Image
+                    alt=""
+                    aria-hidden="true"
+                    height={16}
+                    src="/icons/home/product-cart.svg"
+                    width={16}
+                  />
+                )}
+              </button>
             </div>
             <Link className="mt-2 block" href={`/product/${product.id}`}>
               <span

@@ -5,8 +5,9 @@
 - Swagger 원본: `Temporary Swagger document.json` (OpenAPI 3.0.3, draft)
 - 확인일: 2026-09-03
 - 주문·결제 명세 추가 확인일: 2026-09-17
+- FE 연동 변경 문서 확인일: 2026-09-28
 - 이 문서는 화면과 API 계약을 연결하기 위한 협의용 문서다.
-- Swagger 안내에 따라 현재 모든 API는 실제 호출 대상이 아닌 계획 명세다. API 타입, 요청 함수, MSW handler는 백엔드 계약 확정 후 함께 갱신한다.
+- 장바구니 추가 계약은 최신 FE 연동 문서의 `POST /api/cart/items`와 `{ productId, quantity }`를 기준으로 한다.
 - 화면 상태와 공용 UI 적용 기준은 [FE·PD 핸드오프 적용 기준](../design/fe-pd-handoff.md)을 따른다.
 - 팬트리 목록 Error 화면은 TanStack Query의 `refetch`를 Retry CTA에 연결한다. Toast 정책은 후속 API 계약 범위다.
 - 타입 초안은 [FE API 타입 계약 초안](./frontend-type-contract.md), MSW 시나리오는 [MSW Mock 계약 명세](./msw-mock-spec.md), BE 협의 항목은 [BE API 협의 체크리스트](./backend-alignment-checklist.md)를 기준으로 관리한다.
@@ -61,10 +62,10 @@ interface ApiResponse<T> {
 | 레시피 상세 `/recipe/{recipeId}`        | 상세·부족 재료 확인 | `GET /api/recipes/{id}`                                              | 명세 있음 | `title`, `description`, `cookingTimeMinutes`, `thumbnailUrl`, `isFavorite`, `steps`, `ingredients`, `mappedProduct` 표시          |
 | 조리 완료 `/recipe/{recipeId}/complete` | 사용 식재료 정리    | 없음                                                                 | 협의 필요 | 조리 완료 후 팬트리 항목 삭제·수정 여부와 요청 계약 필요                                                                          |
 | 레시피 찜                               | 찜 상태 변경        | 없음                                                                 | 협의 필요 | `isFavorite`은 응답에 있으나 변경 API가 없음. 낙관적 갱신·실패 복구 기준 필요                                                     |
-| 장바구니 `/cart`                        | 장바구니 조회       | `GET /api/carts`                                                     | 명세 있음 | 상품·수량·가격 데이터 렌더링                                                                                                      |
-| 부족 상품 담기                          | 상품 추가           | `POST /api/carts/items`                                              | 명세 있음 | 중복 클릭 방지, 성공 Toast 또는 장바구니 수량 갱신                                                                                |
-| 장바구니 수량 변경                      | 수량 증감           | `PATCH /api/carts/items/{cartItemId}`                                | 명세 있음 | 요청 중 Stepper Disabled, 실패 시 이전 수량 복구                                                                                  |
-| 장바구니 항목 삭제                      | 항목 삭제           | `DELETE /api/carts/items/{cartItemId}`                               | 명세 있음 | 성공 시 항목 제거, 실패 시 기존 항목 유지 + Error Toast                                                                           |
+| 장바구니 `/cart`                        | 장바구니 조회       | `GET /api/cart`                                                      | 명세 있음 | 상품·수량·가격 데이터 렌더링. Gateway는 `/api/carts`도 허용                                                                       |
+| 부족 상품 담기                          | 상품 추가           | `POST /api/cart/items`                                               | 명세 있음 | 요청 DTO는 `{ productId, quantity }`. 실제 상품 ID 연결 환경에서 `NEXT_PUBLIC_CART_WRITE_API_ENABLED=enabled`로 활성화            |
+| 장바구니 수량 변경                      | 수량 증감           | `PATCH /api/cart/items/{cartItemId}`                                 | 명세 있음 | 요청 중 Stepper Disabled, 실패 시 이전 수량 복구                                                                                  |
+| 장바구니 항목 삭제                      | 항목 삭제           | `DELETE /api/cart/items/{cartItemId}`                                | 명세 있음 | 성공 시 항목 제거, 실패 시 기존 항목 유지 + Error Toast                                                                           |
 | 주문서 `/order`                         | 선택 상품 주문 생성 | `POST /api/orders`                                                   | 명세 있음 | `cartId`, `selectedCartItemIds`, `Idempotency-Key` 전달. 서버 `totalAmount`, `orderId`, `name`을 결제 기준값으로 사용             |
 | 주문서 `/order`                         | 결제 준비           | `POST /api/payments/{orderId}/prepare`                               | 명세 있음 | 중복 호출 방지를 위해 실행 중 CTA 비활성화. 성공 후에만 토스 결제창 요청                                                          |
 | 결제 성공 `/payment/success`            | 결제 승인           | `POST /api/payments/confirm`                                         | 명세 있음 | 토스 리다이렉트의 `paymentKey`, `orderId`, `amount`를 검증해 전달. 재고 차감은 서버에서 처리                                      |

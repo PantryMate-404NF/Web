@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { getPostAuthenticationRoute } from '@/features/auth/model/auth-session';
+import { takeLoginReturnTo } from '@/features/auth/model/login-return-to';
 import { Skeleton } from '@/shared/ui/skeleton';
 
 import { useAuthSession } from './auth-session-provider';
@@ -41,7 +42,8 @@ export function AuthCallbackContent() {
       try {
         const homeState = await restore();
         if (homeState === 'guest') throw new Error('로그인 세션을 복구하지 못했습니다.');
-        router.replace(getPostAuthenticationRoute(homeState));
+        const returnTo = homeState === 'complete' ? takeLoginReturnTo(window.sessionStorage) : null;
+        router.replace(returnTo ?? getPostAuthenticationRoute(homeState));
       } catch {
         router.replace('/?login=failed');
       }

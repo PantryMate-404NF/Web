@@ -21,3 +21,8 @@ export interface CartItemMutationResponseDto {
   productId: number;
   quantity: number;
 }
+
+export interface AddCartItemRequestDto {
+  productId: number;
+  quantity: number;
+}

@@ -5,6 +5,7 @@
 import type { RequestHandler } from 'msw';
 
 import { authHandlers } from './auth';
+import { cartHandlers } from './cart';
 import { pantryHandlers } from './pantry';
 
-export const handlers: RequestHandler[] = [...authHandlers, ...pantryHandlers];
+export const handlers: RequestHandler[] = [...authHandlers, ...cartHandlers, ...pantryHandlers];

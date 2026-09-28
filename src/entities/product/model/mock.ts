@@ -1,5 +1,21 @@
 import type { ProductDetail, ProductId, RelatedProduct } from './types';
 
+export const PRODUCT_COMMERCE_MOCK_IDS: Record<ProductId, number> = {
+  'organic-broccoli': 101,
+  'sweet-banana': 102,
+  'fresh-milk': 103,
+  'soft-tofu': 104,
+  'domestic-onion': 105,
+  'pesticide-free-potato': 106,
+  'free-range-eggs': 107,
+  'dried-rapeseed-greens': 108,
+  'blanched-chwinamul': 109,
+  'bujigaengi-greens': 110,
+  'buckwheat-tofu-noodles': 111,
+  'garlic-cream-cheese': 112,
+  'low-sugar-plum-syrup': 113,
+};
+
 const HOME_PRODUCT_DETAIL_INPUTS: Array<[ProductId, string, string, number, string]> = [
   ['domestic-onion', '채소', '국산 양파', 5900, '1.5kg'],
   ['pesticide-free-potato', '채소', '무농약이상 감자', 3000, '500g'],
@@ -29,6 +45,7 @@ const HOME_PRODUCT_DETAILS: ProductDetail[] = HOME_PRODUCT_DETAIL_INPUTS.map(
     if (id === 'free-range-eggs') {
       return {
         id,
+        mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS[id],
         category: '계란 · 알류',
         name: '완전방사 무항생제 유정란(10구)',
         summary: '구성: 1개(10구) · 용량: 520g · 원산지: 국내산',
@@ -52,15 +69,31 @@ const HOME_PRODUCT_DETAILS: ProductDetail[] = HOME_PRODUCT_DETAIL_INPUTS.map(
           '/images/product-detail/detail-4.png',
         ],
         options: [
-          { id: 'large-10', label: '대란 10구 (520g)', price: 5900 },
-          { id: 'extra-large-10', label: '특란 10구 (600g)', price: 6500 },
-          { id: 'king-10', label: '왕란 10구 (680g)', price: 7200 },
+          {
+            id: 'large-10',
+            label: '대란 10구 (520g)',
+            mockCommerceProductId: 10701,
+            price: 5900,
+          },
+          {
+            id: 'extra-large-10',
+            label: '특란 10구 (600g)',
+            mockCommerceProductId: 10702,
+            price: 6500,
+          },
+          {
+            id: 'king-10',
+            label: '왕란 10구 (680g)',
+            mockCommerceProductId: 10703,
+            price: 7200,
+          },
         ],
       };
     }
 
     return {
       id,
+      mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS[id],
       category,
       name,
       summary: `구성: 1개 · 용량: ${weight} · 원산지: 국내산`,
@@ -83,6 +116,7 @@ const HOME_PRODUCT_DETAILS: ProductDetail[] = HOME_PRODUCT_DETAIL_INPUTS.map(
 export const productMocks: ProductDetail[] = [
   {
     id: 'organic-broccoli',
+    mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS['organic-broccoli'],
     category: '채소·샐러드',
     name: '국산 유기농 브로콜리 1kg',
     summary: '구성: 1개 · 용량: 1kg · 원산지: 국내산',
@@ -100,6 +134,7 @@ export const productMocks: ProductDetail[] = [
   },
   {
     id: 'sweet-banana',
+    mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS['sweet-banana'],
     category: '과일',
     name: '에콰도르산 달콤 바나나',
     summary: '구성: 1송이 · 용량: 600g · 원산지: 에콰도르산',
@@ -117,6 +152,7 @@ export const productMocks: ProductDetail[] = [
   },
   {
     id: 'fresh-milk',
+    mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS['fresh-milk'],
     category: '유제품',
     name: '신선한 우유',
     summary: '구성: 1개 · 용량: 900ml · 원산지: 국내산',
@@ -134,6 +170,7 @@ export const productMocks: ProductDetail[] = [
   },
   {
     id: 'soft-tofu',
+    mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS['soft-tofu'],
     category: '두부·콩나물',
     name: '부드러운 두부',
     summary: '구성: 1개 · 용량: 300g · 원산지: 국내산',
