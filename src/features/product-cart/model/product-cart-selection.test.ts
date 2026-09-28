@@ -5,6 +5,7 @@ import type { ProductDetail, ProductOption } from '@/entities/product/model/type
 import {
   createInitialOptionQuantities,
   getSelectedCartRequests,
+  hasAnyCartProductIdentifier,
   selectCartProducts,
   updateOptionQuantity,
 } from './product-cart-selection';
@@ -77,6 +78,21 @@ describe('product cart selection', () => {
         'api',
       ),
     ).toBeUndefined();
+  });
+
+  it('일부 옵션에만 식별자가 있어도 옵션 선택을 시작할 수 있다', () => {
+    expect(
+      hasAnyCartProductIdentifier(
+        {
+          ...product,
+          options: [
+            { id: 'unknown', label: '미연동 옵션', price: 5900 },
+            { id: 'available', label: '연동 옵션', mockCommerceProductId: 102, price: 7200 },
+          ],
+        },
+        'mock-api',
+      ),
+    ).toBe(true);
   });
 
   it('첫 번째 옵션만 수량 1로 초기화한다', () => {

@@ -11,7 +11,7 @@ import { buildOrderHref } from '@/features/order/model/order-sheet';
 import {
   createInitialOptionQuantities,
   getSelectedCartRequests,
-  hasCartProductIdentifiers,
+  hasAnyCartProductIdentifier,
   selectCartProducts,
   updateOptionQuantity,
 } from '@/features/product-cart/model/product-cart-selection';
@@ -48,13 +48,14 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
   const [actionError, setActionError] = useState<string>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [lockedOptionIds, setLockedOptionIds] = useState<string[]>([]);
   const [showToast, setShowToast] = useState(false);
   const [quantities, setQuantities] = useState(() => createInitialOptionQuantities(options));
   const addTriggerRef = useRef<HTMLButtonElement>(null);
   const buyTriggerRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
   const isSubmittingRef = useRef(false);
-  const pendingCartItemIdsRef = useRef(new Map<number, number>());
+  const pendingCartItemsRef = useRef(new Map<number, { cartItemId: number; optionId: string }>());
 
   useEffect(() => {
     if (!isOpen) return;
@@ -115,7 +116,6 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
     reset();
     setActionError(undefined);
     setAction(nextAction);
-    pendingCartItemIdsRef.current.clear();
     setIsOpen(true);
   }
 
@@ -162,20 +162,29 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
       }
 
       for (const request of cartRequests) {
-        if (pendingCartItemIdsRef.current.has(request.productId)) continue;
+        if (pendingCartItemsRef.current.has(request.productId)) continue;
 
         const result = await addProduct({
           productId: request.productId,
           quantity: request.quantity,
         });
-        pendingCartItemIdsRef.current.set(request.productId, result.cartItemId);
+        pendingCartItemsRef.current.set(request.productId, {
+          cartItemId: result.cartItemId,
+          optionId: request.optionId,
+        });
+        setLockedOptionIds((current) =>
+          current.includes(request.optionId) ? current : [...current, request.optionId],
+        );
       }
 
       if (action === 'buy') {
         try {
           const cart = await loadCart();
           router.push(
-            buildOrderHref(cart.cartId, [...pendingCartItemIdsRef.current.values()].map(String)),
+            buildOrderHref(
+              cart.cartId,
+              [...pendingCartItemsRef.current.values()].map(({ cartItemId }) => String(cartItemId)),
+            ),
           );
         } catch {
           setActionError('상품은 담겼지만 주문 정보를 불러오지 못했어요. 다시 시도해 주세요.');
@@ -185,7 +194,8 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
 
       setIsOpen(false);
       setShowToast(true);
-      pendingCartItemIdsRef.current.clear();
+      pendingCartItemsRef.current.clear();
+      setLockedOptionIds([]);
     } catch (caughtError) {
       setActionError(
         caughtError instanceof Error ? caughtError.message : '장바구니에 담지 못했어요.',
@@ -200,7 +210,7 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
     !product.isAvailable ||
     CART_WRITE_MODE === 'disabled' ||
     ((CART_WRITE_MODE === 'api' || CART_WRITE_MODE === 'mock-api') &&
-      !hasCartProductIdentifiers(product, CART_WRITE_MODE));
+      !hasAnyCartProductIdentifier(product, CART_WRITE_MODE));
   const errorMessage = actionError ?? (error instanceof Error ? error.message : undefined);
 
   return (
@@ -260,6 +270,7 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
           dialogRef={dialogRef}
           errorMessage={errorMessage}
           isPending={isPending || isSubmitting}
+          lockedOptionIds={lockedOptionIds}
           onAdd={handleAdd}
           onClose={() => {
             if (!isPending && !isSubmitting) setIsOpen(false);

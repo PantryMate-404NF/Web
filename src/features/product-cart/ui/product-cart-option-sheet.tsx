@@ -10,6 +10,7 @@ interface ProductCartOptionSheetProps {
   dialogRef?: RefObject<HTMLElement | null>;
   errorMessage?: string;
   isPending?: boolean;
+  lockedOptionIds?: string[];
   onAdd: () => void;
   onClose: () => void;
   onQuantityChange: (optionId: string, amount: number) => void;
@@ -26,6 +27,7 @@ export function ProductCartOptionSheet({
   dialogRef,
   errorMessage,
   isPending = false,
+  lockedOptionIds = [],
   onAdd,
   onClose,
   onQuantityChange,
@@ -89,6 +91,7 @@ export function ProductCartOptionSheet({
             {options.map((option) => {
               const quantity = quantities[option.id] ?? 0;
               const isSelected = quantity > 0;
+              const isLocked = lockedOptionIds.includes(option.id);
 
               return (
                 <li
@@ -106,32 +109,41 @@ export function ProductCartOptionSheet({
                     </p>
                     <p className="text-title-4 font-semibold">{option.price.toLocaleString()}원</p>
                   </div>
-                  <div className="flex shrink-0 items-center">
-                    <button
-                      aria-label={`${option.label} 수량 줄이기`}
-                      className="bg-surface-secondary focus-visible:ring-ring grid size-7 place-items-center rounded-[8px] outline-none focus-visible:ring-2 disabled:opacity-50"
-                      disabled={isPending || quantity === 0}
-                      onClick={() => onQuantityChange(option.id, -1)}
-                      type="button"
-                    >
-                      <Image alt="" height={20} src="/icons/product/minus-line.svg" width={20} />
-                    </button>
+                  {isLocked ? (
                     <span
-                      aria-label={`${option.label} 수량 ${quantity}`}
-                      className="w-9 text-center text-sm"
+                      aria-label={`${option.label} 장바구니 반영 완료`}
+                      className="bg-surface-secondary text-text-secondary shrink-0 rounded-full px-3 py-1 text-xs"
                     >
-                      {quantity}
+                      이미 담긴 옵션
                     </span>
-                    <button
-                      aria-label={`${option.label} 수량 늘리기`}
-                      className="bg-surface-selected text-surface-selected-foreground focus-visible:ring-ring grid size-7 place-items-center rounded-[8px] outline-none focus-visible:ring-2"
-                      disabled={isPending}
-                      onClick={() => onQuantityChange(option.id, 1)}
-                      type="button"
-                    >
-                      <Image alt="" height={20} src="/icons/product/plus-line.svg" width={20} />
-                    </button>
-                  </div>
+                  ) : (
+                    <div className="flex shrink-0 items-center">
+                      <button
+                        aria-label={`${option.label} 수량 줄이기`}
+                        className="bg-surface-secondary focus-visible:ring-ring grid size-7 place-items-center rounded-[8px] outline-none focus-visible:ring-2 disabled:opacity-50"
+                        disabled={isPending || quantity === 0}
+                        onClick={() => onQuantityChange(option.id, -1)}
+                        type="button"
+                      >
+                        <Image alt="" height={20} src="/icons/product/minus-line.svg" width={20} />
+                      </button>
+                      <span
+                        aria-label={`${option.label} 수량 ${quantity}`}
+                        className="w-9 text-center text-sm"
+                      >
+                        {quantity}
+                      </span>
+                      <button
+                        aria-label={`${option.label} 수량 늘리기`}
+                        className="bg-surface-selected text-surface-selected-foreground focus-visible:ring-ring grid size-7 place-items-center rounded-[8px] outline-none focus-visible:ring-2"
+                        disabled={isPending}
+                        onClick={() => onQuantityChange(option.id, 1)}
+                        type="button"
+                      >
+                        <Image alt="" height={20} src="/icons/product/plus-line.svg" width={20} />
+                      </button>
+                    </div>
+                  )}
                 </li>
               );
             })}

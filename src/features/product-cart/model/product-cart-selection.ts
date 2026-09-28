@@ -51,14 +51,17 @@ export function getSelectedCartRequests(
   return requests.map((request) => ({ ...request, productId: request.productId as number }));
 }
 
-export function hasCartProductIdentifiers(product: ProductDetail, mode: CartRequestMode): boolean {
+export function hasAnyCartProductIdentifier(
+  product: ProductDetail,
+  mode: CartRequestMode,
+): boolean {
   const options = product.options;
 
   if (!options) {
     return Boolean(mode === 'mock-api' ? product.mockCommerceProductId : product.commerceProductId);
   }
 
-  return options.every((option) =>
+  return options.some((option) =>
     Boolean(mode === 'mock-api' ? option.mockCommerceProductId : option.commerceProductId),
   );
 }
