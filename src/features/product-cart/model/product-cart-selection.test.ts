@@ -4,7 +4,7 @@ import type { ProductDetail, ProductOption } from '@/entities/product/model/type
 
 import {
   createInitialOptionQuantities,
-  getSelectedProductQuantity,
+  getSelectedCartRequests,
   selectCartProducts,
   updateOptionQuantity,
 } from './product-cart-selection';
@@ -36,8 +36,47 @@ const product: ProductDetail = {
 };
 
 describe('product cart selection', () => {
-  it('선택한 옵션 수량의 합계를 API 수량으로 계산한다', () => {
-    expect(getSelectedProductQuantity({ first: 2, second: 1, third: 0 })).toBe(3);
+  it('선택한 옵션별 목 상품 ID와 수량을 별도 요청으로 만든다', () => {
+    const requests = getSelectedCartRequests(
+      {
+        ...product,
+        options: [
+          {
+            id: 'small',
+            label: '소형',
+            mockCommerceProductId: 101,
+            price: 5900,
+          },
+          {
+            id: 'large',
+            label: '대형',
+            mockCommerceProductId: 102,
+            price: 7200,
+          },
+        ],
+      },
+      { large: 2, small: 1 },
+      'mock-api',
+    );
+
+    expect(requests).toEqual([
+      { optionId: 'small', productId: 101, quantity: 1 },
+      { optionId: 'large', productId: 102, quantity: 2 },
+    ]);
+  });
+
+  it('실제 API 식별자가 없는 옵션 선택은 요청을 만들지 않는다', () => {
+    expect(
+      getSelectedCartRequests(
+        {
+          ...product,
+          commerceProductId: 99,
+          options: [{ id: 'large', label: '대형', price: 7200 }],
+        },
+        { large: 1 },
+        'api',
+      ),
+    ).toBeUndefined();
   });
 
   it('첫 번째 옵션만 수량 1로 초기화한다', () => {

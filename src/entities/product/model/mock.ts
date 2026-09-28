@@ -69,9 +69,24 @@ const HOME_PRODUCT_DETAILS: ProductDetail[] = HOME_PRODUCT_DETAIL_INPUTS.map(
           '/images/product-detail/detail-4.png',
         ],
         options: [
-          { id: 'large-10', label: '대란 10구 (520g)', price: 5900 },
-          { id: 'extra-large-10', label: '특란 10구 (600g)', price: 6500 },
-          { id: 'king-10', label: '왕란 10구 (680g)', price: 7200 },
+          {
+            id: 'large-10',
+            label: '대란 10구 (520g)',
+            mockCommerceProductId: 10701,
+            price: 5900,
+          },
+          {
+            id: 'extra-large-10',
+            label: '특란 10구 (600g)',
+            mockCommerceProductId: 10702,
+            price: 6500,
+          },
+          {
+            id: 'king-10',
+            label: '왕란 10구 (680g)',
+            mockCommerceProductId: 10703,
+            price: 7200,
+          },
         ],
       };
     }

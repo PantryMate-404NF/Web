@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getCartWriteMode } from './cart-write-mode';
+import { getCartHref, getCartWriteMode } from './cart-write-mode';
 
 describe('getCartWriteMode', () => {
   it('계약이 확정된 API만 운영 요청을 허용한다', () => {
@@ -22,5 +22,10 @@ describe('getCartWriteMode', () => {
     expect(
       getCartWriteMode({ apiEnabled: false, apiMockingEnabled: true, isDevelopment: true }),
     ).toBe('mock-api');
+  });
+
+  it('로컬 미리보기 장바구니 경로를 일관되게 반환한다', () => {
+    expect(getCartHref('preview')).toBe('/cart?preview=local');
+    expect(getCartHref('api')).toBe('/cart');
   });
 });

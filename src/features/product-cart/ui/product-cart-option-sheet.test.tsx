@@ -34,4 +34,24 @@ describe('ProductCartOptionSheet', () => {
     expect(markup).toContain('aria-label="옵션 선택 닫기"');
     expect(markup).toContain('장바구니 담기');
   });
+
+  it('요청 중 상태를 보이는 문구와 접근 가능한 이름으로 제공한다', () => {
+    const product = getProductById('free-range-eggs');
+
+    if (!product) throw new Error('유정란 상품 목업이 필요합니다.');
+
+    const markup = renderToStaticMarkup(
+      createElement(ProductCartOptionSheet, {
+        isPending: true,
+        onAdd: vi.fn(),
+        onClose: vi.fn(),
+        onQuantityChange: vi.fn(),
+        product,
+        quantities: { 'large-10': 1 },
+      }),
+    );
+
+    expect(markup).toContain('aria-label="장바구니 담기 처리 중"');
+    expect(markup).toContain('처리 중');
+  });
 });

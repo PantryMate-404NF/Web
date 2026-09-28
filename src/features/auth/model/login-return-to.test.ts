@@ -21,6 +21,8 @@ describe('login returnTo', () => {
   it('같은 서비스의 내부 경로만 허용한다', () => {
     expect(getSafeLoginReturnTo('/product/free-range-eggs')).toBe('/product/free-range-eggs');
     expect(getSafeLoginReturnTo('//outside.example')).toBeUndefined();
+    expect(getSafeLoginReturnTo('/\\outside.example')).toBeUndefined();
+    expect(getSafeLoginReturnTo('/product\\outside.example')).toBeUndefined();
     expect(getSafeLoginReturnTo('https://outside.example')).toBeUndefined();
   });
 

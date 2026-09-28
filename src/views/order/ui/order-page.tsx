@@ -85,11 +85,13 @@ export function OrderSheet({
   cartId,
   items,
   orderReturnTo = '/order',
+  paymentDisabled = false,
   selectedCartItemIds = [],
 }: {
   cartId?: number;
   items: CartItem[];
   orderReturnTo?: string;
+  paymentDisabled?: boolean;
   selectedCartItemIds?: number[];
 }) {
   const [isOrdererExpanded, setIsOrdererExpanded] = useState(false);
@@ -332,7 +334,11 @@ export function OrderSheet({
       </section>
 
       <footer className="bg-background fixed bottom-0 left-1/2 z-20 w-full max-w-[390px] -translate-x-1/2 px-4 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
-        {paymentNotice ? (
+        {paymentDisabled ? (
+          <p className="text-text-secondary mb-2 text-center text-sm" role="status">
+            로컬 미리보기에서는 결제를 진행할 수 없어요.
+          </p>
+        ) : paymentNotice ? (
           <p className="text-destructive mb-2 text-center text-sm" id="payment-notice" role="alert">
             {paymentNotice}
           </p>
@@ -340,7 +346,7 @@ export function OrderSheet({
         <button
           aria-describedby={paymentNotice ? 'payment-notice' : undefined}
           className="bg-primary text-primary-foreground focus-visible:ring-ring h-15 w-full rounded-xl text-lg font-semibold focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={!isAllAgreed || isPaymentPending}
+          disabled={paymentDisabled || !isAllAgreed || isPaymentPending}
           onClick={() => {
             void handlePayment();
           }}
@@ -360,6 +366,7 @@ export function OrderPage({
   items,
   onRetry,
   orderReturnTo = '/order',
+  paymentDisabled = false,
   selectedItemIds,
 }: {
   cartId?: number;
@@ -368,6 +375,7 @@ export function OrderPage({
   items?: CartItem[];
   onRetry?: () => void;
   orderReturnTo?: string;
+  paymentDisabled?: boolean;
   selectedItemIds: string[];
 }) {
   const cartItems = useCartStore((state) => state.items);
@@ -402,6 +410,7 @@ export function OrderPage({
       cartId={cartId}
       items={orderItems}
       orderReturnTo={orderReturnTo}
+      paymentDisabled={paymentDisabled}
       selectedCartItemIds={getSelectedCartItemIds(orderItems)}
     />
   );

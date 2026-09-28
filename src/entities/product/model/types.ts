@@ -17,6 +17,8 @@ export interface ProductOption {
   id: string;
   label: string;
   price: number;
+  commerceProductId?: number;
+  mockCommerceProductId?: number;
 }
 
 export interface ProductDetail {

@@ -115,7 +115,11 @@ export function HomeProductRail({
                 />
               </Link>
               <button
-                aria-label={`${product.name} 장바구니에 담고 이동`}
+                aria-label={
+                  pendingProductId === product.id
+                    ? `${product.name} 장바구니 처리 중`
+                    : `${product.name} 장바구니에 담고 이동`
+                }
                 className="bg-background/80 focus-visible:ring-ring absolute top-2 right-2 grid size-8 place-items-center rounded-full focus-visible:ring-2 disabled:opacity-50"
                 disabled={
                   CART_WRITE_MODE === 'disabled' ||
@@ -128,14 +132,20 @@ export function HomeProductRail({
                 }}
                 type="button"
               >
-                <Image
-                  alt=""
-                  aria-hidden="true"
-                  height={16}
-                  src="/icons/home/product-cart.svg"
-                  width={16}
-                />
-                {pendingProductId === product.id ? <span className="sr-only">처리 중</span> : null}
+                {pendingProductId === product.id ? (
+                  <span
+                    aria-hidden="true"
+                    className="border-primary size-4 animate-spin rounded-full border-2 border-t-transparent"
+                  />
+                ) : (
+                  <Image
+                    alt=""
+                    aria-hidden="true"
+                    height={16}
+                    src="/icons/home/product-cart.svg"
+                    width={16}
+                  />
+                )}
               </button>
             </div>
             <Link className="mt-2 block" href={`/product/${product.id}`}>

@@ -6,6 +6,7 @@ import type { ProductDetail, RelatedProduct } from '@/entities/product/model/typ
 import { ProductCard } from '@/entities/product/ui/product-card';
 import { ProductCartActions } from '@/features/product-cart/ui/product-cart-actions';
 import { ProductFavoriteButton } from '@/features/product-favorite/ui/product-favorite-button';
+import { CART_HREF } from '@/shared/config/cart-write-mode';
 import { BackButton } from '@/shared/ui/back-button';
 
 interface ProductDetailPageProps {
@@ -218,7 +219,7 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
         <Link
           aria-label="장바구니로 이동"
           className="focus-visible:ring-ring ml-auto grid size-10 place-items-center rounded-full focus-visible:ring-2"
-          href="/cart"
+          href={CART_HREF}
         >
           <Image
             alt=""

@@ -145,12 +145,23 @@ export function ProductCartOptionSheet({
             </p>
           ) : null}
           <button
+            aria-label={isPending ? `${actionLabel} 처리 중` : actionLabel}
             className="bg-primary text-primary-foreground focus-visible:ring-ring h-[60px] w-full rounded-xl text-lg font-semibold focus-visible:ring-2 disabled:opacity-50"
             disabled={selectedCount === 0 || isPending}
             onClick={onAdd}
             type="button"
           >
-            {isPending ? '처리 중' : actionLabel}
+            {isPending ? (
+              <span className="inline-flex items-center justify-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+                />
+                처리 중
+              </span>
+            ) : (
+              actionLabel
+            )}
           </button>
         </div>
       </section>

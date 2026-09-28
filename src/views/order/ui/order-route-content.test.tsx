@@ -39,4 +39,14 @@ describe('OrderRouteContent', () => {
     expect(useCartQueryMock).toHaveBeenCalledWith(false);
     expect(page.props).toMatchObject({ isLoading: true });
   });
+
+  it('로컬 미리보기에서는 서버 장바구니를 조회하지 않고 결제를 비활성화한다', () => {
+    useAuthSessionMock.mockReturnValue({ state: 'complete' });
+    useCartQueryMock.mockReturnValue({ data: undefined, error: null, isPending: false });
+
+    const page = OrderRouteContent({ localPreview: true, selectedItemIds: ['local-item'] });
+
+    expect(useCartQueryMock).toHaveBeenCalledWith(false);
+    expect(page.props).toMatchObject({ paymentDisabled: true });
+  });
 });

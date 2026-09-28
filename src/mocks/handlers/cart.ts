@@ -10,7 +10,43 @@ import { productMocks } from '@/entities/product/model/mock';
 import type { ApiSuccessResponse } from '@/shared/api/api-response';
 
 let nextCartItemId = 1;
-let cartItems: CartItemDto[] = [];
+const cartItemsByUser = new Map<string, CartItemDto[]>();
+
+function getUserKey(request: Request) {
+  return request.headers.get('Authorization') ?? request.headers.get('X-User-Id') ?? 'anonymous';
+}
+
+function getCartItems(request: Request) {
+  const userKey = getUserKey(request);
+  const items = cartItemsByUser.get(userKey) ?? [];
+  cartItemsByUser.set(userKey, items);
+  return items;
+}
+
+function getMockCartProduct(productId: number) {
+  for (const product of productMocks) {
+    if (product.mockCommerceProductId === productId) {
+      return {
+        isAvailable: product.isAvailable,
+        name: product.name,
+        price: product.price,
+        product,
+      };
+    }
+
+    const option = product.options?.find((item) => item.mockCommerceProductId === productId);
+    if (option) {
+      return {
+        isAvailable: product.isAvailable,
+        name: `${product.name} ${option.label}`,
+        price: option.price,
+        product,
+      };
+    }
+  }
+
+  return undefined;
+}
 
 function successResponse<T>(data: T, message: string): ApiSuccessResponse<T> {
   return {
@@ -24,19 +60,20 @@ function successResponse<T>(data: T, message: string): ApiSuccessResponse<T> {
 
 export function resetCartMock() {
   nextCartItemId = 1;
-  cartItems = [];
+  cartItemsByUser.clear();
 }
 
 export const cartHandlers = [
-  http.get('*/api/carts', () => {
+  http.get('*/api/carts', ({ request }) => {
+    const cartItems = getCartItems(request);
     const cart: CartResponseDto = { cartId: 1, items: cartItems };
     return HttpResponse.json(successResponse(cart, '장바구니를 조회했습니다.'));
   }),
   http.post('*/api/carts/items', async ({ request }) => {
     const input = (await request.json()) as AddCartItemRequestDto;
-    const product = productMocks.find((item) => item.mockCommerceProductId === input.productId);
+    const mockProduct = getMockCartProduct(input.productId);
 
-    if (!product || !Number.isSafeInteger(input.quantity) || input.quantity < 1) {
+    if (!mockProduct || !Number.isSafeInteger(input.quantity) || input.quantity < 1) {
       return HttpResponse.json(
         {
           status: 'ERROR',
@@ -49,6 +86,20 @@ export const cartHandlers = [
       );
     }
 
+    if (!mockProduct.isAvailable) {
+      return HttpResponse.json(
+        {
+          status: 'ERROR',
+          message: '현재 판매할 수 없는 상품입니다.',
+          data: null,
+          error: 'CART-PRODUCT-NOT-AVAILABLE',
+          timestamp: new Date().toISOString(),
+        },
+        { status: 409 },
+      );
+    }
+
+    const cartItems = getCartItems(request);
     const existingItem = cartItems.find((item) => item.productId === input.productId);
 
     if (existingItem) {
@@ -64,12 +115,12 @@ export const cartHandlers = [
     const cartItem: CartItemDto = {
       cartItemId: nextCartItemId++,
       productId: input.productId,
-      productName: product.name,
-      thumbnailUrl: product.thumbnailUrl ?? product.imageUrl ?? '',
-      price: product.price,
+      productName: mockProduct.name,
+      thumbnailUrl: mockProduct.product.thumbnailUrl ?? mockProduct.product.imageUrl ?? '',
+      price: mockProduct.price,
       quantity: input.quantity,
       status: 'ON_SALE',
-      purchasable: product.isAvailable,
+      purchasable: true,
     };
     cartItems.push(cartItem);
 

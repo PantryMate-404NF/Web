@@ -25,11 +25,13 @@ export function OrderRouteContent({
   const { state: authState } = useAuthSession();
   const isAuthLoading = apiEnabled === undefined && authState === 'loading';
   const shouldUseApi = apiEnabled ?? (authState === 'complete' || authState === 'onboarding');
-  const shouldQuery = shouldUseApi && !previewItems;
+  const shouldQuery = shouldUseApi && !previewItems && !localPreview;
   const { data, error, isPending, refetch } = useCartQuery(shouldQuery);
 
   if (localPreview) {
-    return <OrderPage orderReturnTo={orderReturnTo} selectedItemIds={selectedItemIds} />;
+    return (
+      <OrderPage orderReturnTo={orderReturnTo} paymentDisabled selectedItemIds={selectedItemIds} />
+    );
   }
 
   if (previewItems) {

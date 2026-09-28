@@ -1,7 +1,12 @@
 const LOGIN_RETURN_TO_KEY = 'pantry-mate:login-return-to';
 
 export function getSafeLoginReturnTo(returnTo?: string | null): string | undefined {
-  if (!returnTo?.startsWith('/') || returnTo.startsWith('//')) return undefined;
+  if (
+    !returnTo?.startsWith('/') ||
+    returnTo.startsWith('//') ||
+    /[\\\u0000-\u001f\u007f]/.test(returnTo)
+  )
+    return undefined;
   return returnTo;
 }
 

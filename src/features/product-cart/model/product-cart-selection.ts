@@ -2,6 +2,13 @@ import type { CartProduct } from '@/entities/cart/model/cart-store';
 import type { ProductDetail, ProductOption } from '@/entities/product/model/types';
 
 export type ProductOptionQuantities = Record<string, number>;
+export type CartRequestMode = 'api' | 'mock-api';
+
+export interface SelectedCartRequest {
+  optionId: string;
+  productId: number;
+  quantity: number;
+}
 
 export function createInitialOptionQuantities(options: ProductOption[]): ProductOptionQuantities {
   return Object.fromEntries(options.map((option, index) => [option.id, index === 0 ? 1 : 0]));
@@ -18,8 +25,42 @@ export function updateOptionQuantity(
   };
 }
 
-export function getSelectedProductQuantity(quantities: ProductOptionQuantities): number {
-  return Object.values(quantities).reduce((total, quantity) => total + quantity, 0);
+export function getSelectedCartRequests(
+  product: ProductDetail,
+  quantities: ProductOptionQuantities,
+  mode: CartRequestMode,
+): SelectedCartRequest[] | undefined {
+  const options = product.options ?? [
+    {
+      id: 'default',
+      label: product.weight,
+      price: product.price,
+      commerceProductId: product.commerceProductId,
+      mockCommerceProductId: product.mockCommerceProductId,
+    } satisfies ProductOption,
+  ];
+  const selectedOptions = options.filter((option) => (quantities[option.id] ?? 0) > 0);
+  const requests = selectedOptions.map((option) => ({
+    optionId: option.id,
+    productId: mode === 'mock-api' ? option.mockCommerceProductId : option.commerceProductId,
+    quantity: quantities[option.id] ?? 0,
+  }));
+
+  if (requests.some((request) => request.productId === undefined)) return undefined;
+
+  return requests.map((request) => ({ ...request, productId: request.productId as number }));
+}
+
+export function hasCartProductIdentifiers(product: ProductDetail, mode: CartRequestMode): boolean {
+  const options = product.options;
+
+  if (!options) {
+    return Boolean(mode === 'mock-api' ? product.mockCommerceProductId : product.commerceProductId);
+  }
+
+  return options.every((option) =>
+    Boolean(mode === 'mock-api' ? option.mockCommerceProductId : option.commerceProductId),
+  );
 }
 
 export function selectCartProducts(

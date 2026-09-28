@@ -10,12 +10,13 @@ import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 import { buildOrderHref } from '@/features/order/model/order-sheet';
 import {
   createInitialOptionQuantities,
-  getSelectedProductQuantity,
+  getSelectedCartRequests,
+  hasCartProductIdentifiers,
   selectCartProducts,
   updateOptionQuantity,
 } from '@/features/product-cart/model/product-cart-selection';
 import { useAddProductToCart } from '@/features/product-cart/model/use-add-product-to-cart';
-import { CART_WRITE_MODE } from '@/shared/config/cart-write-mode';
+import { CART_HREF, CART_WRITE_MODE } from '@/shared/config/cart-write-mode';
 
 import { ProductCartOptionSheet } from './product-cart-option-sheet';
 
@@ -40,8 +41,6 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
 export function ProductCartActions({ product }: ProductCartActionsProps) {
   const router = useRouter();
   const options = getProductOptions(product);
-  const apiProductId =
-    CART_WRITE_MODE === 'mock-api' ? product.mockCommerceProductId : product.commerceProductId;
   const addPreviewProducts = useCartStore((state) => state.addProducts);
   const { restore, state: authState } = useAuthSession();
   const { addProduct, error, isPending, loadCart, reset } = useAddProductToCart();
@@ -49,13 +48,13 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
   const [actionError, setActionError] = useState<string>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [pendingPurchaseCartItemId, setPendingPurchaseCartItemId] = useState<number>();
   const [showToast, setShowToast] = useState(false);
   const [quantities, setQuantities] = useState(() => createInitialOptionQuantities(options));
   const addTriggerRef = useRef<HTMLButtonElement>(null);
   const buyTriggerRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
   const isSubmittingRef = useRef(false);
+  const pendingCartItemIdsRef = useRef(new Map<number, number>());
 
   useEffect(() => {
     if (!isOpen) return;
@@ -116,15 +115,12 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
     reset();
     setActionError(undefined);
     setAction(nextAction);
-    setPendingPurchaseCartItemId(undefined);
+    pendingCartItemIdsRef.current.clear();
     setIsOpen(true);
   }
 
   async function handleAdd() {
     if (!product.isAvailable || CART_WRITE_MODE === 'disabled') return;
-
-    const quantity = getSelectedProductQuantity(quantities);
-    if (quantity === 0) return;
 
     if (CART_WRITE_MODE === 'preview') {
       const selectedProducts = selectCartProducts(product, quantities);
@@ -144,7 +140,14 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
       return;
     }
 
-    if (!apiProductId) return;
+    if (CART_WRITE_MODE !== 'api' && CART_WRITE_MODE !== 'mock-api') return;
+
+    const cartRequests = getSelectedCartRequests(product, quantities, CART_WRITE_MODE);
+    if (!cartRequests) {
+      setActionError('선택한 옵션의 상품 정보가 아직 준비되지 않았어요.');
+      return;
+    }
+    if (cartRequests.length === 0) return;
 
     setActionError(undefined);
     isSubmittingRef.current = true;
@@ -158,16 +161,22 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
         return;
       }
 
-      const cartItemId =
-        pendingPurchaseCartItemId ??
-        (await addProduct({ productId: apiProductId, quantity })).cartItemId;
+      for (const request of cartRequests) {
+        if (pendingCartItemIdsRef.current.has(request.productId)) continue;
+
+        const result = await addProduct({
+          productId: request.productId,
+          quantity: request.quantity,
+        });
+        pendingCartItemIdsRef.current.set(request.productId, result.cartItemId);
+      }
 
       if (action === 'buy') {
-        setPendingPurchaseCartItemId(cartItemId);
-
         try {
           const cart = await loadCart();
-          router.push(buildOrderHref(cart.cartId, [String(cartItemId)]));
+          router.push(
+            buildOrderHref(cart.cartId, [...pendingCartItemIdsRef.current.values()].map(String)),
+          );
         } catch {
           setActionError('상품은 담겼지만 주문 정보를 불러오지 못했어요. 다시 시도해 주세요.');
         }
@@ -176,6 +185,7 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
 
       setIsOpen(false);
       setShowToast(true);
+      pendingCartItemIdsRef.current.clear();
     } catch (caughtError) {
       setActionError(
         caughtError instanceof Error ? caughtError.message : '장바구니에 담지 못했어요.',
@@ -189,7 +199,8 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
   const isActionDisabled =
     !product.isAvailable ||
     CART_WRITE_MODE === 'disabled' ||
-    ((CART_WRITE_MODE === 'api' || CART_WRITE_MODE === 'mock-api') && !apiProductId);
+    ((CART_WRITE_MODE === 'api' || CART_WRITE_MODE === 'mock-api') &&
+      !hasCartProductIdentifiers(product, CART_WRITE_MODE));
   const errorMessage = actionError ?? (error instanceof Error ? error.message : undefined);
 
   return (
@@ -203,7 +214,7 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
           <span>상품을 장바구니에 담았어요.</span>
           <Link
             className="focus-visible:ring-ring rounded-sm font-semibold underline focus-visible:ring-2"
-            href={CART_WRITE_MODE === 'preview' ? '/cart?preview=local' : '/cart'}
+            href={CART_HREF}
           >
             장바구니 보기
           </Link>

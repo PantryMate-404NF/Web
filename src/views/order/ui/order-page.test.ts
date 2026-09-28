@@ -37,6 +37,18 @@ describe('OrderSheet', () => {
     );
   });
 
+  it('로컬 미리보기에서는 결제 버튼과 안내를 제공한다', () => {
+    const markup = renderToStaticMarkup(
+      createElement(OrderSheet, {
+        items: orderItems,
+        paymentDisabled: true,
+      }),
+    );
+
+    expect(markup).toContain('로컬 미리보기에서는 결제를 진행할 수 없어요.');
+    expect(markup).toContain('disabled=""');
+  });
+
   it('피그마 기준 섹션 높이와 구분선을 유지한다', () => {
     const markup = renderToStaticMarkup(createElement(OrderSheet, { items: orderItems }));
 
