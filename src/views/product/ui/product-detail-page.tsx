@@ -115,7 +115,7 @@ export function ProductDetailImages({ product }: { product: ProductDetail }) {
   return (
     <section
       aria-label="상품 상세 이미지"
-      className="border-border flex flex-col gap-6 border-t-8 px-4 py-4"
+      className="flex flex-col gap-6 border-t-8 border-[var(--surface-secondary)] px-4 py-4"
     >
       {product.detailImageUrls.map((imageUrl, index) => (
         <Image
@@ -142,7 +142,7 @@ function RelatedProducts({
   title: string;
 }) {
   return (
-    <section className="border-border relative border-t-8 p-4" id={id}>
+    <section className="relative border-t-8 border-[var(--surface-secondary)] p-4" id={id}>
       <div className="w-[281px]">
         <h2 className="text-title-3 leading-[27px] font-semibold">{title}</h2>
         <button
@@ -212,7 +212,7 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
   ];
 
   return (
-    <main className="mobile-page bg-background overflow-x-clip pb-[52px]">
+    <main className="mobile-page bg-background overflow-x-clip pb-16">
       <header className="bg-background relative flex h-10 items-center px-2">
         <BackButton />
         <h1 className="text-title-3 absolute left-1/2 -translate-x-1/2 font-semibold">상품 상세</h1>
@@ -269,7 +269,7 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
         </div>
       </section>
 
-      <section className="border-border border-t-8 px-4 py-4">
+      <section className="border-t-8 border-[var(--surface-secondary)] px-4 py-4">
         <h2 className="sr-only">배송 및 판매 정보</h2>
         <dl className="space-y-2">
           <ProductInfoRow label="배송" value={product.delivery} />
@@ -285,7 +285,10 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
         title="다른 고객이 많이 본 연관 상품"
       />
 
-      <section className="border-border border-t-8 px-4 py-4" id="product-detail">
+      <section
+        className="border-t-8 border-[var(--surface-secondary)] px-4 py-4"
+        id="product-detail"
+      >
         <h2 className="sr-only">상품 상세정보</h2>
         <dl className="space-y-2">
           {detailRows.map((row) => (

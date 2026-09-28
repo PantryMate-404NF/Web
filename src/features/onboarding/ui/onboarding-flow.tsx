@@ -286,7 +286,7 @@ export function TastePreferenceSelector({
             width={212}
           />
           <span
-            className="pointer-events-none absolute top-0 z-10 size-[19px] -translate-x-1/2 rounded-full bg-[var(--primitive-primary-400)] mix-blend-color"
+            className="pointer-events-none absolute top-0 z-10 size-[19px] -translate-x-1/2 rounded-full bg-[var(--primitive-primary-500)] mix-blend-color"
             style={{ left: getTasteSelectionPosition(value) }}
           />
         </div>
@@ -420,7 +420,7 @@ export function OnboardingFlow() {
   }
 
   return (
-    <main className="mobile-page bg-background min-h-dvh pt-[env(safe-area-inset-top)] pb-24">
+    <main className="mobile-page bg-background flex min-h-dvh flex-col pt-[env(safe-area-inset-top)]">
       <OnboardingHeader onBack={handleBack} onSkip={handleSkip} step={step} />
 
       {step === 1 ? (
@@ -552,7 +552,7 @@ export function OnboardingFlow() {
         </>
       ) : null}
 
-      <div className="fixed inset-x-0 bottom-14 z-10 mx-auto w-full max-w-[390px] px-4">
+      <footer className="mt-auto w-full px-4 pt-4 pb-14">
         {saveError ? (
           <p className="text-body-4 text-destructive mb-2 text-center" role="alert">
             {saveError}
@@ -566,7 +566,7 @@ export function OnboardingFlow() {
         >
           {isSaving ? '저장 중...' : actionLabel}
         </Button>
-      </div>
+      </footer>
     </main>
   );
 }
