@@ -6,14 +6,20 @@ import Link from 'next/link';
 import { ORDER_HISTORY_MOCK, type OrderHistoryMock } from '@/entities/order/model/mock';
 import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
 
-const orderStatuses = [
-  { label: '결제완료', count: 1 },
-  { label: '배송준비', count: 0 },
-  { label: '배송 중', count: 0 },
-  { label: '배송완료', count: 3 },
-] as const;
+type OrderListStatus = 'paid' | 'preparing';
 
-function OrderStatusSummary() {
+const orderStatuses = (status: OrderListStatus) =>
+  [
+    { label: '결제완료', count: status === 'paid' ? 1 : 0 },
+    { label: '배송준비', count: status === 'preparing' ? 1 : 0 },
+    { label: '배송 중', count: 0 },
+    { label: '배송완료', count: 3 },
+  ] as const;
+
+function OrderStatusSummary({ status }: { status: OrderListStatus }) {
+  const activeIndex = status === 'paid' ? 0 : 1;
+  const statuses = orderStatuses(status);
+
   return (
     <>
       <div aria-hidden="true" className="h-2 w-full bg-[var(--primitive-grey-100)]" />
@@ -25,31 +31,33 @@ function OrderStatusSummary() {
           </p>
         </div>
         <ol className="mt-6 flex items-start justify-center px-1.5">
-          {orderStatuses.map((status, index) => (
-            <li className="flex items-start" key={status.label}>
+          {statuses.map((item, index) => (
+            <li className="flex items-start" key={item.label}>
               <div className="inline-flex w-10 flex-col items-center gap-[5px]">
                 <strong
                   className={`text-2xl leading-9 font-semibold ${
-                    index === 0 ? 'text-[var(--primitive-primary-700)]' : 'text-foreground'
+                    index === activeIndex
+                      ? 'text-[var(--primitive-primary-700)]'
+                      : 'text-foreground'
                   }`}
                 >
-                  {status.count}
+                  {item.count}
                 </strong>
                 <span
                   className={`text-xs leading-4 whitespace-nowrap ${
-                    index === 0
+                    index === activeIndex
                       ? 'font-semibold text-[var(--primitive-primary-700)]'
                       : 'text-foreground font-medium'
                   }`}
                 >
-                  {status.label === '배송준비' ? (
-                    <Link href="/mypage/delivery">{status.label}</Link>
+                  {status === 'paid' && item.label === '배송준비' ? (
+                    <Link href="/mypage/orders/preparing">{item.label}</Link>
                   ) : (
-                    status.label
+                    item.label
                   )}
                 </span>
               </div>
-              {index < orderStatuses.length - 1 ? (
+              {index < statuses.length - 1 ? (
                 <span
                   className="flex size-8 shrink-0 items-center justify-center pt-1"
                   aria-hidden="true"
@@ -66,7 +74,9 @@ function OrderStatusSummary() {
   );
 }
 
-function OrderHistoryItem({ order }: { order: OrderHistoryMock }) {
+function OrderHistoryItem({ order, status }: { order: OrderHistoryMock; status: OrderListStatus }) {
+  const isPreparing = status === 'preparing';
+
   return (
     <li className="px-4 py-4">
       <div className="flex items-center justify-between">
@@ -83,7 +93,9 @@ function OrderHistoryItem({ order }: { order: OrderHistoryMock }) {
       <div aria-hidden="true" className="bg-border my-4 h-px" />
 
       <div className="flex items-center justify-between">
-        <h2 className="text-base leading-6 font-semibold">{order.status}</h2>
+        <h2 className="text-base leading-6 font-semibold">
+          {isPreparing ? '배송 준비' : order.status}
+        </h2>
         <span className="text-disabled flex items-center gap-0 text-xs leading-4 font-medium">
           {order.orderNumber}
           <Image
@@ -108,9 +120,11 @@ function OrderHistoryItem({ order }: { order: OrderHistoryMock }) {
               width={76}
             />
             <div className="min-w-0">
-              <p className="text-disabled mb-1 text-xs leading-[1.5] font-medium">
-                {order.orderedAt}
-              </p>
+              {!isPreparing ? (
+                <p className="text-disabled mb-1 text-xs leading-[1.5] font-medium">
+                  {order.orderedAt}
+                </p>
+              ) : null}
               <p className="text-sm leading-5 font-medium">{item.name}</p>
               <p className="mt-1 text-lg leading-7 font-bold">
                 {item.price.toLocaleString()}원
@@ -122,18 +136,29 @@ function OrderHistoryItem({ order }: { order: OrderHistoryMock }) {
           </li>
         ))}
       </ul>
+
+      {isPreparing ? (
+        <Link
+          className="mt-4 flex h-10 w-full items-center justify-center rounded-xl bg-[var(--primitive-primary-200)] text-sm leading-5 font-semibold"
+          href="/mypage/delivery"
+        >
+          배송조회
+        </Link>
+      ) : null}
     </li>
   );
 }
 
-export function OrderHistoryPage() {
+export function OrderHistoryPage({ status = 'paid' }: { status?: OrderListStatus }) {
+  const isPreparing = status === 'preparing';
+
   return (
     <main className="mobile-page bg-background flex min-h-dvh flex-col">
       <header className="border-border relative flex h-14 items-center justify-center border-b px-4">
         <Link
-          aria-label="마이페이지로 돌아가기"
+          aria-label="이전 화면으로 돌아가기"
           className="absolute left-4 grid size-8 place-items-center"
-          href="/mypage"
+          href={isPreparing ? '/mypage/orders' : '/mypage'}
         >
           <Image
             alt=""
@@ -146,11 +171,14 @@ export function OrderHistoryPage() {
         <h1 className="text-heading-4 font-semibold">주문 / 배송 목록</h1>
       </header>
 
-      <OrderStatusSummary />
+      <OrderStatusSummary status={status} />
 
-      <section className="flex-1" aria-label="결제 완료 주문 목록">
+      <section
+        className="flex-1"
+        aria-label={isPreparing ? '배송 준비 주문 목록' : '결제 완료 주문 목록'}
+      >
         <ul>
-          <OrderHistoryItem order={ORDER_HISTORY_MOCK} />
+          <OrderHistoryItem order={ORDER_HISTORY_MOCK} status={status} />
         </ul>
       </section>
 
