@@ -2,6 +2,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { ORDER_HISTORY_MOCK } from '@/entities/order/model/mock';
+
 import { DeliveryTrackingCopyButton } from './delivery-tracking-copy-button';
 
 const deliveryDetails = [
@@ -76,27 +78,39 @@ function DeliveryProgress() {
   );
 }
 
-function PurchaseProduct() {
+function PurchaseProducts() {
   return (
-    <section className="border-border border-b-8 pb-4" aria-labelledby="purchase-product-title">
-      <SectionTitle id="purchase-product-title">구매 상품</SectionTitle>
-      <div className="flex items-center gap-2 px-3 pt-2">
-        <Image
-          alt="완전방사 무항생제 유정란"
-          className="size-[76px] shrink-0 rounded-md object-cover"
-          height={76}
-          src="/images/delivery/antibiotic-free-eggs.png"
-          width={76}
-        />
-        <div className="flex min-w-0 flex-col gap-1">
-          <p className="text-label-4 text-disabled font-medium">2026.09.28</p>
-          <div>
-            <p className="text-body-4 font-medium">완전방사 무항생제 유정란</p>
-            <p className="text-title-3 font-bold">6,700원</p>
-          </div>
-        </div>
-      </div>
-    </section>
+    <>
+      <section className="pb-4" aria-labelledby="purchase-product-title">
+        <SectionTitle id="purchase-product-title">구매 상품</SectionTitle>
+        <ul className="space-y-3 px-3 pt-2">
+          {ORDER_HISTORY_MOCK.items.map((item) => (
+            <li className="flex items-center gap-2" key={item.id}>
+              <Image
+                alt=""
+                className="size-[76px] shrink-0 rounded-lg object-cover"
+                height={76}
+                src={item.imageSrc}
+                width={76}
+              />
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <p className="text-disabled text-xs leading-4 font-medium">
+                  {ORDER_HISTORY_MOCK.orderedAt}
+                </p>
+                <p className="text-sm leading-5 font-medium">{item.name}</p>
+                <p className="text-title-3 font-bold">
+                  {item.price.toLocaleString()}원
+                  <span className="text-disabled ml-1 text-sm leading-5 font-medium">
+                    / {item.quantity}개
+                  </span>
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <div aria-hidden="true" className="h-2 w-full bg-[var(--primitive-grey-50)]" />
+    </>
   );
 }
 
@@ -104,13 +118,11 @@ function DeliveryDetails() {
   return (
     <section aria-labelledby="delivery-detail-title">
       <SectionTitle id="delivery-detail-title">배송 상세</SectionTitle>
-      <dl className="border-border grid grid-cols-[70px_minmax(0,1fr)] gap-x-5 gap-y-3 border-b px-3 py-4">
+      <dl className="border-border grid grid-cols-[70px_minmax(0,1fr)] gap-x-5 gap-y-3 border-b px-3 py-5">
         {deliveryDetails.map(([label, value]) => (
           <div className="contents" key={label}>
-            <dt className="text-base leading-6 font-medium text-[var(--primitive-grey-400)]">
-              {label}
-            </dt>
-            <dd className="text-text-secondary relative text-base leading-6 font-medium">
+            <dt className="text-text-tertiary font-['Pretendard'] text-base leading-6">{label}</dt>
+            <dd className="text-text-secondary relative font-['Pretendard'] text-base leading-6">
               {label === '운송장번호' ? (
                 <span className="relative inline-block">
                   {value}
@@ -129,16 +141,16 @@ function DeliveryDetails() {
 
 function DeliveryHistory() {
   return (
-    <section aria-labelledby="delivery-history-title">
+    <section className="pt-2" aria-labelledby="delivery-history-title">
       <SectionTitle id="delivery-history-title">배송 현황</SectionTitle>
       <ul>
         {deliveryHistory.map((history) => (
           <li className="flex items-center gap-4 p-3" key={`${history.date}-${history.time}`}>
             <time className="text-label-4 text-disabled w-16 shrink-0 text-center font-medium">
-              <span className="block">{history.date}</span>
-              <span className="block">{history.time}</span>
+              <span className="text-text-tertiary block text-xs leading-4">{history.date}</span>
+              <span className="text-text-tertiary block text-xs leading-4">{history.time}</span>
             </time>
-            <p className="text-body-4 text-text-secondary font-medium">{history.status}</p>
+            <p className="text-text-secondary text-sm leading-5 font-medium">{history.status}</p>
           </li>
         ))}
       </ul>
@@ -153,7 +165,7 @@ export function DeliveryTrackingPage() {
         <Link
           aria-label="이전 화면"
           className="focus-visible:ring-ring absolute left-4 grid size-10 place-items-center rounded-full focus-visible:ring-2"
-          href="/mypage"
+          href="/mypage/orders"
         >
           <Image alt="" aria-hidden="true" height={24} src="/icons/delivery/back.svg" width={24} />
         </Link>
@@ -162,7 +174,7 @@ export function DeliveryTrackingPage() {
 
       <div className="mx-4">
         <DeliveryProgress />
-        <PurchaseProduct />
+        <PurchaseProducts />
         <DeliveryDetails />
         <DeliveryHistory />
         <button

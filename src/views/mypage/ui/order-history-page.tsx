@@ -7,57 +7,58 @@ import { ORDER_HISTORY_MOCK, type OrderHistoryMock } from '@/entities/order/mode
 import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
 
 const orderStatuses = [
-  { label: '결제완료', count: 1 },
-  { label: '배송준비', count: 0 },
+  { label: '결제완료', count: 0 },
+  { label: '배송준비', count: 1 },
   { label: '배송 중', count: 0 },
   { label: '배송완료', count: 3 },
 ] as const;
 
 function OrderStatusSummary() {
   return (
-    <section
-      className="bg-muted border-surface-secondary border-y-8 px-4 py-4"
-      aria-label="주문 상태 상세현황"
-    >
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm leading-5 font-semibold">상세현황</h2>
-        <p className="text-disabled text-sm leading-5 font-medium">
-          주문취소/환불 <strong className="font-semibold text-[var(--primitive-black)]">1</strong>
-        </p>
-      </div>
-      <ol className="mt-6 flex items-start justify-center px-1.5">
-        {orderStatuses.map((status, index) => (
-          <li className="flex items-start" key={status.label}>
-            <div className="inline-flex w-10 flex-col items-center gap-[5px]">
-              <strong
-                className={`text-2xl leading-9 font-semibold ${
-                  index === 0 ? 'text-[var(--primitive-primary-700)]' : 'text-foreground'
-                }`}
-              >
-                {status.count}
-              </strong>
-              <span
-                className={`text-xs leading-4 whitespace-nowrap ${
-                  index === 0
-                    ? 'font-semibold text-[var(--primitive-primary-700)]'
-                    : 'text-foreground font-medium'
-                }`}
-              >
-                {status.label}
-              </span>
-            </div>
-            {index < orderStatuses.length - 1 ? (
-              <span
-                className="flex size-8 shrink-0 items-center justify-center pt-1"
-                aria-hidden="true"
-              >
-                <ChevronRight className="text-disabled size-3" />
-              </span>
-            ) : null}
-          </li>
-        ))}
-      </ol>
-    </section>
+    <>
+      <div aria-hidden="true" className="h-2 w-full bg-[var(--primitive-grey-100)]" />
+      <section className="bg-muted px-4 py-4" aria-label="주문 상태 상세현황">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm leading-5 font-semibold">상세현황</h2>
+          <p className="text-disabled text-sm leading-5 font-medium">
+            주문취소/환불 <strong className="font-semibold text-[var(--primitive-black)]">1</strong>
+          </p>
+        </div>
+        <ol className="mt-6 flex items-start justify-center px-1.5">
+          {orderStatuses.map((status, index) => (
+            <li className="flex items-start" key={status.label}>
+              <div className="inline-flex w-10 flex-col items-center gap-[5px]">
+                <strong
+                  className={`text-2xl leading-9 font-semibold ${
+                    index === 1 ? 'text-[var(--primitive-primary-700)]' : 'text-foreground'
+                  }`}
+                >
+                  {status.count}
+                </strong>
+                <span
+                  className={`text-xs leading-4 whitespace-nowrap ${
+                    index === 1
+                      ? 'font-semibold text-[var(--primitive-primary-700)]'
+                      : 'text-foreground font-medium'
+                  }`}
+                >
+                  {status.label}
+                </span>
+              </div>
+              {index < orderStatuses.length - 1 ? (
+                <span
+                  className="flex size-8 shrink-0 items-center justify-center pt-1"
+                  aria-hidden="true"
+                >
+                  <ChevronRight className="text-disabled size-3" />
+                </span>
+              ) : null}
+            </li>
+          ))}
+        </ol>
+      </section>
+      <div aria-hidden="true" className="h-2 w-full bg-[var(--primitive-grey-100)]" />
+    </>
   );
 }
 
@@ -92,17 +93,20 @@ function OrderHistoryItem({ order }: { order: OrderHistoryMock }) {
         </span>
       </div>
 
-      <ul className="mt-5 space-y-5">
+      <ul className="mt-4 space-y-4">
         {order.items.map((item) => (
-          <li className="flex items-center gap-4" key={item.id}>
+          <li className="flex items-start gap-2" key={item.id}>
             <Image
               alt=""
-              className="size-20 shrink-0 rounded-xl object-cover"
-              height={80}
+              className="size-[76px] shrink-0 rounded-xl object-cover"
+              height={76}
               src={item.imageSrc}
-              width={80}
+              width={76}
             />
-            <div className="mb-7 min-w-0">
+            <div className="min-w-0">
+              <p className="text-disabled mb-1 text-xs leading-[1.5] font-medium">
+                {order.orderedAt}
+              </p>
               <p className="text-sm leading-5 font-medium">{item.name}</p>
               <p className="mt-1 text-lg leading-7 font-bold">
                 {item.price.toLocaleString()}원
@@ -114,6 +118,12 @@ function OrderHistoryItem({ order }: { order: OrderHistoryMock }) {
           </li>
         ))}
       </ul>
+      <Link
+        className="text-foreground mt-4 flex h-10 w-full items-center justify-center rounded-sm bg-[var(--primitive-primary-300)] text-base leading-6 font-semibold"
+        href="/mypage/delivery"
+      >
+        배송조회
+      </Link>
     </li>
   );
 }
