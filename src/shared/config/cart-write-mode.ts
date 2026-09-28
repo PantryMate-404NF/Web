@@ -10,7 +10,7 @@ export function getCartWriteMode({
   isDevelopment: boolean;
 }): CartWriteMode {
   if (apiEnabled) return 'api';
-  if (apiMockingEnabled) return 'mock-api';
+  if (isDevelopment && apiMockingEnabled) return 'mock-api';
   return isDevelopment ? 'preview' : 'disabled';
 }
 

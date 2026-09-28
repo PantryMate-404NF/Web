@@ -24,6 +24,12 @@ describe('getCartWriteMode', () => {
     ).toBe('mock-api');
   });
 
+  it('운영 환경에서는 공개 목업 플래그가 켜져도 목 상품 ID를 사용하지 않는다', () => {
+    expect(
+      getCartWriteMode({ apiEnabled: false, apiMockingEnabled: true, isDevelopment: false }),
+    ).toBe('disabled');
+  });
+
   it('로컬 미리보기 장바구니 경로를 일관되게 반환한다', () => {
     expect(getCartHref('preview')).toBe('/cart?preview=local');
     expect(getCartHref('api')).toBe('/cart');
