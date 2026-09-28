@@ -20,7 +20,7 @@ describe('addCartItem', () => {
 
     await addCartItem({ productId: 101, quantity: 2 });
 
-    expect(orderPaymentRequestMock).toHaveBeenCalledWith('/carts/items', {
+    expect(orderPaymentRequestMock).toHaveBeenCalledWith('/cart/items', {
       body: { productId: 101, quantity: 2 },
       method: 'POST',
     });

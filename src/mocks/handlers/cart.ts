@@ -64,12 +64,12 @@ export function resetCartMock() {
 }
 
 export const cartHandlers = [
-  http.get('*/api/carts', ({ request }) => {
+  http.get('*/api/cart', ({ request }) => {
     const cartItems = getCartItems(request);
     const cart: CartResponseDto = { cartId: 1, items: cartItems };
     return HttpResponse.json(successResponse(cart, '장바구니를 조회했습니다.'));
   }),
-  http.post('*/api/carts/items', async ({ request }) => {
+  http.post('*/api/cart/items', async ({ request }) => {
     const input = (await request.json()) as AddCartItemRequestDto;
     const mockProduct = getMockCartProduct(input.productId);
 

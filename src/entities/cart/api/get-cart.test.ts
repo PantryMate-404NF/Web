@@ -7,12 +7,12 @@ vi.mock('@/shared/api/order-payment-client', () => ({
 }));
 
 describe('getCart', () => {
-  it('장바구니 복수형 경로로 조회한다', async () => {
+  it('최신 연동 문서의 장바구니 경로로 조회한다', async () => {
     orderPaymentRequestMock.mockResolvedValue({ cartId: 1, items: [] });
     const { getCart } = await import('./get-cart');
 
     await getCart();
 
-    expect(orderPaymentRequestMock).toHaveBeenCalledWith('/carts');
+    expect(orderPaymentRequestMock).toHaveBeenCalledWith('/cart');
   });
 });

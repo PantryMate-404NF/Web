@@ -5,7 +5,7 @@ import type {
 import { orderPaymentRequest } from '@/shared/api/order-payment-client';
 
 export function addCartItem(input: AddCartItemRequestDto) {
-  return orderPaymentRequest<CartItemMutationResponseDto>('/carts/items', {
+  return orderPaymentRequest<CartItemMutationResponseDto>('/cart/items', {
     body: input,
     method: 'POST',
   });
