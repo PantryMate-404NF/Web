@@ -1,9 +1,5 @@
 import { registerDeviceToken } from '../api/register-device-token';
-import {
-  getTokenForGrantedPermission,
-  isPushSupported,
-  requestPushPermissionAndGetToken,
-} from './push-client';
+import { getTokenForGrantedPermission, requestPushPermissionAndGetToken } from './push-client';
 
 export type NotificationPermissionResult =
   'registered' | 'permission-denied' | 'dismissed' | 'unsupported' | 'error';
@@ -24,14 +20,17 @@ export async function registerTokenForSession(state: string): Promise<boolean> {
 }
 
 /** 사용자 동작으로 권한을 요청하고 허용되면 발급한 토큰을 백엔드에 등록합니다. */
-export async function requestAndRegisterDeviceToken(): Promise<NotificationPermissionResult> {
+export async function requestAndRegisterDeviceToken(
+  isSupported: boolean,
+): Promise<NotificationPermissionResult> {
+  if (!isSupported) return 'unsupported';
+
   try {
-    const token = await requestPushPermissionAndGetToken();
+    const token = await requestPushPermissionAndGetToken(isSupported);
 
     if (!token) {
       if (typeof Notification === 'undefined') return 'unsupported';
       if (Notification.permission === 'denied') return 'permission-denied';
-      if (!(await isPushSupported())) return 'unsupported';
       if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
         return 'unsupported';
       }

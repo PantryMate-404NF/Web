@@ -49,14 +49,14 @@ export async function getTokenForGrantedPermission(): Promise<string | null> {
 }
 
 /** 사용자 동작으로 알림 권한을 요청한 뒤 허용된 경우에만 FCM 토큰을 가져옵니다. */
-export async function requestPushPermissionAndGetToken(): Promise<string | null> {
-  if (!canUseBrowserPush() || !firebaseApp || !firebaseVapidKey) return null;
+export async function requestPushPermissionAndGetToken(
+  isSupported: boolean,
+): Promise<string | null> {
+  if (!isSupported || !canUseBrowserPush() || !firebaseApp || !firebaseVapidKey) return null;
 
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') return null;
 
-  const messagingModule = await getMessagingModule();
-  if (!messagingModule) return null;
-
+  const messagingModule = await import('firebase/messaging');
   return getFcmToken(messagingModule);
 }

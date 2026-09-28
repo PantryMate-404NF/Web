@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { getMyProfile } from '@/entities/user/api/get-my-profile';
 import { logout } from '@/features/auth/api/logout';
 import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
+import { isPushSupported as checkPushSupport } from '@/features/notification/model/push-client';
 import {
   getNotificationPermissionMessage,
   requestAndRegisterDeviceToken,
@@ -100,16 +101,20 @@ export function MyPagePage() {
   const [logoutError, setLogoutError] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState<string | null>(null);
   const [isSettingUpNotifications, setIsSettingUpNotifications] = useState(false);
+  const [isPushSupported, setIsPushSupported] = useState<boolean | null>(null);
   const displayName = getMyPageDisplayName(nickname);
   const onboardingSetupHref = getOnboardingSetupHref(state);
 
   const handleEnableNotifications = async () => {
-    if (isSettingUpNotifications) return;
+    if (isSettingUpNotifications || !isPushSupported) return;
 
     setIsSettingUpNotifications(true);
-    const result = await requestAndRegisterDeviceToken();
-    setNotificationMessage(getNotificationPermissionMessage(result));
-    setIsSettingUpNotifications(false);
+    try {
+      const result = await requestAndRegisterDeviceToken(isPushSupported);
+      setNotificationMessage(getNotificationPermissionMessage(result));
+    } finally {
+      setIsSettingUpNotifications(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -141,6 +146,32 @@ export function MyPagePage() {
         if (isMounted) setNickname(profile.nickname);
       })
       .catch(() => undefined);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [state]);
+
+  useEffect(() => {
+    if (state === 'guest' || state === 'loading') return;
+
+    let isMounted = true;
+
+    void checkPushSupport()
+      .then((supported) => {
+        if (!isMounted) return;
+
+        setIsPushSupported(supported);
+        if (!supported) {
+          setNotificationMessage(getNotificationPermissionMessage('unsupported'));
+        }
+      })
+      .catch(() => {
+        if (!isMounted) return;
+
+        setIsPushSupported(false);
+        setNotificationMessage(getNotificationPermissionMessage('unsupported'));
+      });
 
     return () => {
       isMounted = false;
@@ -238,8 +269,14 @@ export function MyPagePage() {
               <SettingsRow {...item} key={item.label} />
             ))}
             <SettingsRow
-              disabled={isSettingUpNotifications}
-              label={isSettingUpNotifications ? '알림 설정 중' : '알림 받기'}
+              disabled={isPushSupported !== true || isSettingUpNotifications}
+              label={
+                isSettingUpNotifications
+                  ? '알림 설정 중'
+                  : isPushSupported === null
+                    ? '알림 지원 확인 중'
+                    : '알림 받기'
+              }
               onClick={() => void handleEnableNotifications()}
             />
             {notificationMessage ? (

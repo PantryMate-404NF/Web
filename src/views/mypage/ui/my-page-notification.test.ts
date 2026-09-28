@@ -39,7 +39,8 @@ describe('Mypage notification action', () => {
   it('provides a user-initiated action for enabling pantry notifications', () => {
     const markup = renderToStaticMarkup(createElement(MyPagePage));
 
-    expect(markup).toContain('알림 받기');
+    expect(markup).toContain('알림 지원 확인 중');
     expect(markup).toContain('type="button"');
+    expect(markup).toContain('disabled=""');
   });
 });

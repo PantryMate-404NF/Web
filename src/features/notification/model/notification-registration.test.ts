@@ -66,7 +66,7 @@ describe('notification registration', () => {
     requestPermissionMock.mockResolvedValue('fcm-token');
     registerDeviceTokenMock.mockResolvedValue(undefined);
 
-    await expect(requestAndRegisterDeviceToken()).resolves.toBe('registered');
+    await expect(requestAndRegisterDeviceToken(true)).resolves.toBe('registered');
     expect(registerDeviceTokenMock).toHaveBeenCalledWith('fcm-token');
   });
 
@@ -75,7 +75,7 @@ describe('notification registration', () => {
     isPushSupportedMock.mockResolvedValue(false);
     requestPermissionMock.mockResolvedValue(null);
 
-    await expect(requestAndRegisterDeviceToken()).resolves.toBe('permission-denied');
+    await expect(requestAndRegisterDeviceToken(true)).resolves.toBe('permission-denied');
     expect(isPushSupportedMock).not.toHaveBeenCalled();
     expect(registerDeviceTokenMock).not.toHaveBeenCalled();
   });
@@ -84,7 +84,8 @@ describe('notification registration', () => {
     isPushSupportedMock.mockResolvedValue(false);
     requestPermissionMock.mockResolvedValue(null);
 
-    await expect(requestAndRegisterDeviceToken()).resolves.toBe('unsupported');
+    await expect(requestAndRegisterDeviceToken(false)).resolves.toBe('unsupported');
+    expect(requestPermissionMock).not.toHaveBeenCalled();
     expect(registerDeviceTokenMock).not.toHaveBeenCalled();
   });
 
@@ -94,7 +95,7 @@ describe('notification registration', () => {
     isPushSupportedMock.mockResolvedValue(true);
     requestPermissionMock.mockResolvedValue(null);
 
-    await expect(requestAndRegisterDeviceToken()).resolves.toBe('dismissed');
+    await expect(requestAndRegisterDeviceToken(true)).resolves.toBe('dismissed');
     expect(registerDeviceTokenMock).not.toHaveBeenCalled();
   });
 });

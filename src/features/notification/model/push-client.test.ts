@@ -72,14 +72,14 @@ describe('push client', () => {
     vi.stubGlobal('window', { PushManager: class PushManager {}, indexedDB: {} });
     vi.stubGlobal('navigator', { serviceWorker: { register } });
     vi.stubGlobal('Notification', { permission: 'default', requestPermission });
-    isSupportedMock.mockResolvedValue(true);
     getTokenMock.mockResolvedValue('issued-fcm-token');
 
     const { requestPushPermissionAndGetToken } = await import('./push-client');
 
-    await expect(requestPushPermissionAndGetToken()).resolves.toBe('issued-fcm-token');
+    await expect(requestPushPermissionAndGetToken(true)).resolves.toBe('issued-fcm-token');
 
     expect(requestPermission).toHaveBeenCalledOnce();
+    expect(isSupportedMock).not.toHaveBeenCalled();
     expect(register).toHaveBeenCalledWith('/sw.js');
     expect(getTokenMock).toHaveBeenCalledWith(
       { app: 'firebase-app' },
@@ -118,9 +118,10 @@ describe('push client', () => {
 
     const { requestPushPermissionAndGetToken } = await import('./push-client');
 
-    await expect(requestPushPermissionAndGetToken()).resolves.toBeNull();
+    await expect(requestPushPermissionAndGetToken(false)).resolves.toBeNull();
     expect(requestPermission).not.toHaveBeenCalled();
     expect(getTokenMock).not.toHaveBeenCalled();
+    expect(isSupportedMock).not.toHaveBeenCalled();
   });
 
   it('does not request notification permission when Firebase environment settings are missing', async () => {
@@ -132,29 +133,34 @@ describe('push client', () => {
 
     const { requestPushPermissionAndGetToken } = await import('./push-client');
 
-    await expect(requestPushPermissionAndGetToken()).resolves.toBeNull();
+    await expect(requestPushPermissionAndGetToken(false)).resolves.toBeNull();
     expect(requestPermission).not.toHaveBeenCalled();
   });
 
-  it('starts the permission request synchronously before awaiting Firebase support checks', async () => {
-    const calls: string[] = [];
-    const requestPermission = vi.fn(() => {
-      calls.push('permission');
-      return Promise.resolve('granted' as NotificationPermission);
-    });
+  it('starts the permission request without rechecking browser support', async () => {
+    const requestPermission = vi.fn().mockResolvedValue('granted');
     vi.stubGlobal('window', { PushManager: class PushManager {}, indexedDB: {} });
     vi.stubGlobal('navigator', { serviceWorker: { register: vi.fn().mockResolvedValue({}) } });
     vi.stubGlobal('Notification', { permission: 'default', requestPermission });
-    isSupportedMock.mockImplementation(async () => {
-      calls.push('firebase-support');
-      return true;
-    });
     getTokenMock.mockResolvedValue('issued-fcm-token');
 
     const { requestPushPermissionAndGetToken } = await import('./push-client');
 
-    await requestPushPermissionAndGetToken();
+    await requestPushPermissionAndGetToken(true);
 
-    expect(calls.slice(0, 2)).toEqual(['permission', 'firebase-support']);
+    expect(requestPermission).toHaveBeenCalledOnce();
+    expect(isSupportedMock).not.toHaveBeenCalled();
+  });
+
+  it('checks messaging support during the preflight check', async () => {
+    vi.stubGlobal('window', { PushManager: class PushManager {}, indexedDB: {} });
+    vi.stubGlobal('navigator', { serviceWorker: { register: vi.fn() } });
+    vi.stubGlobal('Notification', { permission: 'default' });
+    isSupportedMock.mockResolvedValue(true);
+
+    const { isPushSupported } = await import('./push-client');
+
+    await expect(isPushSupported()).resolves.toBe(true);
+    expect(isSupportedMock).toHaveBeenCalledOnce();
   });
 });
