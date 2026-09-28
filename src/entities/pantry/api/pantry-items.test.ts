@@ -33,6 +33,17 @@ describe('pantry item API', () => {
     );
   });
 
+  it('목록 검색어를 keyword query parameter로 전송한다', async () => {
+    const { getPantries } = await import('./get-pantries');
+
+    await getPantries({ keyword: '양파' });
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:8080/api/pantry-items?keyword=%EC%96%91%ED%8C%8C',
+      expect.anything(),
+    );
+  });
+
   it('선택한 팬트리 항목을 단건 삭제한다', async () => {
     const { deletePantryItem } = await import('./delete-pantry-item');
 

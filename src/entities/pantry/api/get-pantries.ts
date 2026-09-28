@@ -8,12 +8,14 @@ import type { PantryItemDto } from './pantry.dto';
 export interface PantryListFilters {
   storageType?: 'REFRIGERATED' | 'FROZEN' | 'ROOM_TEMP';
   sort?: 'RECENT' | 'IMMINENT' | 'OLDEST';
+  keyword?: string;
 }
 
 export function getPantries(filters: PantryListFilters = {}) {
   const searchParams = new URLSearchParams();
   if (filters.storageType) searchParams.set('storageType', filters.storageType);
   if (filters.sort) searchParams.set('sort', filters.sort);
+  if (filters.keyword?.trim()) searchParams.set('keyword', filters.keyword.trim());
   const query = searchParams.toString();
 
   return request<PantryItemDto[]>(`/api/pantry-items${query ? `?${query}` : ''}`);

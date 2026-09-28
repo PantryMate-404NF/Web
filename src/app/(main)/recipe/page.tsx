@@ -1,24 +1,18 @@
 import { RecipeListPage } from '@/views/recipe/ui/recipe-list-page';
 
-interface RecipeRouteProps {
-  searchParams: Promise<{ mockPantry?: string; tab?: string }>;
-}
-
-export default async function RecipeRoute({ searchParams }: RecipeRouteProps) {
-  const { mockPantry, tab } = await searchParams;
+export default async function RecipeRoute({
+  searchParams,
+}: {
+  searchParams: Promise<{ ingredientIds?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const rawIngredientIds = Array.isArray(params.ingredientIds)
+    ? params.ingredientIds
+    : params.ingredientIds
+      ? [params.ingredientIds]
+      : [];
 
   return (
-    <RecipeListPage
-      tab={tab === 'imminent' ? 'imminent' : 'main'}
-      mockPantryMode={
-        process.env.NODE_ENV === 'development'
-          ? mockPantry === 'true'
-            ? 'imminent'
-            : mockPantry === 'normal'
-              ? 'normal'
-              : null
-          : null
-      }
-    />
+    <RecipeListPage selectedIngredientIds={rawIngredientIds.map(Number).filter(Number.isFinite)} />
   );
 }

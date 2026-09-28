@@ -8,6 +8,7 @@ import { toPantryItem } from './pantry.mapper';
 
 const basePantryDto: PantryItemDto = {
   pantryItemId: 1,
+  ingredientId: 11,
   ingredientName: '대파',
   sellByDate: '2026-09-07',
   expiryDate: '2026-09-10',
@@ -26,6 +27,7 @@ describe('toPantryItem', () => {
 
     expect(item).toMatchObject({
       id: '1',
+      ingredientId: 11,
       expirationDate: '2026-09-07',
       consumptionDate: '2026-09-10',
       expirationStatus: 'IMMINENT',

@@ -1,117 +1,137 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { useRecipeDetailQueryMock, useScrappedRecipesQueryMock } = vi.hoisted(() => ({
+  useRecipeDetailQueryMock: vi.fn(),
+  useScrappedRecipesQueryMock: vi.fn(),
+}));
+
+vi.mock('@/entities/recipe/api/use-recipe-detail-query', () => ({
+  useRecipeDetailQuery: useRecipeDetailQueryMock,
+}));
+
+vi.mock('@/entities/recipe/api/use-scrapped-recipes-query', () => ({
+  useScrappedRecipesQuery: useScrappedRecipesQueryMock,
+}));
 
 import {
   COOKING_GUIDE_DELAY_MS,
   COOKING_GUIDE_VISIBLE_MS,
   RecipeDetailPage,
   areAllIngredientsSelected,
-  getCleanupDeletionCount,
-  getCleanupIngredients,
-  getCleanupToastMessage,
-  getMatchingPantryIngredients,
-  toRecipeCartProducts,
   toggleIngredientSelection,
 } from './recipe-detail-page';
 
 describe('RecipeDetailPage', () => {
-  it('renders the Figma recipe detail content with its local hero image', () => {
+  beforeEach(() => {
+    useScrappedRecipesQueryMock.mockReturnValue({ data: [], isPending: false });
+    useRecipeDetailQueryMock.mockReturnValue({
+      data: {
+        id: '42',
+        name: 'API 토마토 볶음',
+        category: '중식',
+        cookTime: '15분',
+        description: '서버 설명',
+        thumbnailUrl: 'https://cdn.example.test/recipe.jpg',
+        cookingSteps: ['1단계 API 조리 설명', '2단계 API 조리 설명'],
+        missingCount: 0,
+        ingredients: [{ id: '3', name: '양파', amount: '2개' }],
+        linkedProducts: [],
+        servings: 3,
+        difficulty: 'EASY',
+        steps: [
+          { number: 1, description: '1단계 API 조리 설명', imageUrl: null },
+          {
+            number: 2,
+            description: '2단계 API 조리 설명',
+            imageUrl: 'https://cdn.example.test/step.jpg',
+          },
+        ],
+      },
+      error: null,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+  });
+
+  it('요청한 recipe ID의 API 상세와 조리 순서를 렌더링한다', () => {
     const queryClient = new QueryClient();
     const markup = renderToStaticMarkup(
       <QueryClientProvider client={queryClient}>
-        <RecipeDetailPage recipeId="tomato-egg-stir-fry" />
+        <RecipeDetailPage recipeId="42" />
       </QueryClientProvider>,
     );
 
-    expect(markup).toContain('토마토 달걀 볶음');
+    expect(useRecipeDetailQueryMock).toHaveBeenCalledWith('42');
+    expect(markup).toContain('API 토마토 볶음');
+    expect(markup).toContain('서버 설명');
+    expect(markup).toContain('3인분');
+    expect(markup).toContain('양파');
+    expect(markup).toContain('2개');
+    expect(markup).toContain('1단계 API 조리 설명');
+    expect(markup).toContain('2단계 API 조리 설명');
     expect(markup).toContain('필요 재료');
     expect(markup).toContain('조리 순서');
     expect(markup).toContain('조리 완료');
-    expect(markup).toContain('tomato-egg-hero.png');
+    expect(markup).toContain('https://cdn.example.test/recipe.jpg');
+    expect(markup).toContain('https://cdn.example.test/step.jpg');
+    expect(markup).not.toContain('토마토 달걀 볶음');
   });
 
-  it('shows each matching pantry item, including duplicate ingredient registrations', () => {
-    const cleanupIngredients = getMatchingPantryIngredients(
-      [
-        { imageSrc: '/images/tomato.png', name: '토마토' },
-        { imageSrc: '/images/egg.png', name: '달걀' },
-      ],
-      [
-        {
-          id: 'pantry-tomato-1',
-          imageAlt: '토마토',
-          imageUrl: '/uploads/tomato-1.png',
-          name: '토마토',
-        },
-        { id: 'pantry-tomato-2', imageAlt: '토마토', name: '토마토' },
-        { id: 'pantry-sugar-1', imageAlt: '설탕', name: '설탕' },
-      ],
+  it('상세 조회 중에는 목업 내용을 렌더링하지 않는다', () => {
+    useRecipeDetailQueryMock.mockReturnValue({ data: undefined, error: null, isPending: true });
+    const queryClient = new QueryClient();
+    const markup = renderToStaticMarkup(
+      <QueryClientProvider client={queryClient}>
+        <RecipeDetailPage recipeId="42" />
+      </QueryClientProvider>,
     );
 
-    expect(cleanupIngredients).toEqual([
-      { id: 'pantry-tomato-1', imageSrc: '/uploads/tomato-1.png', name: '토마토' },
-      { id: 'pantry-tomato-2', imageSrc: '/images/tomato.png', name: '토마토' },
-    ]);
+    expect(markup).toContain('role="status"');
+    expect(markup).not.toContain('토마토 달걀 볶음');
+    expect(markup).not.toContain('필요 재료');
   });
 
-  it('uses the selected pantry item count in the cleanup confirmation toast', () => {
-    expect(getCleanupToastMessage(2)).toBe('총 2개의 식재료가 삭제되었어요.');
-    expect(getCleanupToastMessage(0)).toBe('총 0개의 식재료가 삭제되었어요.');
+  it('상세 조회가 실패하면 목업 대신 재시도 가능한 오류 화면을 보여준다', () => {
+    useRecipeDetailQueryMock.mockReturnValue({
+      data: undefined,
+      error: new Error('not found'),
+      isPending: false,
+      refetch: vi.fn(),
+    });
+    const queryClient = new QueryClient();
+    const markup = renderToStaticMarkup(
+      <QueryClientProvider client={queryClient}>
+        <RecipeDetailPage recipeId="missing-id" />
+      </QueryClientProvider>,
+    );
+
+    expect(markup).toContain('레시피를 불러오지 못했어요');
+    expect(markup).not.toContain('API 토마토 볶음');
+    expect(markup).not.toContain('토마토 달걀 볶음');
   });
 
-  it('counts every selected recipe ingredient for the cleanup confirmation', () => {
-    expect(getCleanupDeletionCount(['egg', 'sugar'])).toBe(2);
+  it('스크랩 버튼 상태를 브라우저 저장소가 아니라 서버 스크랩 목록에서 가져온다', () => {
+    useScrappedRecipesQueryMock.mockReturnValue({ data: [{ id: '42' }], isPending: false });
+    const queryClient = new QueryClient();
+    const markup = renderToStaticMarkup(
+      <QueryClientProvider client={queryClient}>
+        <RecipeDetailPage recipeId="42" />
+      </QueryClientProvider>,
+    );
+
+    expect(markup).toContain('aria-pressed="true"');
+    expect(markup).toContain('aria-label="레시피 스크랩 해제"');
   });
 });
 
 describe('ingredient selection', () => {
-  it('선택한 필요 재료를 장바구니 상품으로 변환한다', () => {
-    expect(
-      toRecipeCartProducts('tomato-egg-stir-fry', [
-        {
-          id: 'tomato',
-          name: '토마토',
-          amount: '2개',
-          imageSrc: '/tomato.png',
-          status: 'available',
-          statusLabel: '보유',
-        },
-        {
-          id: 'egg',
-          name: '달걀',
-          amount: '3개',
-          imageSrc: '/egg.png',
-          status: 'unavailable',
-          statusLabel: '미보유',
-        },
-      ]),
-    ).toEqual([
-      expect.objectContaining({ id: 'tomato-egg-stir-fry-tomato', ingredient: '토마토' }),
-      expect.objectContaining({ id: 'tomato-egg-stir-fry-egg', ingredient: '달걀' }),
-    ]);
-  });
-
   it('toggles one ingredient and can identify a fully selected ingredient list', () => {
     expect(toggleIngredientSelection([], 'tomato')).toEqual(['tomato']);
     expect(toggleIngredientSelection(['tomato'], 'tomato')).toEqual([]);
     expect(areAllIngredientsSelected(['tomato', 'egg'], ['tomato', 'egg'])).toBe(true);
     expect(areAllIngredientsSelected(['tomato'], ['tomato', 'egg'])).toBe(false);
-  });
-
-  it('uses only the identity, name, and image for cleanup cards', () => {
-    expect(
-      getCleanupIngredients([
-        {
-          id: 'tomato',
-          imageSrc: '/images/tomato.png',
-          name: '토마토',
-          amount: '2개',
-          status: 'available',
-          statusLabel: '보유',
-        },
-      ]),
-    ).toEqual([{ id: 'tomato', imageSrc: '/images/tomato.png', name: '토마토' }]);
   });
 });
 

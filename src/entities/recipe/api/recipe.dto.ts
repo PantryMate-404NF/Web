@@ -8,14 +8,15 @@ export interface RecipeDto {
   cookingTime: number;
   servings: number;
   difficulty: 'EASY' | 'NORMAL' | 'HARD';
-  thumbnailUrl: string | null;
+  thumbnailUrl?: string | null;
 }
 
 export interface RecipeIngredientDto {
   ingredientId: number;
   name: string;
-  requiredAmount: number;
-  unit: string;
+  imageUrl?: string | null;
+  requiredAmount?: number | null;
+  unit?: string | null;
   isMain: boolean;
 }
 
@@ -34,4 +35,52 @@ export interface CookingHistoryDto {
   historyId: number;
   recipeId: number;
   cookedAt: string;
+}
+
+export interface RecipeListResponseDto {
+  content: RecipeDto[];
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface RecipeFilterIngredientDto {
+  ingredientId: number;
+  name: string;
+  expiryDate: string;
+  expired: boolean;
+  defaultSelected: boolean;
+}
+
+export interface RecipePantryMatchItemDto {
+  pantryItemId: number;
+  expiryDate: string;
+  expiryStatus: 'NORMAL' | 'IMMINENT' | 'EXPIRED';
+}
+
+export interface RecipeIngredientPantryMatchDto {
+  ingredientId: number;
+  name: string;
+  hasIngredient: boolean;
+  matchedPantryItems: RecipePantryMatchItemDto[];
+}
+
+export interface RecipePantryMatchDto {
+  recipeId: number;
+  ingredients: RecipeIngredientPantryMatchDto[];
+}
+
+export interface CookingCompleteRequestDto {
+  pantryItemIds?: number[];
+}
+
+export interface RecipeListParams {
+  page?: number;
+  size?: number;
+  ingredientIds?: number[];
+}
+
+export interface RecipeSearchParams {
+  keyword: string;
+  page?: number;
+  size?: number;
 }

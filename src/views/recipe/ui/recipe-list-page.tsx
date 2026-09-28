@@ -3,18 +3,19 @@
 import { Bookmark, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { useRecipesQuery } from '@/entities/recipe/api/use-recipes-query';
-import { recipeMocks } from '@/entities/recipe/model/mock';
-import { useScrappedRecipeStore } from '@/entities/recipe/model/scrapped-recipe-store';
+import { useRecipeSearchQuery } from '@/entities/recipe/api/use-recipe-search-query';
+import { useRecipeMutations } from '@/entities/recipe/api/use-recipe-mutations';
+import { useScrappedRecipesQuery } from '@/entities/recipe/api/use-scrapped-recipes-query';
 import { usePantriesQuery } from '@/entities/pantry/api/use-pantries-query';
 import type { PantryItem } from '@/entities/pantry/model/types';
-import type { Recipe, RecipeTab } from '@/entities/recipe/model/types';
+import type { Recipe } from '@/entities/recipe/model/types';
 import { SystemErrorState } from '@/shared/ui/system-error-state';
 import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
 
-export type RecipeSectionId = 'popular' | 'scrapped' | 'shared' | 'completed' | 'random';
+export type RecipeSectionId = 'all';
 
 export interface RecipeRailSection {
   id: RecipeSectionId;
@@ -29,106 +30,6 @@ export interface ImminentIngredient {
 }
 
 export type RecipeDisplayMode = 'pantry' | 'basic';
-export type RecipePantryMockMode = 'imminent' | 'normal' | null;
-
-const recipeImageSrc = '/images/delivery/antibiotic-free-eggs.png';
-
-const recipePantryMockItems: PantryItem[] = [
-  {
-    id: 'pork',
-    name: '돼지고기',
-    daysUntilExpiration: 1,
-    expirationLabel: '소비기한 1일 남음',
-    expirationStatus: 'IMMINENT',
-    availability: 'AVAILABLE',
-    imageAlt: '돼지고기 이미지',
-  },
-  {
-    id: 'green-onion',
-    name: '대파',
-    daysUntilExpiration: 2,
-    expirationLabel: '소비기한 2일 남음',
-    expirationStatus: 'IMMINENT',
-    availability: 'AVAILABLE',
-    imageAlt: '대파 이미지',
-  },
-  {
-    id: 'carrot',
-    name: '당근',
-    daysUntilExpiration: 3,
-    expirationLabel: '소비기한 3일 남음',
-    expirationStatus: 'IMMINENT',
-    availability: 'AVAILABLE',
-    imageAlt: '당근 이미지',
-  },
-  {
-    id: 'egg',
-    name: '계란',
-    daysUntilExpiration: 20,
-    expirationLabel: '소비기한 20일 남음',
-    expirationStatus: 'NORMAL',
-    availability: 'AVAILABLE',
-    imageAlt: '계란 이미지',
-  },
-  {
-    id: 'potato',
-    name: '감자',
-    daysUntilExpiration: 25,
-    expirationLabel: '소비기한 25일 남음',
-    expirationStatus: 'NORMAL',
-    availability: 'AVAILABLE',
-    imageAlt: '감자 이미지',
-  },
-];
-
-const recipePantryNormalMockItems: PantryItem[] = [
-  {
-    id: 'pork',
-    name: '돼지고기',
-    daysUntilExpiration: 5,
-    expirationLabel: '소비기한 5일 남음',
-    expirationStatus: 'NORMAL',
-    availability: 'AVAILABLE',
-    imageAlt: '돼지고기 이미지',
-  },
-  {
-    id: 'green-onion',
-    name: '대파',
-    daysUntilExpiration: 8,
-    expirationLabel: '소비기한 8일 남음',
-    expirationStatus: 'NORMAL',
-    availability: 'AVAILABLE',
-    imageAlt: '대파 이미지',
-  },
-  {
-    id: 'garlic',
-    name: '다진 마늘',
-    daysUntilExpiration: 14,
-    expirationLabel: '소비기한 14일 남음',
-    expirationStatus: 'NORMAL',
-    availability: 'AVAILABLE',
-    imageAlt: '다진 마늘 이미지',
-  },
-  {
-    id: 'egg',
-    name: '계란',
-    daysUntilExpiration: 7,
-    expirationLabel: '소비기한 7일 남음',
-    expirationStatus: 'NORMAL',
-    availability: 'AVAILABLE',
-    imageAlt: '계란 이미지',
-  },
-  {
-    id: 'potato',
-    name: '감자',
-    daysUntilExpiration: 10,
-    expirationLabel: '소비기한 10일 남음',
-    expirationStatus: 'NORMAL',
-    availability: 'AVAILABLE',
-    imageAlt: '감자 이미지',
-  },
-];
-
 export const RECIPE_ACTION_LAYOUT = {
   containerClassName: 'flex h-[60px] shrink-0 items-center pb-5',
   sectionHeaderClassName: '-mr-4 flex h-[60px] items-center justify-between',
@@ -150,20 +51,19 @@ export const RECIPE_SEARCH_EMPTY_COPY = {
   descriptionLines: ['다른 검색어를 입력하거나', '맞춤법을 확인해보세요'],
 } as const;
 
-export function getRecipeTab(tab?: string): RecipeTab {
-  return tab === 'imminent' ? 'imminent' : 'main';
-}
-
-export function getRecipeRoute(tab: RecipeTab): string {
-  return tab === 'imminent' ? '/recipe/imminent' : '/recipe';
-}
-
 export function getIngredientSelectionRoute(): string {
   return '/recipe/ingredients';
 }
 
-export function getRecipeMoreRoute(sectionId: RecipeSectionId): string {
-  return `/recipe/more?section=${sectionId}`;
+export function getRecipeMoreRoute(
+  sectionId: RecipeSectionId,
+  ingredientIds: number[] = [],
+  title?: string,
+): string {
+  const params = new URLSearchParams({ section: sectionId });
+  if (title) params.set('title', title);
+  ingredientIds.forEach((id) => params.append('ingredientIds', String(id)));
+  return `/recipe/more?${params.toString()}`;
 }
 
 export function filterRecipesByQuery(recipes: Recipe[], query: string): Recipe[] {
@@ -190,16 +90,6 @@ export function getRecipeDisplayMode(items: PantryItem[]): RecipeDisplayMode {
   return items.length > 0 ? 'pantry' : 'basic';
 }
 
-export function getRecipePantryItems(
-  items: PantryItem[],
-  mockPantryMode: RecipePantryMockMode,
-): PantryItem[] {
-  if (mockPantryMode === 'imminent') return recipePantryMockItems;
-  if (mockPantryMode === 'normal') return recipePantryNormalMockItems;
-
-  return items;
-}
-
 export function getImminentIngredients(items: PantryItem[]): ImminentIngredient[] {
   return items
     .filter(
@@ -220,92 +110,22 @@ export function getAvailablePantryIngredients(items: PantryItem[]): ImminentIngr
     .map((item) => ({ name: item.name, daysLeft: item.daysUntilExpiration! }));
 }
 
-export function getPantryRecipeRecommendations(items: PantryItem[]): Recipe[] {
-  const prioritizedIngredientIds = [...items]
-    .filter(
-      (item): item is PantryItem & { daysUntilExpiration: number } =>
-        item.availability === 'AVAILABLE' && item.daysUntilExpiration !== null,
-    )
-    .sort((left, right) => left.daysUntilExpiration - right.daysUntilExpiration)
-    .slice(0, 3)
-    .map((item) => item.id);
-
-  const priorityByIngredientId = new Map(
-    prioritizedIngredientIds.map((ingredientId, index) => [ingredientId, index]),
-  );
-
-  return [...recipeMocks].sort((left, right) => {
-    const leftPriority = getRecipePantryPriority(left, priorityByIngredientId);
-    const rightPriority = getRecipePantryPriority(right, priorityByIngredientId);
-
-    return (
-      leftPriority.closestIngredientRank - rightPriority.closestIngredientRank ||
-      rightPriority.matchedIngredientCount - leftPriority.matchedIngredientCount
-    );
-  });
-}
-
-function getRecipePantryPriority(recipe: Recipe, priorityByIngredientId: Map<string, number>) {
-  const matchedRanks = recipe.ingredients
-    .map((ingredient) => priorityByIngredientId.get(ingredient.id))
-    .filter((rank): rank is number => rank !== undefined);
-
-  return {
-    closestIngredientRank: matchedRanks.length > 0 ? Math.min(...matchedRanks) : Infinity,
-    matchedIngredientCount: matchedRanks.length,
-  };
-}
-
-export function getRecipeSections(
-  tab: RecipeTab,
-  sourceRecipes = recipeMocks,
-): RecipeRailSection[] {
-  const imminentRecipes = sourceRecipes.filter((recipe) =>
-    recipe.ingredients.some((ingredient) => ingredient.isImminent),
-  );
-  const recipes = tab === 'imminent' ? imminentRecipes : sourceRecipes;
-
+export function getRecipeSections(sourceRecipes: Recipe[]): RecipeRailSection[] {
   return [
     {
-      id: 'popular',
-      title: '후기 많은 인기 레시피',
-      description: '직접 만들어본 분들의 후기로 검증된 레시피예요.',
-      recipes,
-    },
-    {
-      id: 'scrapped',
-      title: '스크랩 수가 말해주는 레시피',
-      description: '저장해두고 계속 찾게 되는 레시피예요.',
-      recipes,
-    },
-    {
-      id: 'shared',
-      title: '가장 많이 공유된 레시피',
-      description: '주변에 알리고 싶은 공유 랭킹 레시피를 모았어요.',
-      recipes,
-    },
-    {
-      id: 'completed',
-      title: '끝까지 만들기 좋은 레시피',
-      description: '실제로 레시피를 완성한 후보들로 추려봤어요.',
-      recipes,
-    },
-    {
-      id: 'random',
-      title: '오늘의 랜덤 레시피',
-      description: '팬트리 메이트가 오늘을 위해 골라봤어요.',
-      recipes,
+      id: 'all',
+      title: '전체 레시피',
+      description: '등록된 레시피를 확인해 보세요.',
+      recipes: sourceRecipes,
     },
   ];
 }
 
 export function getRecipeSectionById(
-  sectionId: string | undefined,
-  sourceRecipes = recipeMocks,
+  _sectionId: string | undefined,
+  sourceRecipes: Recipe[],
 ): RecipeRailSection {
-  const sections = getRecipeSections('main', sourceRecipes);
-
-  return sections.find((section) => section.id === sectionId) ?? sections[0];
+  return getRecipeSections(sourceRecipes)[0];
 }
 
 function RecipeHeader({
@@ -361,12 +181,18 @@ export function RecipeActionIcon() {
   );
 }
 
-function SectionAction({ section }: { section: RecipeRailSection }) {
+function SectionAction({
+  section,
+  ingredientIds,
+}: {
+  section: RecipeRailSection;
+  ingredientIds: number[];
+}) {
   return (
     <Link
       aria-label={`${section.title} 레시피 더보기`}
       className={RECIPE_ACTION_LAYOUT.containerClassName}
-      href={getRecipeMoreRoute(section.id)}
+      href={getRecipeMoreRoute(section.id, ingredientIds, section.title)}
     >
       <span className={RECIPE_ACTION_LAYOUT.textClassName}>더보기</span>
       <RecipeActionIcon />
@@ -376,15 +202,31 @@ function SectionAction({ section }: { section: RecipeRailSection }) {
 
 export function RecipeCard({
   recipe,
-  rank,
   variant = 'rail',
 }: {
   recipe: Recipe;
-  rank?: number;
   variant?: 'rail' | 'search';
 }) {
-  const isScrapped = useScrappedRecipeStore((state) => state.scrappedRecipeIds.includes(recipe.id));
+  const scrappedRecipesQuery = useScrappedRecipesQuery();
+  const { scrap, unscrap } = useRecipeMutations();
+  const [scrapError, setScrapError] = useState(false);
+  const isScrapped =
+    scrappedRecipesQuery.data?.some((scrapped) => scrapped.id === recipe.id) ?? false;
+  const isScrapPending =
+    scrappedRecipesQuery.isPending ||
+    scrap.isPending ||
+    unscrap.isPending ||
+    scrappedRecipesQuery.isError;
   const isSearchCard = variant === 'search';
+
+  async function handleScrap() {
+    setScrapError(false);
+    try {
+      await (isScrapped ? unscrap.mutateAsync(recipe.id) : scrap.mutateAsync(recipe.id));
+    } catch {
+      setScrapError(true);
+    }
+  }
 
   return (
     <div className={`relative shrink-0 ${isSearchCard ? 'w-[171px]' : 'w-[164px]'}`}>
@@ -392,40 +234,36 @@ export function RecipeCard({
         <div
           className={`relative overflow-hidden rounded-lg ${isSearchCard ? 'h-[171px]' : 'h-[164px]'}`}
         >
-          <Image
-            alt=""
-            aria-hidden
-            className="object-cover"
-            fill
-            sizes={isSearchCard ? '171px' : '164px'}
-            src={recipeImageSrc}
-          />
+          {recipe.thumbnailUrl ? (
+            <Image
+              alt=""
+              aria-hidden
+              className="object-cover"
+              fill
+              sizes={isSearchCard ? '171px' : '164px'}
+              src={recipe.thumbnailUrl}
+              unoptimized
+            />
+          ) : null}
         </div>
         <div className="mt-2 h-11">
           <div className="flex items-center gap-1">
             <p className="min-w-0 flex-1 truncate text-[15px] leading-6 font-semibold">
               {recipe.name}
             </p>
-            {rank ? (
-              <span
-                className={`rounded-full px-2 text-xs leading-[18px] font-medium ${
-                  rank === 1
-                    ? 'bg-[var(--primitive-primary-300)]'
-                    : 'bg-[var(--primitive-secondary-300)]'
-                }`}
-              >
-                {rank}위
-              </span>
-            ) : null}
           </div>
           <p className="truncate text-xs leading-5 font-normal text-[var(--primitive-grey-400)]">
             {recipe.category} · {recipe.cookTime}
           </p>
         </div>
       </Link>
-      <span
-        aria-label="레시피 저장 상태"
-        className="bg-card/80 absolute top-2 right-2.5 grid size-8 place-items-center rounded-full"
+      <button
+        aria-label={`레시피 ${isScrapped ? '스크랩 해제' : '스크랩'}`}
+        aria-pressed={isScrapped}
+        className="bg-card/80 absolute top-2 right-2.5 grid size-8 place-items-center rounded-full disabled:opacity-60"
+        disabled={isScrapPending}
+        onClick={() => void handleScrap()}
+        type="button"
       >
         <Bookmark
           aria-hidden="true"
@@ -434,7 +272,12 @@ export function RecipeCard({
           stroke={isScrapped ? 'none' : 'currentColor'}
           strokeWidth={isScrapped ? 0 : 1.8}
         />
-      </span>
+      </button>
+      {scrapError ? (
+        <span className="sr-only" role="status">
+          스크랩을 변경하지 못했어요.
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -462,7 +305,13 @@ function RecipeSearchEmptyState() {
   );
 }
 
-function RecipeSearchResults({ recipes }: { recipes: Recipe[] }) {
+function RecipeSearchResults({
+  recipes,
+  totalElements,
+}: {
+  recipes: Recipe[];
+  totalElements: number;
+}) {
   if (getRecipeSearchResultDisplay(recipes) === 'empty') {
     return <RecipeSearchEmptyState />;
   }
@@ -472,7 +321,7 @@ function RecipeSearchResults({ recipes }: { recipes: Recipe[] }) {
       <h1 className="py-4 text-base leading-6 text-[var(--primitive-grey-600)]">
         레시피 검색 결과{' '}
         <strong className="font-semibold text-[var(--primitive-primary-700)]">
-          {recipes.length}개
+          {totalElements}개
         </strong>
       </h1>
       <div className="grid grid-cols-2 gap-x-4 gap-y-6">
@@ -486,10 +335,10 @@ function RecipeSearchResults({ recipes }: { recipes: Recipe[] }) {
 
 function RecipeRail({
   section,
-  sectionIndex,
+  ingredientIds,
 }: {
   section: RecipeRailSection;
-  sectionIndex: number;
+  ingredientIds: number[];
 }) {
   return (
     <section className="flex flex-col gap-3">
@@ -498,15 +347,11 @@ function RecipeRail({
           <h2 className={RECIPE_RAIL_TYPOGRAPHY.titleClassName}>{section.title}</h2>
           <p className={RECIPE_RAIL_TYPOGRAPHY.descriptionClassName}>{section.description}</p>
         </div>
-        <SectionAction section={section} />
+        <SectionAction ingredientIds={ingredientIds} section={section} />
       </div>
       <div className="-mx-4 flex [scrollbar-width:none] gap-2 overflow-x-auto px-4 pb-1">
-        {section.recipes.map((recipe, recipeIndex) => (
-          <RecipeCard
-            key={`${section.title}-${recipe.id}`}
-            rank={sectionIndex < 2 ? recipeIndex + 1 : undefined}
-            recipe={recipe}
-          />
+        {section.recipes.map((recipe) => (
+          <RecipeCard key={`${section.title}-${recipe.id}`} recipe={recipe} />
         ))}
       </div>
     </section>
@@ -552,7 +397,7 @@ export function ImminentIngredientChips({
     <div className="rounded-xl bg-[var(--primitive-primary-200)] p-3">
       <h2 className="text-base leading-6 font-semibold">기한 임박 식재료가 있어요!</h2>
       <p className="text-[13px] leading-5 text-[var(--primitive-grey-600)]">
-        팬트리메이트가 활용할 수 있는 레시피를 추천해 드릴게요.
+        보유 재료 기반 추천은 아직 제공되지 않아요. 아래 전체 레시피를 확인해 주세요.
       </p>
       <div className="mt-3">{chips}</div>
     </div>
@@ -562,11 +407,9 @@ export function ImminentIngredientChips({
 function PantryRecipeIntro({
   imminentIngredients,
   pantryIngredients,
-  recipes,
 }: {
   imminentIngredients: ImminentIngredient[];
   pantryIngredients: ImminentIngredient[];
-  recipes: Recipe[];
 }) {
   const hasImminentIngredients = imminentIngredients.length > 0;
   const ingredients = hasImminentIngredients ? imminentIngredients : pantryIngredients;
@@ -588,38 +431,32 @@ function PantryRecipeIntro({
           <ImminentIngredientChips ingredients={ingredients} showAlert={hasImminentIngredients} />
         </div>
       ) : null}
-      <div className="mt-4 flex [scrollbar-width:none] gap-2 overflow-x-auto px-4 pb-1">
-        {recipes.map((recipe) => (
-          <RecipeCard key={recipe.id} recipe={recipe} />
-        ))}
-      </div>
     </section>
   );
 }
 
 export function RecipeListPage({
-  tab = 'main',
-  mockPantryMode = null,
+  selectedIngredientIds = [],
 }: {
-  tab?: RecipeTab;
-  mockPantryMode?: RecipePantryMockMode;
+  selectedIngredientIds?: number[];
 }) {
+  const ingredientIds = selectedIngredientIds;
   const [searchQuery, setSearchQuery] = useState('');
-  useEffect(() => {
-    void useScrappedRecipeStore.persist.rehydrate();
-  }, []);
-
-  const { data: apiRecipes, error, refetch } = useRecipesQuery();
-  const recipes = apiRecipes ?? recipeMocks;
-  const sections = getRecipeSections(tab, recipes);
-  const searchedRecipes = filterRecipesByQuery(recipes, searchQuery);
+  const { data: recipePage, error, isPending, refetch } = useRecipesQuery({ ingredientIds });
+  const {
+    data: searchPage,
+    error: searchError,
+    isPending: isSearchPending,
+    refetch: refetchSearch,
+  } = useRecipeSearchQuery(searchQuery.trim());
+  const recipes = recipePage?.content ?? [];
+  const sections = getRecipeSections(recipes);
+  const searchedRecipes = searchPage?.content ?? [];
   const contentMode = getRecipeContentMode(searchQuery);
   const { data: pantryItems = [] } = usePantriesQuery();
-  const recipePantryItems = getRecipePantryItems(pantryItems, mockPantryMode);
-  const displayMode = getRecipeDisplayMode(recipePantryItems);
-  const imminentIngredients = getImminentIngredients(recipePantryItems);
-  const pantryIngredients = getAvailablePantryIngredients(recipePantryItems);
-  const pantryRecipes = getPantryRecipeRecommendations(recipePantryItems);
+  const displayMode = getRecipeDisplayMode(pantryItems);
+  const imminentIngredients = getImminentIngredients(pantryItems);
+  const pantryIngredients = getAvailablePantryIngredients(pantryItems);
 
   if (getRecipeViewState(error) === 'error') {
     return (
@@ -631,23 +468,48 @@ export function RecipeListPage({
     );
   }
 
+  if (isPending) {
+    return (
+      <main className="mobile-page bg-background text-foreground flex min-h-dvh flex-col">
+        <RecipeHeader onQueryChange={setSearchQuery} query={searchQuery} />
+        <div className="flex flex-1 items-center justify-center" role="status">
+          <span className="sr-only">레시피를 불러오는 중입니다.</span>
+        </div>
+        <BottomNavigation />
+      </main>
+    );
+  }
+
   return (
     <main className="mobile-page bg-background text-foreground flex min-h-dvh flex-col">
       <RecipeHeader onQueryChange={setSearchQuery} query={searchQuery} />
       {contentMode === 'search' ? (
-        <RecipeSearchResults recipes={searchedRecipes} />
+        searchError ? (
+          <SystemErrorState
+            onRetry={() => void refetchSearch()}
+            title="검색 결과를 불러오지 못했어요"
+          />
+        ) : isSearchPending ? (
+          <div className="flex flex-1 items-center justify-center" role="status">
+            <span className="sr-only">레시피 검색 중입니다.</span>
+          </div>
+        ) : (
+          <RecipeSearchResults
+            recipes={searchedRecipes}
+            totalElements={searchPage?.totalElements ?? 0}
+          />
+        )
       ) : (
         <>
           {displayMode === 'pantry' ? (
             <PantryRecipeIntro
               imminentIngredients={imminentIngredients}
               pantryIngredients={pantryIngredients}
-              recipes={pantryRecipes}
             />
           ) : null}
           <div className="flex flex-1 flex-col gap-8 px-4 pt-2 pb-8">
-            {sections.map((section, index) => (
-              <RecipeRail key={section.title} section={section} sectionIndex={index} />
+            {sections.map((section) => (
+              <RecipeRail ingredientIds={ingredientIds} key={section.title} section={section} />
             ))}
           </div>
         </>

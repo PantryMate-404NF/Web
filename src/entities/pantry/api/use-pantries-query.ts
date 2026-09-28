@@ -10,7 +10,12 @@ export const PANTRY_QUERY_KEY = ['pantry', 'list'] as const;
 
 export function usePantriesQuery(filters: PantryListFilters = {}) {
   return useQuery({
-    queryKey: [...PANTRY_QUERY_KEY, filters.storageType ?? 'ALL', filters.sort ?? 'RECENT'],
+    queryKey: [
+      ...PANTRY_QUERY_KEY,
+      filters.storageType ?? 'ALL',
+      filters.sort ?? 'RECENT',
+      filters.keyword?.trim() ?? '',
+    ],
     queryFn: () => getPantries(filters),
     select: (items) => items.map(toPantryItem),
   });
