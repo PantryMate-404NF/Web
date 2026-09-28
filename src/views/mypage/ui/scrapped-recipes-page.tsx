@@ -3,18 +3,11 @@
 import { Bookmark } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect } from 'react';
 
-import { useRecipesQuery } from '@/entities/recipe/api/use-recipes-query';
-import { recipeMocks } from '@/entities/recipe/model/mock';
-import {
-  selectScrappedRecipeIds,
-  useScrappedRecipeStore,
-} from '@/entities/recipe/model/scrapped-recipe-store';
+import { useScrappedRecipesQuery } from '@/entities/recipe/api/use-scrapped-recipes-query';
 import type { Recipe } from '@/entities/recipe/model/types';
 import { BackButton } from '@/shared/ui/back-button';
-
-import { selectScrappedRecipes } from '../model/scrapped-recipes';
+import { SystemErrorState } from '@/shared/ui/system-error-state';
 
 function ScrappedRecipeCard({ recipe }: { recipe: Recipe }) {
   return (
@@ -25,13 +18,16 @@ function ScrappedRecipeCard({ recipe }: { recipe: Recipe }) {
         href={`/recipe/${recipe.id}`}
       >
         <div className="bg-muted relative aspect-square w-full overflow-hidden rounded-[8px]">
-          <Image
-            alt=""
-            className="object-cover"
-            fill
-            sizes="171px"
-            src="/images/delivery/antibiotic-free-eggs.png"
-          />
+          {recipe.thumbnailUrl ? (
+            <Image
+              alt=""
+              className="object-cover"
+              fill
+              sizes="171px"
+              src={recipe.thumbnailUrl}
+              unoptimized
+            />
+          ) : null}
         </div>
         <div className="mt-2 leading-[1.5]">
           <p className="truncate text-[15px] leading-[1.5] font-semibold">{recipe.name}</p>
@@ -76,14 +72,7 @@ export function scrappedRecipesEmptyState() {
 }
 
 export function ScrappedRecipesPage() {
-  const scrappedRecipeIds = useScrappedRecipeStore(selectScrappedRecipeIds);
-  const hasHydrated = useScrappedRecipeStore((state) => state.hasHydrated);
-  const { data: apiRecipes } = useRecipesQuery();
-  const scrappedRecipes = selectScrappedRecipes(scrappedRecipeIds, apiRecipes ?? recipeMocks);
-
-  useEffect(() => {
-    void useScrappedRecipeStore.persist.rehydrate();
-  }, []);
+  const { data: scrappedRecipes, error, isPending, refetch } = useScrappedRecipesQuery();
 
   return (
     <main className="mobile-page bg-background min-h-dvh">
@@ -94,18 +83,23 @@ export function ScrappedRecipesPage() {
         </h1>
       </header>
 
-      {!hasHydrated ? (
+      {isPending ? (
         <div className="py-16 text-center" role="status">
           <span className="sr-only">스크랩 레시피를 불러오는 중입니다.</span>
         </div>
-      ) : scrappedRecipes.length === 0 ? (
+      ) : error ? (
+        <SystemErrorState
+          onRetry={() => void refetch()}
+          title="스크랩 레시피를 불러오지 못했어요"
+        />
+      ) : scrappedRecipes?.length === 0 ? (
         scrappedRecipesEmptyState()
       ) : (
         <section
           aria-label="스크랩 레시피 목록"
           className="grid grid-cols-2 gap-x-4 gap-y-6 px-4 pt-2 pb-8"
         >
-          {scrappedRecipes.map((recipe) => (
+          {scrappedRecipes?.map((recipe) => (
             <ScrappedRecipeCard key={recipe.id} recipe={recipe} />
           ))}
         </section>

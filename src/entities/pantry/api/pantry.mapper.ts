@@ -19,6 +19,7 @@ export function toPantryItem(dto: PantryItemDto): PantryItem {
 
   return {
     id: String(dto.pantryItemId),
+    ingredientId: dto.ingredientId ?? null,
     name: dto.ingredientName,
     daysUntilExpiration: dto.dDay,
     expirationLabel,

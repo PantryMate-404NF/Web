@@ -1,11 +1,21 @@
 import { RecipeMorePage } from '@/views/recipe/ui/recipe-more-page';
 
-interface RecipeMoreRouteProps {
-  searchParams: Promise<{ section?: string }>;
-}
+export default async function RecipeMoreRoute({
+  searchParams,
+}: {
+  searchParams: Promise<{ ingredientIds?: string | string[]; title?: string }>;
+}) {
+  const params = await searchParams;
+  const rawIngredientIds = Array.isArray(params.ingredientIds)
+    ? params.ingredientIds
+    : params.ingredientIds
+      ? [params.ingredientIds]
+      : [];
 
-export default async function RecipeMoreRoute({ searchParams }: RecipeMoreRouteProps) {
-  const { section } = await searchParams;
-
-  return <RecipeMorePage sectionId={section} />;
+  return (
+    <RecipeMorePage
+      selectedIngredientIds={rawIngredientIds.map(Number).filter(Number.isFinite)}
+      title={params.title}
+    />
+  );
 }
