@@ -51,6 +51,18 @@ export function getPantryMockState(state?: string): PantryMockState {
   return 'full';
 }
 
+export function getPantryFieldCompletionClassName(isComplete: boolean) {
+  return isComplete
+    ? 'pantry-field-complete border-border-complete bg-surface-complete'
+    : 'border-border bg-surface-secondary';
+}
+
+export function getPantryStorageTypeClassName(isSelected: boolean) {
+  return isSelected
+    ? 'bg-surface-complete border-border-complete text-title-4 flex h-12 items-center justify-center gap-1.5 rounded-lg border font-medium'
+    : 'bg-surface-secondary border-border text-disabled text-title-4 flex h-12 items-center justify-center gap-1.5 rounded-lg border font-medium';
+}
+
 export function isIngredientFormSubmittable(
   ingredientName: string,
   storageType: PantryStorageType | null,
@@ -185,7 +197,7 @@ function IngredientFields({
           </div>
           <span className="relative">
             <input
-              className="bg-surface-secondary text-title-4 focus-visible:ring-ring placeholder:text-disabled h-12 w-full rounded-xl border px-4 pr-14 font-normal outline-none focus-visible:ring-2"
+              className={`text-title-4 focus-visible:ring-ring placeholder:text-disabled h-12 w-full rounded-xl border px-4 pr-14 font-normal outline-none focus-visible:ring-2 ${getPantryFieldCompletionClassName(ingredient.name.trim().length > 0)}`}
               id={inputId}
               maxLength={20}
               name="ingredientName"
@@ -211,7 +223,7 @@ function IngredientFields({
             <p className="text-title-4 font-medium">{label}</p>
             <button
               aria-label={`${label} 선택`}
-              className="bg-surface-secondary text-title-4 focus-visible:ring-ring flex h-12 w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2"
+              className={`text-title-4 focus-visible:ring-ring flex h-12 w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2 ${getPantryFieldCompletionClassName(Boolean(date))}`}
               onClick={(event) => onOpenCalendar(ingredient.id, field, date, event.currentTarget)}
               type="button"
             >
@@ -251,11 +263,7 @@ function IngredientFields({
             ).map(([label, storageType, iconSrc, iconClassName]) => (
               <button
                 aria-pressed={ingredient.storageType === storageType}
-                className={
-                  ingredient.storageType === storageType
-                    ? 'bg-primary/15 border-primary text-title-4 flex h-12 items-center justify-center gap-1.5 rounded-lg border font-medium'
-                    : 'bg-surface-secondary text-disabled text-title-4 flex h-12 items-center justify-center gap-1.5 rounded-lg border font-medium'
-                }
+                className={getPantryStorageTypeClassName(ingredient.storageType === storageType)}
                 key={storageType}
                 onClick={() => onUpdate(ingredient.id, { storageType })}
                 type="button"
@@ -589,7 +597,7 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
             </label>
             <span className="relative">
               <input
-                className="bg-surface-secondary text-title-4 focus-visible:ring-ring placeholder:text-disabled h-12 w-full rounded-xl border px-4 pr-14 font-normal outline-none focus-visible:ring-2"
+                className={`text-title-4 focus-visible:ring-ring placeholder:text-disabled h-12 w-full rounded-xl border px-4 pr-14 font-normal outline-none focus-visible:ring-2 ${getPantryFieldCompletionClassName(ingredientName.trim().length > 0)}`}
                 id="pantry-ingredient-name"
                 maxLength={20}
                 name="ingredientName"
@@ -609,7 +617,7 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
             <p className="text-title-4 font-medium">유통기한</p>
             <button
               aria-label="유통기한 선택"
-              className="bg-surface-secondary text-title-4 focus-visible:ring-ring flex h-12 w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2"
+              className={`text-title-4 focus-visible:ring-ring flex h-12 w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2 ${getPantryFieldCompletionClassName(Boolean(expirationDate))}`}
               onClick={(event) => {
                 openCalendar(
                   primaryIngredient.id,
@@ -644,7 +652,7 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
             <p className="text-title-4 font-medium">소비기한</p>
             <button
               aria-label="소비기한 선택"
-              className="bg-surface-secondary text-title-4 focus-visible:ring-ring flex h-12 w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2"
+              className={`text-title-4 focus-visible:ring-ring flex h-12 w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2 ${getPantryFieldCompletionClassName(Boolean(consumptionDate))}`}
               onClick={(event) => {
                 openCalendar(
                   primaryIngredient.id,
@@ -691,11 +699,7 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
                 ] as const
               ).map(([label, type, iconSrc, iconClassName]) => (
                 <button
-                  className={
-                    storageType === type
-                      ? 'bg-primary/15 border-primary text-title-4 flex h-12 items-center justify-center gap-1.5 rounded-lg border font-medium'
-                      : 'bg-surface-secondary text-disabled text-title-4 flex h-12 items-center justify-center gap-1.5 rounded-lg border font-medium'
-                  }
+                  className={getPantryStorageTypeClassName(storageType === type)}
                   key={type}
                   onClick={() => updatePrimaryIngredient({ storageType: type })}
                   aria-pressed={storageType === type}

@@ -9,6 +9,8 @@ import {
   getPantryImageInputProps,
   isPantryImageUploadable,
   getPantryMockState,
+  getPantryFieldCompletionClassName,
+  getPantryStorageTypeClassName,
   isIngredientFormSubmittable,
 } from './pantry-flow-page';
 
@@ -32,6 +34,26 @@ describe('isIngredientFormSubmittable', () => {
     expect(isIngredientFormSubmittable('', null)).toBe(false);
     expect(isIngredientFormSubmittable('대파', null)).toBe(false);
     expect(isIngredientFormSubmittable('대파', 'REFRIGERATED')).toBe(true);
+  });
+});
+
+describe('getPantryFieldCompletionClassName', () => {
+  it('shows the selected yellow surface only when a field has a value', () => {
+    expect(getPantryFieldCompletionClassName(false)).toBe('border-border bg-surface-secondary');
+    expect(getPantryFieldCompletionClassName(true)).toBe(
+      'pantry-field-complete border-border-complete bg-surface-complete',
+    );
+  });
+});
+
+describe('getPantryStorageTypeClassName', () => {
+  it('uses the completion colors for a selected storage type', () => {
+    expect(getPantryStorageTypeClassName(true)).toContain('bg-surface-complete');
+    expect(getPantryStorageTypeClassName(true)).toContain('border-border-complete');
+  });
+
+  it('keeps unselected storage types on the neutral surface', () => {
+    expect(getPantryStorageTypeClassName(false)).toContain('bg-surface-secondary');
   });
 });
 
