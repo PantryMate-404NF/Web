@@ -8,13 +8,26 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { getProductById } from '@/entities/product/model/mock';
 
-import { ProductDetailImages, ProductDetailPage, ProductImage } from './product-detail-page';
+import {
+  ProductDetailImages,
+  ProductDetailPage,
+  ProductImage,
+  ProductSectionDivider,
+} from './product-detail-page';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ back: vi.fn(), push: vi.fn() }),
 }));
 
 describe('product detail images', () => {
+  it('구간 구분선을 Grey-100 배경으로 표시한다', () => {
+    const markup = renderToStaticMarkup(createElement(ProductSectionDivider));
+
+    expect(markup).toBe(
+      '<div aria-hidden="true" class="h-2 w-full bg-[var(--primitive-grey-100)]"></div>',
+    );
+  });
+
   it('대표 이미지가 없으면 대체 UI를 표시한다', () => {
     const product = getProductById('sweet-banana');
 
@@ -37,7 +50,7 @@ describe('product detail images', () => {
 });
 
 describe('product detail section separators', () => {
-  it('섹션 사이에 밝은 surface-secondary 구분 영역을 사용한다', () => {
+  it('섹션 사이에 Grey-100 구분선을 사용한다', () => {
     const product = getProductById('free-range-eggs');
 
     if (!product) throw new Error('상품 상세 목업이 필요합니다.');
@@ -51,8 +64,8 @@ describe('product detail section separators', () => {
       ),
     );
 
-    expect(markup).toContain('border-[var(--surface-secondary)]');
-    expect(markup).not.toContain('border-border border-t-8');
+    expect(markup).toContain('bg-[var(--primitive-grey-100)]');
+    expect(markup).not.toContain('border-t-8');
   });
 });
 

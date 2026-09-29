@@ -7,6 +7,7 @@ import {
   getPantryExpirationPresentation,
   getCalendarMonthCells,
   getPantryImageInputProps,
+  isPantryImageUploadable,
   getPantryMockState,
   isIngredientFormSubmittable,
 } from './pantry-flow-page';
@@ -54,10 +55,18 @@ describe('areIngredientFormsSubmittable', () => {
 describe('getPantryImageInputProps', () => {
   it('uses the outward camera for a new photo and the regular picker for an existing image', () => {
     expect(getPantryImageInputProps('camera')).toEqual({
-      accept: 'image/*',
+      accept: 'image/jpeg,image/png,image/webp',
       capture: 'environment',
     });
-    expect(getPantryImageInputProps('gallery')).toEqual({ accept: 'image/*' });
+    expect(getPantryImageInputProps('gallery')).toEqual({
+      accept: 'image/jpeg,image/png,image/webp',
+    });
+  });
+
+  it('accepts only JPEG, PNG, or WebP images up to 5MB', () => {
+    expect(isPantryImageUploadable({ type: 'image/jpeg', size: 5 * 1024 * 1024 })).toBe(true);
+    expect(isPantryImageUploadable({ type: 'image/heic', size: 1024 })).toBe(false);
+    expect(isPantryImageUploadable({ type: 'image/png', size: 5 * 1024 * 1024 + 1 })).toBe(false);
   });
 });
 

@@ -7,6 +7,16 @@ import { completeCooking, scrapRecipe, unscrapRecipe } from './recipe-mutations'
 import { PANTRY_QUERY_KEY } from '@/entities/pantry/api/use-pantries-query';
 import { getRecipePantryMatchQueryKey } from './use-recipe-pantry-match-query';
 
+interface RecipeRecommendationAction {
+  recipeId: string;
+  requestId?: string | null;
+  position?: number;
+}
+
+function getRecipeRecommendationAction(value: string | RecipeRecommendationAction) {
+  return typeof value === 'string' ? { recipeId: value } : value;
+}
+
 export function invalidateScrappedRecipes(queryClient: QueryClient) {
   return queryClient.invalidateQueries({ queryKey: RECIPE_SCRAPS_QUERY_KEY });
 }
@@ -22,8 +32,19 @@ export function useRecipeMutations() {
   const queryClient = useQueryClient();
   return {
     completeCooking: useMutation({
-      mutationFn: ({ recipeId, pantryItemIds }: { recipeId: string; pantryItemIds?: number[] }) =>
-        completeCooking(recipeId, pantryItemIds?.length ? { pantryItemIds } : undefined),
+      mutationFn: (variables: {
+        recipeId: string;
+        pantryItemIds?: number[];
+        requestId?: string | null;
+        position?: number;
+      }) => {
+        const { recipeId, pantryItemIds, requestId, position } = variables;
+        const body = {
+          ...(pantryItemIds?.length ? { pantryItemIds } : {}),
+          ...(requestId && position != null ? { requestId, position } : {}),
+        };
+        return completeCooking(recipeId, Object.keys(body).length > 0 ? body : undefined);
+      },
       onSuccess: (_result, variables) => {
         if (variables.pantryItemIds?.length) {
           return invalidateCookingPantryMatch(queryClient, variables.recipeId);
@@ -31,11 +52,17 @@ export function useRecipeMutations() {
       },
     }),
     scrap: useMutation({
-      mutationFn: scrapRecipe,
+      mutationFn: (value: string | RecipeRecommendationAction) => {
+        const { recipeId, requestId, position } = getRecipeRecommendationAction(value);
+        return scrapRecipe(recipeId, { requestId, position });
+      },
       onSuccess: () => invalidateScrappedRecipes(queryClient),
     }),
     unscrap: useMutation({
-      mutationFn: unscrapRecipe,
+      mutationFn: (value: string | RecipeRecommendationAction) => {
+        const { recipeId, requestId, position } = getRecipeRecommendationAction(value);
+        return unscrapRecipe(recipeId, { requestId, position });
+      },
       onSuccess: () => invalidateScrappedRecipes(queryClient),
     }),
   };

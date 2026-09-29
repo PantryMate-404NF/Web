@@ -14,6 +14,7 @@ import {
   toCreatePantryItemRequest,
   toUpdatePantryItemRequest,
 } from '@/entities/pantry/api/pantry-request';
+import { uploadPantryImage } from '@/entities/pantry/api/upload-pantry-image';
 import { usePantryStore } from '@/entities/pantry/model/pantry-store';
 import { getPantryCardVariant } from '@/entities/pantry/model/types';
 import type {
@@ -58,9 +59,15 @@ export function isIngredientFormSubmittable(
 }
 
 export function getPantryImageInputProps(source: 'camera' | 'gallery') {
-  return source === 'camera'
-    ? { accept: 'image/*', capture: 'environment' as const }
-    : { accept: 'image/*' };
+  const accept = 'image/jpeg,image/png,image/webp';
+
+  return source === 'camera' ? { accept, capture: 'environment' as const } : { accept };
+}
+
+export function isPantryImageUploadable(file: Pick<File, 'size' | 'type'>) {
+  const supportedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+  return supportedTypes.includes(file.type) && file.size <= 5 * 1024 * 1024;
 }
 
 type IngredientDateField = 'expiration' | 'consumption';
@@ -68,6 +75,7 @@ type IngredientDateField = 'expiration' | 'consumption';
 interface IngredientDraft {
   consumptionDate: string;
   expirationDate: string;
+  imageFile?: File;
   id: string;
   imageUrl: string;
   name: string;
@@ -137,7 +145,7 @@ function IngredientFields({
               fill
               sizes="80px"
               src={ingredient.imageUrl}
-              unoptimized={ingredient.imageUrl.startsWith('blob:')}
+              unoptimized={!ingredient.imageUrl.startsWith('/')}
             />
           ) : (
             <Image
@@ -320,12 +328,15 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
   const [selectedDay, setSelectedDay] = useState(initialCalendarSelection.selectedDay);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
+  const [imagePickerError, setImagePickerError] = useState<string | null>(null);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [activeImageIngredientId, setActiveImageIngredientId] = useState(initialIngredient.id);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const calendarDialogRef = useRef<HTMLElement>(null);
   const calendarTriggerRef = useRef<HTMLButtonElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const imagePreviewUrlsRef = useRef(new Set<string>());
   const isEdit = mode === 'edit';
   const primaryIngredient = ingredients[0];
   const ingredientName = primaryIngredient.name;
@@ -334,8 +345,16 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
   const consumptionDate = primaryIngredient.consumptionDate;
   const imageUrl = primaryIngredient.imageUrl;
   const canSubmit = areIngredientFormsSubmittable(ingredients) && (!isEdit || Boolean(editingItem));
-  const isSubmitting = create.isPending || update.isPending;
+  const isSubmitting = isUploadingImages || create.isPending || update.isPending;
   const calendarCells = getCalendarMonthCells(visibleMonth.year, visibleMonth.monthIndex);
+
+  useEffect(
+    () => () => {
+      imagePreviewUrlsRef.current.forEach((imageUrl) => URL.revokeObjectURL(imageUrl));
+      imagePreviewUrlsRef.current.clear();
+    },
+    [],
+  );
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -347,22 +366,37 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
     }));
 
     setSubmitError(null);
+    setIsUploadingImages(true);
 
     try {
+      const formValues = await Promise.all(
+        requests.map(async (ingredient) => ({
+          consumptionDate: ingredient.consumptionDate,
+          expirationDate: ingredient.expirationDate,
+          imageUrl: ingredient.imageFile
+            ? (await uploadPantryImage(ingredient.imageFile)).imageUrl
+            : ingredient.imageUrl,
+          name: ingredient.name,
+          storageType: ingredient.storageType,
+        })),
+      );
+
       if (isEdit && editingItem) {
         await update.mutateAsync({
           pantryItemId: editingItem.id,
-          payload: toUpdatePantryItemRequest(requests[0]),
+          payload: toUpdatePantryItemRequest(formValues[0]),
         });
       } else {
         await Promise.all(
-          requests.map((ingredient) => create.mutateAsync(toCreatePantryItemRequest(ingredient))),
+          formValues.map((ingredient) => create.mutateAsync(toCreatePantryItemRequest(ingredient))),
         );
       }
 
       router.push('/pantry');
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : '식재료 등록에 실패했어요.');
+    } finally {
+      setIsUploadingImages(false);
     }
   }
 
@@ -395,7 +429,22 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
     const image = event.currentTarget.files?.[0];
     if (!image) return;
 
-    updateIngredient(activeImageIngredientId, { imageUrl: URL.createObjectURL(image) });
+    if (!isPantryImageUploadable(image)) {
+      setImagePickerError('JPEG, PNG, WebP 형식의 5MB 이하 이미지를 선택해주세요.');
+      event.currentTarget.value = '';
+      return;
+    }
+
+    setImagePickerError(null);
+    setSubmitError(null);
+    const previousImageUrl = ingredients.find(({ id }) => id === activeImageIngredientId)?.imageUrl;
+    if (previousImageUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(previousImageUrl);
+      imagePreviewUrlsRef.current.delete(previousImageUrl);
+    }
+    const imageUrl = URL.createObjectURL(image);
+    imagePreviewUrlsRef.current.add(imageUrl);
+    updateIngredient(activeImageIngredientId, { imageFile: image, imageUrl });
     setIsImagePickerOpen(false);
     event.currentTarget.value = '';
   }
@@ -418,6 +467,11 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
   }
 
   function removeIngredient(ingredientId: string) {
+    const imageUrl = ingredients.find(({ id }) => id === ingredientId)?.imageUrl;
+    if (imageUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(imageUrl);
+      imagePreviewUrlsRef.current.delete(imageUrl);
+    }
     setIngredients((currentIngredients) =>
       currentIngredients.filter((ingredient) => ingredient.id !== ingredientId),
     );
@@ -482,6 +536,7 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
             className="bg-surface-secondary border-border relative grid size-20 overflow-hidden rounded-sm border"
             onClick={() => {
               setActiveImageIngredientId(primaryIngredient.id);
+              setImagePickerError(null);
               setIsImagePickerOpen(true);
             }}
             type="button"
@@ -493,7 +548,7 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
                 fill
                 sizes="80px"
                 src={imageUrl}
-                unoptimized={imageUrl.startsWith('blob:')}
+                unoptimized={!imageUrl.startsWith('/')}
               />
             ) : (
               <Image
@@ -670,6 +725,7 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
             onOpenCalendar={openCalendar}
             onOpenImagePicker={(ingredientId) => {
               setActiveImageIngredientId(ingredientId);
+              setImagePickerError(null);
               setIsImagePickerOpen(true);
             }}
             onRemove={removeIngredient}
@@ -882,6 +938,11 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
                 앨범에서 선택
               </Button>
             </div>
+            {imagePickerError ? (
+              <p className="text-destructive mt-3 text-sm" role="alert">
+                {imagePickerError}
+              </p>
+            ) : null}
             <button
               className="text-disabled mt-4 h-10 w-full text-sm font-medium"
               onClick={() => setIsImagePickerOpen(false)}

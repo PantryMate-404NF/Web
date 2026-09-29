@@ -18,6 +18,10 @@ interface ProductInfoRowProps {
   value: string;
 }
 
+export function ProductSectionDivider() {
+  return <div aria-hidden="true" className="h-2 w-full bg-[var(--primitive-grey-100)]" />;
+}
+
 const frequentlyViewedProducts: RelatedProduct[] = [
   {
     id: 'soft-boiled-eggs',
@@ -113,21 +117,21 @@ export function ProductDetailImages({ product }: { product: ProductDetail }) {
   if (!product.detailImageUrls?.length) return null;
 
   return (
-    <section
-      aria-label="상품 상세 이미지"
-      className="flex flex-col gap-6 border-t-8 border-[var(--surface-secondary)] px-4 py-4"
-    >
-      {product.detailImageUrls.map((imageUrl, index) => (
-        <Image
-          alt={`${product.name} 상세 정보 ${index + 1}`}
-          className={`w-full object-cover ${index === 1 ? 'h-[1220px]' : index === 2 ? 'h-[835px]' : index === 3 ? 'h-[200px]' : 'h-[149px]'}`}
-          height={index === 1 ? 1220 : index === 2 ? 835 : index === 3 ? 200 : 149}
-          key={imageUrl}
-          sizes="(max-width: 390px) calc(100vw - 32px), 358px"
-          src={imageUrl}
-          width={358}
-        />
-      ))}
+    <section aria-label="상품 상세 이미지" className="flex flex-col">
+      <ProductSectionDivider />
+      <div className="flex flex-col gap-6 px-4 py-4">
+        {product.detailImageUrls.map((imageUrl, index) => (
+          <Image
+            alt={`${product.name} 상세 정보 ${index + 1}`}
+            className={`w-full object-cover ${index === 1 ? 'h-[1220px]' : index === 2 ? 'h-[835px]' : index === 3 ? 'h-[200px]' : 'h-[149px]'}`}
+            height={index === 1 ? 1220 : index === 2 ? 835 : index === 3 ? 200 : 149}
+            key={imageUrl}
+            sizes="(max-width: 390px) calc(100vw - 32px), 358px"
+            src={imageUrl}
+            width={358}
+          />
+        ))}
+      </div>
     </section>
   );
 }
@@ -142,24 +146,27 @@ function RelatedProducts({
   title: string;
 }) {
   return (
-    <section className="relative border-t-8 border-[var(--surface-secondary)] p-4" id={id}>
-      <div className="w-[281px]">
-        <h2 className="text-title-3 leading-[27px] font-semibold">{title}</h2>
-        <button
-          aria-label={`${title} 더보기`}
-          className="text-title-4 text-text-secondary focus-visible:ring-ring absolute top-[10px] right-0 flex h-10 items-center rounded-sm font-medium focus-visible:ring-2"
-          type="button"
-        >
-          더보기
-          <span className="grid size-10 place-items-center">
-            <ChevronRight aria-hidden="true" className="size-6" />
-          </span>
-        </button>
-      </div>
-      <div className="mt-4 flex [scrollbar-width:none] gap-2 overflow-x-auto">
-        {products.map((relatedProduct) => (
-          <ProductCard key={relatedProduct.id} product={relatedProduct} />
-        ))}
+    <section id={id}>
+      <ProductSectionDivider />
+      <div className="relative p-4">
+        <div className="w-[281px]">
+          <h2 className="text-title-3 leading-[27px] font-semibold">{title}</h2>
+          <button
+            aria-label={`${title} 더보기`}
+            className="text-title-4 text-text-secondary focus-visible:ring-ring absolute top-[10px] right-0 flex h-10 items-center rounded-sm font-medium focus-visible:ring-2"
+            type="button"
+          >
+            더보기
+            <span className="grid size-10 place-items-center">
+              <ChevronRight aria-hidden="true" className="size-6" />
+            </span>
+          </button>
+        </div>
+        <div className="mt-4 flex [scrollbar-width:none] gap-2 overflow-x-auto">
+          {products.map((relatedProduct) => (
+            <ProductCard key={relatedProduct.id} product={relatedProduct} />
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -269,7 +276,8 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
         </div>
       </section>
 
-      <section className="border-t-8 border-[var(--surface-secondary)] px-4 py-4">
+      <ProductSectionDivider />
+      <section className="px-4 py-4">
         <h2 className="sr-only">배송 및 판매 정보</h2>
         <dl className="space-y-2">
           <ProductInfoRow label="배송" value={product.delivery} />
@@ -285,10 +293,8 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
         title="다른 고객이 많이 본 연관 상품"
       />
 
-      <section
-        className="border-t-8 border-[var(--surface-secondary)] px-4 py-4"
-        id="product-detail"
-      >
+      <ProductSectionDivider />
+      <section className="px-4 py-4" id="product-detail">
         <h2 className="sr-only">상품 상세정보</h2>
         <dl className="space-y-2">
           {detailRows.map((row) => (

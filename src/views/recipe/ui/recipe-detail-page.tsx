@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { getCartItemCount, useCartStore } from '@/entities/cart/model/cart-store';
 import { useRecipeMutations } from '@/entities/recipe/api/use-recipe-mutations';
 import { useRecipeDetailQuery } from '@/entities/recipe/api/use-recipe-detail-query';
+import type { RecipeRecommendationContext } from '@/entities/recipe/api/recipe.dto';
 import { useRecipePantryMatchQuery } from '@/entities/recipe/api/use-recipe-pantry-match-query';
 import { useScrappedRecipesQuery } from '@/entities/recipe/api/use-scrapped-recipes-query';
 import type { RecipeDetail } from '@/entities/recipe/model/types';
@@ -15,6 +16,7 @@ import { SystemErrorState } from '@/shared/ui/system-error-state';
 
 interface RecipeDetailPageProps {
   recipeId: string;
+  recommendationContext?: RecipeRecommendationContext;
 }
 
 const difficultyLabels = {
@@ -36,8 +38,13 @@ export function areAllIngredientsSelected(selectedIds: string[], ingredientIds: 
   return ingredientIds.length > 0 && ingredientIds.every((id) => selectedIds.includes(id));
 }
 
-export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
-  const { data: recipe, error, isPending, refetch } = useRecipeDetailQuery(recipeId);
+export function RecipeDetailPage({ recipeId, recommendationContext }: RecipeDetailPageProps) {
+  const {
+    data: recipe,
+    error,
+    isPending,
+    refetch,
+  } = useRecipeDetailQuery(recipeId, recommendationContext);
 
   if (isPending) {
     return (
@@ -55,10 +62,16 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
     );
   }
 
-  return <RecipeDetailContent recipe={recipe} />;
+  return <RecipeDetailContent recipe={recipe} recommendationContext={recommendationContext} />;
 }
 
-function RecipeDetailContent({ recipe }: { recipe: RecipeDetail }) {
+function RecipeDetailContent({
+  recipe,
+  recommendationContext,
+}: {
+  recipe: RecipeDetail;
+  recommendationContext?: RecipeRecommendationContext;
+}) {
   const { completeCooking, scrap, unscrap } = useRecipeMutations();
   const pantryMatchQuery = useRecipePantryMatchQuery(recipe.id);
   const scrappedRecipesQuery = useScrappedRecipesQuery();
@@ -132,7 +145,16 @@ function RecipeDetailContent({ recipe }: { recipe: RecipeDetail }) {
 
   const submitCookingComplete = async (pantryItemIds?: number[]) => {
     try {
-      await completeCooking.mutateAsync({ recipeId: recipe.id, pantryItemIds });
+      await completeCooking.mutateAsync({
+        recipeId: recipe.id,
+        pantryItemIds,
+        ...(recommendationContext?.requestId && recommendationContext.position != null
+          ? {
+              requestId: recommendationContext.requestId,
+              position: recommendationContext.position,
+            }
+          : {}),
+      });
       setIsPantryCleanupOpen(false);
       setCompletionMessage('조리 완료를 기록했어요.');
     } catch {
@@ -157,7 +179,15 @@ function RecipeDetailContent({ recipe }: { recipe: RecipeDetail }) {
   const handleScrap = async () => {
     setScrapMessage(null);
     try {
-      await (isScrapped ? unscrap.mutateAsync(recipe.id) : scrap.mutateAsync(recipe.id));
+      const action =
+        recommendationContext?.requestId && recommendationContext.position != null
+          ? {
+              recipeId: recipe.id,
+              requestId: recommendationContext.requestId,
+              position: recommendationContext.position,
+            }
+          : recipe.id;
+      await (isScrapped ? unscrap.mutateAsync(action) : scrap.mutateAsync(action));
     } catch {
       setScrapMessage('스크랩을 변경하지 못했어요. 다시 시도해 주세요.');
     }
