@@ -26,6 +26,10 @@ export interface PantryItemDto {
   imageUrl: string | null;
 }
 
+export interface PantryImageUploadResponseDto {
+  imageUrl: string;
+}
+
 export interface CreatePantryItemRequest {
   ingredientName: string;
   sellByDate?: string;

@@ -38,6 +38,11 @@ interface PantryItemCardProps {
   item: PantryItem;
   variant?: PantryCardVariant;
   onOptions?: (trigger: HTMLButtonElement) => void;
+  selectionMode?: boolean;
+  selected?: boolean;
+  selectionIngredientId?: number | null;
+  selectionDisabled?: boolean;
+  onSelect?: (item: PantryItem, ingredientId?: number) => void;
 }
 
 function ItemOptionsLink({
@@ -62,9 +67,19 @@ function ItemOptionsLink({
 function PantryImageCard({
   item,
   onOptions,
+  selectionMode = false,
+  selected = false,
+  selectionIngredientId = item.ingredientId,
+  selectionDisabled = false,
+  onSelect,
 }: {
   item: PantryItem;
   onOptions?: (trigger: HTMLButtonElement) => void;
+  selectionMode?: boolean;
+  selected?: boolean;
+  selectionIngredientId?: number | null;
+  selectionDisabled?: boolean;
+  onSelect?: (item: PantryItem, ingredientId?: number) => void;
 }) {
   const storageLabels = { REFRIGERATED: '냉장', FROZEN: '냉동', ROOM_TEMP: '실온' } as const;
   const sourceLabels = {
@@ -83,7 +98,23 @@ function PantryImageCard({
         : '/images/pantry/refrigerator.svg';
 
   return (
-    <article className="text-foreground bg-card shadow-card relative flex h-[156px] min-w-0 flex-col rounded-xl p-3">
+    <article
+      aria-disabled={selectionMode ? selectionDisabled : undefined}
+      aria-pressed={selectionMode ? selected : undefined}
+      className={`text-foreground shadow-card relative flex h-[156px] min-w-0 flex-col rounded-xl p-3 ${selectionMode ? `cursor-pointer focus-visible:ring-2 focus-visible:ring-[#FFCD55] focus-visible:outline-none ${selected ? 'border border-[#FFCD55] bg-[#FAE9C2]' : 'bg-card border border-transparent'}` : 'bg-card'}`}
+      onClick={
+        selectionMode && !selectionDisabled
+          ? () => onSelect?.(item, selectionIngredientId ?? undefined)
+          : undefined
+      }
+      onKeyDown={(event) => {
+        if (!selectionMode || (event.key !== 'Enter' && event.key !== ' ')) return;
+        event.preventDefault();
+        if (!selectionDisabled) onSelect?.(item, selectionIngredientId ?? undefined);
+      }}
+      role={selectionMode ? 'button' : undefined}
+      tabIndex={selectionMode ? 0 : undefined}
+    >
       <div className="flex items-start justify-between">
         <div className="bg-placeholder relative size-20 overflow-hidden rounded-sm">
           <Image
@@ -92,7 +123,7 @@ function PantryImageCard({
             fill
             sizes="80px"
             src={item.imageUrl ?? '/images/pantry/pantry-basic.svg'}
-            unoptimized={item.imageUrl?.startsWith('blob:')}
+            unoptimized={Boolean(item.imageUrl && !item.imageUrl.startsWith('/'))}
           />
         </div>
         <span
@@ -119,9 +150,11 @@ function PantryImageCard({
           <span>{sourceLabel}</span>
         </p>
       </div>
-      <div className="absolute right-[-6px] bottom-[5px]">
-        <ItemOptionsLink itemName={item.name} onOptions={onOptions} />
-      </div>
+      {!selectionMode ? (
+        <div className="absolute right-[-6px] bottom-[5px]">
+          <ItemOptionsLink itemName={item.name} onOptions={onOptions} />
+        </div>
+      ) : null}
     </article>
   );
 }
@@ -129,14 +162,40 @@ function PantryImageCard({
 function PantryIconCard({
   item,
   onOptions,
+  selectionMode = false,
+  selected = false,
+  selectionIngredientId = item.ingredientId,
+  selectionDisabled = false,
+  onSelect,
 }: {
   item: PantryItem;
   onOptions?: (trigger: HTMLButtonElement) => void;
+  selectionMode?: boolean;
+  selected?: boolean;
+  selectionIngredientId?: number | null;
+  selectionDisabled?: boolean;
+  onSelect?: (item: PantryItem, ingredientId?: number) => void;
 }) {
   const availabilityLabel = item.availability === 'AVAILABLE' ? '요리 가능' : '확인 필요';
 
   return (
-    <article className="text-foreground bg-muted flex h-[104px] min-w-0 flex-col rounded-2xl px-2.5 py-3">
+    <article
+      aria-disabled={selectionMode ? selectionDisabled : undefined}
+      aria-pressed={selectionMode ? selected : undefined}
+      className={`text-foreground flex h-[104px] min-w-0 flex-col rounded-2xl px-2.5 py-3 ${selectionMode ? `cursor-pointer focus-visible:ring-2 focus-visible:ring-[#FFCD55] focus-visible:outline-none ${selected ? 'border border-[#FFCD55] bg-[#FAE9C2]' : 'bg-muted border border-transparent'}` : 'bg-muted'}`}
+      onClick={
+        selectionMode && !selectionDisabled
+          ? () => onSelect?.(item, selectionIngredientId ?? undefined)
+          : undefined
+      }
+      onKeyDown={(event) => {
+        if (!selectionMode || (event.key !== 'Enter' && event.key !== ' ')) return;
+        event.preventDefault();
+        if (!selectionDisabled) onSelect?.(item, selectionIngredientId ?? undefined);
+      }}
+      role={selectionMode ? 'button' : undefined}
+      tabIndex={selectionMode ? 0 : undefined}
+    >
       <div className="flex items-start justify-between gap-2">
         <div
           aria-label={item.imageAlt}
@@ -157,7 +216,7 @@ function PantryIconCard({
           <h2 className="text-body-4 truncate font-semibold">{item.name}</h2>
           <p className="text-label-4 text-muted-foreground mt-1 truncate">{item.expirationLabel}</p>
         </div>
-        <ItemOptionsLink itemName={item.name} onOptions={onOptions} />
+        {!selectionMode ? <ItemOptionsLink itemName={item.name} onOptions={onOptions} /> : null}
       </div>
 
       <p className="sr-only">{availabilityLabel}</p>
@@ -165,8 +224,38 @@ function PantryIconCard({
   );
 }
 
-export function PantryItemCard({ item, variant = 'icon', onOptions }: PantryItemCardProps) {
-  if (variant === 'image') return <PantryImageCard item={item} onOptions={onOptions} />;
+export function PantryItemCard({
+  item,
+  variant = 'icon',
+  onOptions,
+  selectionMode,
+  selected,
+  selectionIngredientId,
+  selectionDisabled,
+  onSelect,
+}: PantryItemCardProps) {
+  if (variant === 'image')
+    return (
+      <PantryImageCard
+        item={item}
+        onOptions={onOptions}
+        onSelect={onSelect}
+        selectionIngredientId={selectionIngredientId}
+        selectionDisabled={selectionDisabled}
+        selected={selected}
+        selectionMode={selectionMode}
+      />
+    );
 
-  return <PantryIconCard item={item} onOptions={onOptions} />;
+  return (
+    <PantryIconCard
+      item={item}
+      onOptions={onOptions}
+      onSelect={onSelect}
+      selectionIngredientId={selectionIngredientId}
+      selectionDisabled={selectionDisabled}
+      selected={selected}
+      selectionMode={selectionMode}
+    />
+  );
 }

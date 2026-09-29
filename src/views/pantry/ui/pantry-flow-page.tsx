@@ -14,6 +14,7 @@ import {
   toCreatePantryItemRequest,
   toUpdatePantryItemRequest,
 } from '@/entities/pantry/api/pantry-request';
+import { uploadPantryImage } from '@/entities/pantry/api/upload-pantry-image';
 import { usePantryStore } from '@/entities/pantry/model/pantry-store';
 import { getPantryCardVariant } from '@/entities/pantry/model/types';
 import type {
@@ -50,6 +51,18 @@ export function getPantryMockState(state?: string): PantryMockState {
   return 'full';
 }
 
+export function getPantryFieldCompletionClassName(isComplete: boolean) {
+  return isComplete
+    ? 'pantry-field-complete border-border-complete bg-surface-complete'
+    : 'border-border bg-surface-secondary';
+}
+
+export function getPantryStorageTypeClassName(isSelected: boolean) {
+  return isSelected
+    ? 'bg-surface-complete border-border-complete text-title-4 flex h-12 items-center justify-center gap-1.5 rounded-lg border font-medium'
+    : 'bg-surface-secondary border-border text-disabled text-title-4 flex h-12 items-center justify-center gap-1.5 rounded-lg border font-medium';
+}
+
 export function isIngredientFormSubmittable(
   ingredientName: string,
   storageType: PantryStorageType | null,
@@ -58,9 +71,15 @@ export function isIngredientFormSubmittable(
 }
 
 export function getPantryImageInputProps(source: 'camera' | 'gallery') {
-  return source === 'camera'
-    ? { accept: 'image/*', capture: 'environment' as const }
-    : { accept: 'image/*' };
+  const accept = 'image/jpeg,image/png,image/webp';
+
+  return source === 'camera' ? { accept, capture: 'environment' as const } : { accept };
+}
+
+export function isPantryImageUploadable(file: Pick<File, 'size' | 'type'>) {
+  const supportedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+  return supportedTypes.includes(file.type) && file.size <= 5 * 1024 * 1024;
 }
 
 type IngredientDateField = 'expiration' | 'consumption';
@@ -68,6 +87,7 @@ type IngredientDateField = 'expiration' | 'consumption';
 interface IngredientDraft {
   consumptionDate: string;
   expirationDate: string;
+  imageFile?: File;
   id: string;
   imageUrl: string;
   name: string;
@@ -137,7 +157,7 @@ function IngredientFields({
               fill
               sizes="80px"
               src={ingredient.imageUrl}
-              unoptimized={ingredient.imageUrl.startsWith('blob:')}
+              unoptimized={!ingredient.imageUrl.startsWith('/')}
             />
           ) : (
             <Image
@@ -177,7 +197,7 @@ function IngredientFields({
           </div>
           <span className="relative">
             <input
-              className="bg-surface-secondary text-title-4 focus-visible:ring-ring placeholder:text-disabled h-12 w-full rounded-xl border px-4 pr-14 font-normal outline-none focus-visible:ring-2"
+              className={`text-title-4 focus-visible:ring-ring placeholder:text-disabled h-12 w-full rounded-xl border px-4 pr-14 font-normal outline-none focus-visible:ring-2 ${getPantryFieldCompletionClassName(ingredient.name.trim().length > 0)}`}
               id={inputId}
               maxLength={20}
               name="ingredientName"
@@ -203,7 +223,7 @@ function IngredientFields({
             <p className="text-title-4 font-medium">{label}</p>
             <button
               aria-label={`${label} 선택`}
-              className="bg-surface-secondary text-title-4 focus-visible:ring-ring flex h-12 w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2"
+              className={`text-title-4 focus-visible:ring-ring flex h-12 w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2 ${getPantryFieldCompletionClassName(Boolean(date))}`}
               onClick={(event) => onOpenCalendar(ingredient.id, field, date, event.currentTarget)}
               type="button"
             >
@@ -243,11 +263,7 @@ function IngredientFields({
             ).map(([label, storageType, iconSrc, iconClassName]) => (
               <button
                 aria-pressed={ingredient.storageType === storageType}
-                className={
-                  ingredient.storageType === storageType
-                    ? 'bg-primary/15 border-primary text-title-4 flex h-12 items-center justify-center gap-1.5 rounded-lg border font-medium'
-                    : 'bg-surface-secondary text-disabled text-title-4 flex h-12 items-center justify-center gap-1.5 rounded-lg border font-medium'
-                }
+                className={getPantryStorageTypeClassName(ingredient.storageType === storageType)}
                 key={storageType}
                 onClick={() => onUpdate(ingredient.id, { storageType })}
                 type="button"
@@ -320,12 +336,15 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
   const [selectedDay, setSelectedDay] = useState(initialCalendarSelection.selectedDay);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
+  const [imagePickerError, setImagePickerError] = useState<string | null>(null);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [activeImageIngredientId, setActiveImageIngredientId] = useState(initialIngredient.id);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const calendarDialogRef = useRef<HTMLElement>(null);
   const calendarTriggerRef = useRef<HTMLButtonElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const imagePreviewUrlsRef = useRef(new Set<string>());
   const isEdit = mode === 'edit';
   const primaryIngredient = ingredients[0];
   const ingredientName = primaryIngredient.name;
@@ -334,8 +353,16 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
   const consumptionDate = primaryIngredient.consumptionDate;
   const imageUrl = primaryIngredient.imageUrl;
   const canSubmit = areIngredientFormsSubmittable(ingredients) && (!isEdit || Boolean(editingItem));
-  const isSubmitting = create.isPending || update.isPending;
+  const isSubmitting = isUploadingImages || create.isPending || update.isPending;
   const calendarCells = getCalendarMonthCells(visibleMonth.year, visibleMonth.monthIndex);
+
+  useEffect(
+    () => () => {
+      imagePreviewUrlsRef.current.forEach((imageUrl) => URL.revokeObjectURL(imageUrl));
+      imagePreviewUrlsRef.current.clear();
+    },
+    [],
+  );
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -347,22 +374,37 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
     }));
 
     setSubmitError(null);
+    setIsUploadingImages(true);
 
     try {
+      const formValues = await Promise.all(
+        requests.map(async (ingredient) => ({
+          consumptionDate: ingredient.consumptionDate,
+          expirationDate: ingredient.expirationDate,
+          imageUrl: ingredient.imageFile
+            ? (await uploadPantryImage(ingredient.imageFile)).imageUrl
+            : ingredient.imageUrl,
+          name: ingredient.name,
+          storageType: ingredient.storageType,
+        })),
+      );
+
       if (isEdit && editingItem) {
         await update.mutateAsync({
           pantryItemId: editingItem.id,
-          payload: toUpdatePantryItemRequest(requests[0]),
+          payload: toUpdatePantryItemRequest(formValues[0]),
         });
       } else {
         await Promise.all(
-          requests.map((ingredient) => create.mutateAsync(toCreatePantryItemRequest(ingredient))),
+          formValues.map((ingredient) => create.mutateAsync(toCreatePantryItemRequest(ingredient))),
         );
       }
 
       router.push('/pantry');
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : '식재료 등록에 실패했어요.');
+    } finally {
+      setIsUploadingImages(false);
     }
   }
 
@@ -395,7 +437,22 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
     const image = event.currentTarget.files?.[0];
     if (!image) return;
 
-    updateIngredient(activeImageIngredientId, { imageUrl: URL.createObjectURL(image) });
+    if (!isPantryImageUploadable(image)) {
+      setImagePickerError('JPEG, PNG, WebP 형식의 5MB 이하 이미지를 선택해주세요.');
+      event.currentTarget.value = '';
+      return;
+    }
+
+    setImagePickerError(null);
+    setSubmitError(null);
+    const previousImageUrl = ingredients.find(({ id }) => id === activeImageIngredientId)?.imageUrl;
+    if (previousImageUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(previousImageUrl);
+      imagePreviewUrlsRef.current.delete(previousImageUrl);
+    }
+    const imageUrl = URL.createObjectURL(image);
+    imagePreviewUrlsRef.current.add(imageUrl);
+    updateIngredient(activeImageIngredientId, { imageFile: image, imageUrl });
     setIsImagePickerOpen(false);
     event.currentTarget.value = '';
   }
@@ -418,6 +475,11 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
   }
 
   function removeIngredient(ingredientId: string) {
+    const imageUrl = ingredients.find(({ id }) => id === ingredientId)?.imageUrl;
+    if (imageUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(imageUrl);
+      imagePreviewUrlsRef.current.delete(imageUrl);
+    }
     setIngredients((currentIngredients) =>
       currentIngredients.filter((ingredient) => ingredient.id !== ingredientId),
     );
@@ -482,6 +544,7 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
             className="bg-surface-secondary border-border relative grid size-20 overflow-hidden rounded-sm border"
             onClick={() => {
               setActiveImageIngredientId(primaryIngredient.id);
+              setImagePickerError(null);
               setIsImagePickerOpen(true);
             }}
             type="button"
@@ -493,7 +556,7 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
                 fill
                 sizes="80px"
                 src={imageUrl}
-                unoptimized={imageUrl.startsWith('blob:')}
+                unoptimized={!imageUrl.startsWith('/')}
               />
             ) : (
               <Image
@@ -534,7 +597,7 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
             </label>
             <span className="relative">
               <input
-                className="bg-surface-secondary text-title-4 focus-visible:ring-ring placeholder:text-disabled h-12 w-full rounded-xl border px-4 pr-14 font-normal outline-none focus-visible:ring-2"
+                className={`text-title-4 focus-visible:ring-ring placeholder:text-disabled h-12 w-full rounded-xl border px-4 pr-14 font-normal outline-none focus-visible:ring-2 ${getPantryFieldCompletionClassName(ingredientName.trim().length > 0)}`}
                 id="pantry-ingredient-name"
                 maxLength={20}
                 name="ingredientName"
@@ -554,7 +617,7 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
             <p className="text-title-4 font-medium">유통기한</p>
             <button
               aria-label="유통기한 선택"
-              className="bg-surface-secondary text-title-4 focus-visible:ring-ring flex h-12 w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2"
+              className={`text-title-4 focus-visible:ring-ring flex h-12 w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2 ${getPantryFieldCompletionClassName(Boolean(expirationDate))}`}
               onClick={(event) => {
                 openCalendar(
                   primaryIngredient.id,
@@ -589,7 +652,7 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
             <p className="text-title-4 font-medium">소비기한</p>
             <button
               aria-label="소비기한 선택"
-              className="bg-surface-secondary text-title-4 focus-visible:ring-ring flex h-12 w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2"
+              className={`text-title-4 focus-visible:ring-ring flex h-12 w-full items-center rounded-xl border px-1.5 text-left font-normal outline-none focus-visible:ring-2 ${getPantryFieldCompletionClassName(Boolean(consumptionDate))}`}
               onClick={(event) => {
                 openCalendar(
                   primaryIngredient.id,
@@ -636,11 +699,7 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
                 ] as const
               ).map(([label, type, iconSrc, iconClassName]) => (
                 <button
-                  className={
-                    storageType === type
-                      ? 'bg-primary/15 border-primary text-title-4 flex h-12 items-center justify-center gap-1.5 rounded-lg border font-medium'
-                      : 'bg-surface-secondary text-disabled text-title-4 flex h-12 items-center justify-center gap-1.5 rounded-lg border font-medium'
-                  }
+                  className={getPantryStorageTypeClassName(storageType === type)}
                   key={type}
                   onClick={() => updatePrimaryIngredient({ storageType: type })}
                   aria-pressed={storageType === type}
@@ -670,6 +729,7 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
             onOpenCalendar={openCalendar}
             onOpenImagePicker={(ingredientId) => {
               setActiveImageIngredientId(ingredientId);
+              setImagePickerError(null);
               setIsImagePickerOpen(true);
             }}
             onRemove={removeIngredient}
@@ -882,6 +942,11 @@ function IngredientFormMock({ mode, itemId, items }: IngredientFormMockProps) {
                 앨범에서 선택
               </Button>
             </div>
+            {imagePickerError ? (
+              <p className="text-destructive mt-3 text-sm" role="alert">
+                {imagePickerError}
+              </p>
+            ) : null}
             <button
               className="text-disabled mt-4 h-10 w-full text-sm font-medium"
               onClick={() => setIsImagePickerOpen(false)}

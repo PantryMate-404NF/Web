@@ -17,6 +17,12 @@ import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { usePantryMutations } from '@/entities/pantry/api/use-pantry-mutations';
+import { useRecipeFilterIngredientsQuery } from '@/entities/recipe/api/use-recipe-filter-ingredients-query';
+import {
+  consumeRecipePantrySelectionIntent,
+  MAX_RECIPE_PANTRY_SELECTION,
+  useRecipePantrySelectionStore,
+} from '@/entities/pantry/model/recipe-pantry-selection-store';
 import {
   filterPantryItems,
   sortPantryItems,
@@ -100,11 +106,26 @@ export function getVisiblePantryItems(
 }
 
 export function getDeleteConfirmationTitle(itemName: string) {
+  const itemNameCharacters = Array.from(itemName);
+  const displayName =
+    itemNameCharacters.length >= 13 ? `${itemNameCharacters.slice(0, 12).join('')}...` : itemName;
   const lastCharacter = itemName.at(-1);
   const codePoint = lastCharacter?.charCodeAt(0) ?? 0;
   const hasFinalConsonant =
     codePoint >= 0xac00 && codePoint <= 0xd7a3 && (codePoint - 0xac00) % 28 !== 0;
-  return `${itemName}${hasFinalConsonant ? '을' : '를'} 삭제할까요?`;
+  return `${displayName}${hasFinalConsonant ? '을' : '를'} 삭제할까요?`;
+}
+
+export function getRecipeResultsHref(ingredientIds: number[], pantryItemIds: string[] = []) {
+  const search = new URLSearchParams();
+  [...new Set(ingredientIds)].forEach((ingredientId) =>
+    search.append('ingredientIds', String(ingredientId)),
+  );
+  [...new Set(pantryItemIds)].forEach((pantryItemId) =>
+    search.append('pantryItemIds', pantryItemId),
+  );
+  const query = search.toString();
+  return query ? `/recipe?${query}` : '/recipe';
 }
 
 export function PantryErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
@@ -204,11 +225,11 @@ export function PantryDeleteDialog({
       role="dialog"
       tabIndex={-1}
     >
-      <div className="text-title-4 flex w-40 flex-col items-center gap-3 text-center">
+      <div className="text-title-4 flex w-[255px] flex-col items-center gap-3 text-center">
         <h2 className="w-full font-bold" id="delete-title">
           {getDeleteConfirmationTitle(itemName)}
         </h2>
-        <p className="text-muted-foreground w-full font-medium">
+        <p className="text-muted-foreground w-40 font-medium">
           삭제하면 팬트리에서 다시
           <br />
           확인할 수 없어요.
@@ -243,6 +264,20 @@ export function PantryPage({
 }: PantryPageProps) {
   const storedItems = usePantryStore((state) => state.items);
   const { remove: removePantryItem } = usePantryMutations();
+  const isRecipeSelectionMode = useRecipePantrySelectionStore(
+    (state) => state.isSelectingForRecipe,
+  );
+  const selectedPantryItemIds = useRecipePantrySelectionStore(
+    (state) => state.selectedPantryItemIds,
+  );
+  const selectedIngredientIdsByPantryItemId = useRecipePantrySelectionStore(
+    (state) => state.selectedIngredientIdsByPantryItemId,
+  );
+  const toggleRecipeSelection = useRecipePantrySelectionStore((state) => state.toggleSelection);
+  const clearRecipeSelection = useRecipePantrySelectionStore((state) => state.clearSelection);
+  const resumeRecipeSelection = useRecipePantrySelectionStore((state) => state.resumeSelection);
+  const { data: recipeFilterIngredients = [] } =
+    useRecipeFilterIngredientsQuery(isRecipeSelectionMode);
   const currentItems = items ?? storedItems;
   const [query, setQuery] = useState('');
   const [storage, setStorage] = useState<StorageFilter>('ALL');
@@ -259,6 +294,10 @@ export function PantryPage({
   const [isAddOptionsOpen, setIsAddOptionsOpen] = useState(false);
   const visibleItems = getVisiblePantryItems(currentItems, query, storage, sort);
   const viewState = getPantryViewState({ items: currentItems, errorMessage, isLoading });
+
+  useEffect(() => {
+    if (consumeRecipePantrySelectionIntent()) resumeRecipeSelection();
+  }, [resumeRecipeSelection]);
 
   function closeDeleteDialog() {
     setDeleteItem(null);
@@ -367,7 +406,15 @@ export function PantryPage({
           <Link
             aria-label="이전 페이지"
             className="grid size-10 shrink-0 place-items-center"
-            href="/"
+            href={
+              isRecipeSelectionMode
+                ? getRecipeResultsHref(
+                    Object.values(selectedIngredientIdsByPantryItemId),
+                    selectedPantryItemIds,
+                  )
+                : '/'
+            }
+            onClick={isRecipeSelectionMode ? clearRecipeSelection : undefined}
           >
             <ChevronLeft className="size-6" />
           </Link>
@@ -472,6 +519,9 @@ export function PantryPage({
             <PantryItemCard
               item={item}
               key={item.id}
+              onSelect={(selectedItem, ingredientId) =>
+                toggleRecipeSelection(selectedItem, ingredientId)
+              }
               onOptions={(trigger) => {
                 menuTriggerRef.current = trigger;
                 setMenuItem(item);
@@ -479,6 +529,18 @@ export function PantryPage({
                   getPantryMenuPosition(trigger.getBoundingClientRect(), window.innerWidth),
                 );
               }}
+              selectionIngredientId={
+                item.ingredientId ??
+                recipeFilterIngredients.find(
+                  (ingredient) => ingredient.name.trim() === item.name.trim(),
+                )?.ingredientId
+              }
+              selectionDisabled={
+                !selectedPantryItemIds.includes(item.id) &&
+                selectedPantryItemIds.length >= MAX_RECIPE_PANTRY_SELECTION
+              }
+              selected={selectedPantryItemIds.includes(item.id)}
+              selectionMode={isRecipeSelectionMode}
               variant={cardVariant}
             />
           ))}

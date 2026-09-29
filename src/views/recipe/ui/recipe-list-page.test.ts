@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import { pantryItems } from '@/entities/pantry/model/mock';
 import type { Recipe } from '@/entities/recipe/model/types';
+import { getRecipeResultsHref } from '@/views/pantry/ui/pantry-page';
 
 import {
+  getAvailablePantryIngredients,
   filterRecipesByQuery,
   getRecipeDisplayMode,
   getImminentIngredients,
@@ -13,6 +15,7 @@ import {
   getRecipeSectionById,
   getRecipeViewState,
   getRecipeSearchResultDisplay,
+  getRecipeSearchPagination,
   getRecipeSections,
   RECIPE_SEARCH_EMPTY_COPY,
   RECIPE_RAIL_TYPOGRAPHY,
@@ -47,6 +50,21 @@ describe('recipe list helpers', () => {
     });
   });
 
+  it('exposes previous and next availability for a paginated search result', () => {
+    expect(getRecipeSearchPagination(0, 35)).toEqual({
+      currentPage: 1,
+      totalPages: 35,
+      canGoPrevious: false,
+      canGoNext: true,
+    });
+    expect(getRecipeSearchPagination(34, 35)).toEqual({
+      currentPage: 35,
+      totalPages: 35,
+      canGoPrevious: true,
+      canGoNext: false,
+    });
+  });
+
   it('prioritizes an API failure over recipe content', () => {
     expect(getRecipeViewState(new Error('레시피 조회 실패'))).toBe('error');
     expect(getRecipeViewState(null)).toBe('content');
@@ -71,9 +89,16 @@ describe('recipe list helpers', () => {
   });
 
   it('routes ingredient cards and the only API-supported recipe list', () => {
-    expect(getIngredientSelectionRoute()).toBe('/recipe/ingredients');
+    expect(getIngredientSelectionRoute()).toBe('/pantry');
     expect(getRecipeMoreRoute('all')).toBe('/recipe/more?section=all');
+    expect(getRecipeMoreRoute('recommendations')).toBe('/recipe/more?section=recommendations');
     expect(getRecipeSectionById('popular', recipes).title).toBe('전체 레시피');
+  });
+
+  it('keeps selected pantry item IDs in the return route while ingredient IDs are unresolved', () => {
+    expect(getRecipeResultsHref([8, 8], ['egg', 'mushroom', 'bacon'])).toBe(
+      '/recipe?ingredientIds=8&pantryItemIds=egg&pantryItemIds=mushroom&pantryItemIds=bacon',
+    );
   });
 
   it('does not claim ranking categories or fabricate ranked recipe subsets', () => {
@@ -85,5 +110,56 @@ describe('recipe list helpers', () => {
 
   it('shows up to three registered, available imminent pantry ingredients in expiry order', () => {
     expect(getImminentIngredients(pantryItems)).toEqual([{ name: '바나나', daysLeft: 2 }]);
+  });
+
+  it('shows only the selected pantry ingredients in the recipe header', () => {
+    const items = pantryItems.map((item, index) => ({ ...item, ingredientId: index + 1 }));
+    const ingredients = getAvailablePantryIngredients(items, [2]);
+
+    expect(ingredients).toEqual([
+      {
+        name: items[1].name,
+        daysLeft: items[1].daysUntilExpiration,
+      },
+    ]);
+  });
+
+  it('uses the recipe ingredient catalog to label selected pantry entries with no pantry ingredient ID', () => {
+    const ingredients = getAvailablePantryIngredients(
+      [{ ...pantryItems[0], ingredientId: null }],
+      [91],
+      [
+        {
+          ingredientId: 91,
+          name: '설탕',
+          expiryDate: '2027-01-14',
+          expired: false,
+          defaultSelected: false,
+        },
+      ],
+    );
+
+    expect(ingredients).toEqual([{ name: '설탕', daysLeft: 122 }]);
+  });
+
+  it('shows every selected pantry item in its original selection order before IDs resolve', () => {
+    const items = pantryItems.map((item) => ({ ...item, ingredientId: null }));
+    const selectedIds = [items[2]!.id, items[0]!.id, items[1]!.id];
+
+    expect(getAvailablePantryIngredients(items, [], [], selectedIds)).toEqual(
+      selectedIds.map((id) => {
+        const selected = items.find((item) => item.id === id)!;
+        return { name: selected.name, daysLeft: selected.daysUntilExpiration };
+      }),
+    );
+  });
+
+  it('keeps selected ingredients in the recipe header even when pantry marks them unavailable', () => {
+    expect(
+      getAvailablePantryIngredients(
+        [{ ...pantryItems[0], ingredientId: 88, availability: 'UNAVAILABLE' }],
+        [88],
+      ),
+    ).toEqual([{ name: '설탕', daysLeft: 122 }]);
   });
 });

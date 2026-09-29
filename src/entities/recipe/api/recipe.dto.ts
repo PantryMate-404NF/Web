@@ -71,6 +71,35 @@ export interface RecipePantryMatchDto {
 
 export interface CookingCompleteRequestDto {
   pantryItemIds?: number[];
+  requestId?: string;
+  position?: number;
+}
+
+export type RecipeRecommendationSource = 'AI' | 'POPULARITY';
+
+export interface RecipeRecommendationItemDto {
+  rank: number;
+  reason: string | null;
+  coverage: number | null;
+  missingCount: number | null;
+  missingIngredients: Array<{ ingredientId: number; name: string }>;
+  recipe: RecipeDto;
+}
+
+export interface RecipeRecommendationsDto {
+  requestId: string | null;
+  source: RecipeRecommendationSource;
+  items: RecipeRecommendationItemDto[];
+}
+
+export interface RecipeRecommendationParams {
+  size?: number;
+  maxMinutes?: number;
+}
+
+export interface RecipeRecommendationContext {
+  requestId?: string | null;
+  position?: number;
 }
 
 export interface RecipeListParams {

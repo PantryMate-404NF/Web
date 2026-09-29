@@ -7,7 +7,10 @@ import {
   getPantryExpirationPresentation,
   getCalendarMonthCells,
   getPantryImageInputProps,
+  isPantryImageUploadable,
   getPantryMockState,
+  getPantryFieldCompletionClassName,
+  getPantryStorageTypeClassName,
   isIngredientFormSubmittable,
 } from './pantry-flow-page';
 
@@ -34,6 +37,26 @@ describe('isIngredientFormSubmittable', () => {
   });
 });
 
+describe('getPantryFieldCompletionClassName', () => {
+  it('shows the selected yellow surface only when a field has a value', () => {
+    expect(getPantryFieldCompletionClassName(false)).toBe('border-border bg-surface-secondary');
+    expect(getPantryFieldCompletionClassName(true)).toBe(
+      'pantry-field-complete border-border-complete bg-surface-complete',
+    );
+  });
+});
+
+describe('getPantryStorageTypeClassName', () => {
+  it('uses the completion colors for a selected storage type', () => {
+    expect(getPantryStorageTypeClassName(true)).toContain('bg-surface-complete');
+    expect(getPantryStorageTypeClassName(true)).toContain('border-border-complete');
+  });
+
+  it('keeps unselected storage types on the neutral surface', () => {
+    expect(getPantryStorageTypeClassName(false)).toContain('bg-surface-secondary');
+  });
+});
+
 describe('areIngredientFormsSubmittable', () => {
   it('requires every added ingredient to have both a name and storage method', () => {
     expect(
@@ -54,10 +77,18 @@ describe('areIngredientFormsSubmittable', () => {
 describe('getPantryImageInputProps', () => {
   it('uses the outward camera for a new photo and the regular picker for an existing image', () => {
     expect(getPantryImageInputProps('camera')).toEqual({
-      accept: 'image/*',
+      accept: 'image/jpeg,image/png,image/webp',
       capture: 'environment',
     });
-    expect(getPantryImageInputProps('gallery')).toEqual({ accept: 'image/*' });
+    expect(getPantryImageInputProps('gallery')).toEqual({
+      accept: 'image/jpeg,image/png,image/webp',
+    });
+  });
+
+  it('accepts only JPEG, PNG, or WebP images up to 5MB', () => {
+    expect(isPantryImageUploadable({ type: 'image/jpeg', size: 5 * 1024 * 1024 })).toBe(true);
+    expect(isPantryImageUploadable({ type: 'image/heic', size: 1024 })).toBe(false);
+    expect(isPantryImageUploadable({ type: 'image/png', size: 5 * 1024 * 1024 + 1 })).toBe(false);
   });
 });
 

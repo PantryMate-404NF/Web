@@ -63,7 +63,7 @@ describe('RecipeDetailPage', () => {
       </QueryClientProvider>,
     );
 
-    expect(useRecipeDetailQueryMock).toHaveBeenCalledWith('42');
+    expect(useRecipeDetailQueryMock).toHaveBeenCalledWith('42', undefined);
     expect(markup).toContain('API 토마토 볶음');
     expect(markup).toContain('서버 설명');
     expect(markup).toContain('3인분');

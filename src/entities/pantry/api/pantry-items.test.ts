@@ -54,4 +54,39 @@ describe('pantry item API', () => {
       expect.objectContaining({ method: 'DELETE' }),
     );
   });
+
+  it('이미지를 multipart 파일로 업로드하고 서버가 반환한 URL을 받는다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            status: 'SUCCESS',
+            message: '성공',
+            data: { imageUrl: 'http://localhost:8080/api/pantry-items/images/tomato.jpg' },
+            error: null,
+            timestamp: '2026-09-29T00:00:00Z',
+          }),
+        ),
+      ),
+    );
+    const { uploadPantryImage } = await import('./upload-pantry-image');
+    const { setAccessToken } = await import('@/shared/model/access-token-store');
+    const file = new File(['image'], 'tomato.png', { type: 'image/png' });
+    setAccessToken('access-token');
+
+    await expect(uploadPantryImage(file)).resolves.toEqual({
+      imageUrl: 'http://localhost:8080/api/pantry-items/images/tomato.jpg',
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:8080/api/pantry-items/images',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    const [, options] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
+    expect(options.body).toBeInstanceOf(FormData);
+    expect((options.body as FormData).get('file')).toBe(file);
+    expect(new Headers(options.headers).get('Authorization')).toBe('Bearer access-token');
+    expect(new Headers(options.headers).has('Content-Type')).toBe(false);
+  });
 });

@@ -6,7 +6,7 @@ import { getRecipes } from './get-recipes';
 import { toRecipePage } from './recipe.mapper';
 
 export const RECIPE_QUERY_KEY = ['recipe', 'list'] as const;
-export function useRecipesQuery(params: RecipeListParams = {}) {
+export function useRecipesQuery(params: RecipeListParams = {}, enabled = true) {
   const normalizedParams = {
     page: params.page ?? 0,
     size: params.size ?? 20,
@@ -16,6 +16,7 @@ export function useRecipesQuery(params: RecipeListParams = {}) {
   return useQuery({
     queryKey: [...RECIPE_QUERY_KEY, normalizedParams],
     queryFn: () => getRecipes(normalizedParams),
+    enabled,
     select: toRecipePage,
   });
 }

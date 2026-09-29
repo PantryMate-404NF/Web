@@ -6,16 +6,29 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import { useRecipesQuery } from '@/entities/recipe/api/use-recipes-query';
+import { toRecipe } from '@/entities/recipe/api/recipe.mapper';
 import { useRecipeSearchQuery } from '@/entities/recipe/api/use-recipe-search-query';
+import { useRecipeFilterIngredientsQuery } from '@/entities/recipe/api/use-recipe-filter-ingredients-query';
 import { useRecipeMutations } from '@/entities/recipe/api/use-recipe-mutations';
+import { useRecipeRecommendationsQuery } from '@/entities/recipe/api/use-recipe-recommendations-query';
+import type {
+  RecipeFilterIngredientDto,
+  RecipeRecommendationContext,
+  RecipeRecommendationItemDto,
+  RecipeRecommendationsDto,
+  RecipeRecommendationSource,
+} from '@/entities/recipe/api/recipe.dto';
 import { useScrappedRecipesQuery } from '@/entities/recipe/api/use-scrapped-recipes-query';
 import { usePantriesQuery } from '@/entities/pantry/api/use-pantries-query';
+import { useRecipePantrySelectionStore } from '@/entities/pantry/model/recipe-pantry-selection-store';
 import type { PantryItem } from '@/entities/pantry/model/types';
 import type { Recipe } from '@/entities/recipe/model/types';
+import { ApiError } from '@/shared/api/api-error';
 import { SystemErrorState } from '@/shared/ui/system-error-state';
+import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
 
-export type RecipeSectionId = 'all';
+export type RecipeSectionId = 'all' | 'recommendations';
 
 export interface RecipeRailSection {
   id: RecipeSectionId;
@@ -26,7 +39,7 @@ export interface RecipeRailSection {
 
 export interface ImminentIngredient {
   name: string;
-  daysLeft: number;
+  daysLeft: number | null;
 }
 
 export type RecipeDisplayMode = 'pantry' | 'basic';
@@ -45,6 +58,7 @@ export const RECIPE_RAIL_TYPOGRAPHY = {
     'truncate text-[15px] leading-[1.5] font-medium text-[var(--primitive-grey-500)]',
   titleClassName: 'text-title-3 font-semibold',
 } as const;
+export const RECIPE_PANTRY_DIVIDER_CLASS = 'h-2 w-full bg-[var(--primitive-grey-100)]';
 
 export const RECIPE_SEARCH_EMPTY_COPY = {
   title: '검색 결과가 없어요.',
@@ -52,7 +66,7 @@ export const RECIPE_SEARCH_EMPTY_COPY = {
 } as const;
 
 export function getIngredientSelectionRoute(): string {
-  return '/recipe/ingredients';
+  return '/pantry';
 }
 
 export function getRecipeMoreRoute(
@@ -86,6 +100,51 @@ export function getRecipeSearchResultDisplay(recipes: Recipe[]): 'results' | 'em
   return recipes.length === 0 ? 'empty' : 'results';
 }
 
+export function getRecipeSearchPagination(page: number, totalPages: number) {
+  return {
+    currentPage: page + 1,
+    totalPages,
+    canGoPrevious: page > 0,
+    canGoNext: page + 1 < totalPages,
+  };
+}
+
+export function RecipeSearchPagination({
+  page,
+  totalPages,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  const pagination = getRecipeSearchPagination(page, totalPages);
+
+  return (
+    <nav aria-label="레시피 검색 페이지" className="flex items-center justify-center gap-6 py-4">
+      <button
+        aria-label="이전 페이지"
+        disabled={!pagination.canGoPrevious}
+        onClick={() => onPageChange(page - 1)}
+        type="button"
+      >
+        이전
+      </button>
+      <span aria-live="polite">
+        {pagination.currentPage} / {pagination.totalPages}
+      </span>
+      <button
+        aria-label="다음 페이지"
+        disabled={!pagination.canGoNext}
+        onClick={() => onPageChange(page + 1)}
+        type="button"
+      >
+        다음
+      </button>
+    </nav>
+  );
+}
+
 export function getRecipeDisplayMode(items: PantryItem[]): RecipeDisplayMode {
   return items.length > 0 ? 'pantry' : 'basic';
 }
@@ -103,11 +162,69 @@ export function getImminentIngredients(items: PantryItem[]): ImminentIngredient[
     .map((item) => ({ name: item.name, daysLeft: item.daysUntilExpiration! }));
 }
 
-export function getAvailablePantryIngredients(items: PantryItem[]): ImminentIngredient[] {
+export function getAvailablePantryIngredients(
+  items: PantryItem[],
+  selectedIngredientIds?: number[],
+  recipeIngredients: RecipeFilterIngredientDto[] = [],
+  selectedPantryItemIds: string[] = [],
+): ImminentIngredient[] {
+  if (selectedPantryItemIds.length > 0) {
+    return selectedPantryItemIds.flatMap((pantryItemId) => {
+      const pantryItem = items.find((item) => item.id === pantryItemId);
+      return pantryItem
+        ? [{ name: pantryItem.name, daysLeft: pantryItem.daysUntilExpiration }]
+        : [];
+    });
+  }
+
+  if (selectedIngredientIds) {
+    return selectedIngredientIds.slice(0, 3).flatMap((ingredientId) => {
+      const ingredient = recipeIngredients.find(
+        (candidate) => candidate.ingredientId === ingredientId,
+      );
+      const pantryItem =
+        items.find((item) => item.ingredientId === ingredientId) ??
+        items.find((item) => item.name.trim() === ingredient?.name.trim());
+      const name = ingredient?.name ?? pantryItem?.name;
+
+      if (!name) return [];
+
+      return [
+        {
+          name,
+          daysLeft: pantryItem?.daysUntilExpiration ?? null,
+        },
+      ];
+    });
+  }
+
   return items
     .filter((item) => item.availability === 'AVAILABLE' && item.daysUntilExpiration !== null)
     .slice(0, 3)
-    .map((item) => ({ name: item.name, daysLeft: item.daysUntilExpiration! }));
+    .map((item) => ({ name: item.name, daysLeft: item.daysUntilExpiration }));
+}
+
+export function getSelectedRecipeIngredientIds(
+  items: PantryItem[],
+  selectedPantryItemIds: string[],
+  recipeIngredients: RecipeFilterIngredientDto[],
+  selectedIngredientIds: number[] = [],
+) {
+  const resolvedIds = selectedPantryItemIds.flatMap((pantryItemId) => {
+    const item = items.find((pantryItem) => pantryItem.id === pantryItemId);
+    if (!item) return [];
+    const ingredientId =
+      item.ingredientId ??
+      recipeIngredients.find((ingredient) => ingredient.name.trim() === item.name.trim())
+        ?.ingredientId;
+    return ingredientId == null ? [] : [ingredientId];
+  });
+
+  return [...new Set([...selectedIngredientIds, ...resolvedIds])];
+}
+
+export function getRecipeRecommendationTitle(source: RecipeRecommendationSource) {
+  return source === 'AI' ? '팬트리 기반 추천' : '인기 레시피';
 }
 
 export function getRecipeSections(sourceRecipes: Recipe[]): RecipeRailSection[] {
@@ -203,9 +320,11 @@ function SectionAction({
 export function RecipeCard({
   recipe,
   variant = 'rail',
+  recommendationContext,
 }: {
   recipe: Recipe;
   variant?: 'rail' | 'search';
+  recommendationContext?: RecipeRecommendationContext;
 }) {
   const scrappedRecipesQuery = useScrappedRecipesQuery();
   const { scrap, unscrap } = useRecipeMutations();
@@ -218,11 +337,26 @@ export function RecipeCard({
     unscrap.isPending ||
     scrappedRecipesQuery.isError;
   const isSearchCard = variant === 'search';
+  const hasRecommendationContext =
+    Boolean(recommendationContext?.requestId) && recommendationContext?.position != null;
+  const recipeHref = hasRecommendationContext
+    ? `/recipe/${recipe.id}?${new URLSearchParams({
+        requestId: recommendationContext!.requestId!,
+        position: String(recommendationContext!.position),
+      }).toString()}`
+    : `/recipe/${recipe.id}`;
 
   async function handleScrap() {
     setScrapError(false);
     try {
-      await (isScrapped ? unscrap.mutateAsync(recipe.id) : scrap.mutateAsync(recipe.id));
+      const action = hasRecommendationContext
+        ? {
+            recipeId: recipe.id,
+            requestId: recommendationContext!.requestId,
+            position: recommendationContext!.position,
+          }
+        : recipe.id;
+      await (isScrapped ? unscrap.mutateAsync(action) : scrap.mutateAsync(action));
     } catch {
       setScrapError(true);
     }
@@ -230,7 +364,7 @@ export function RecipeCard({
 
   return (
     <div className={`relative shrink-0 ${isSearchCard ? 'w-[171px]' : 'w-[164px]'}`}>
-      <Link className="block" href={`/recipe/${recipe.id}`}>
+      <Link className="block" href={recipeHref}>
         <div
           className={`relative overflow-hidden rounded-lg ${isSearchCard ? 'h-[171px]' : 'h-[164px]'}`}
         >
@@ -308,9 +442,15 @@ function RecipeSearchEmptyState() {
 function RecipeSearchResults({
   recipes,
   totalElements,
+  page,
+  totalPages,
+  onPageChange,
 }: {
   recipes: Recipe[];
   totalElements: number;
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
 }) {
   if (getRecipeSearchResultDisplay(recipes) === 'empty') {
     return <RecipeSearchEmptyState />;
@@ -329,6 +469,9 @@ function RecipeSearchResults({
           <RecipeCard key={recipe.id} recipe={recipe} variant="search" />
         ))}
       </div>
+      {totalPages > 1 ? (
+        <RecipeSearchPagination onPageChange={onPageChange} page={page} totalPages={totalPages} />
+      ) : null}
     </section>
   );
 }
@@ -352,6 +495,123 @@ function RecipeRail({
       <div className="-mx-4 flex [scrollbar-width:none] gap-2 overflow-x-auto px-4 pb-1">
         {section.recipes.map((recipe) => (
           <RecipeCard key={`${section.title}-${recipe.id}`} recipe={recipe} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function RecipeRecommendationsSection({
+  authState,
+  data,
+  isPending,
+  isError,
+  error,
+  onRetry,
+}: {
+  authState: 'loading' | 'guest' | 'complete' | 'onboarding';
+  data?: RecipeRecommendationsDto;
+  isPending: boolean;
+  isError: boolean;
+  error?: unknown;
+  onRetry: () => void;
+}) {
+  if (authState === 'guest') {
+    return (
+      <section aria-label="레시피 추천" className="space-y-3">
+        <h2 className={RECIPE_RAIL_TYPOGRAPHY.titleClassName}>레시피 추천</h2>
+        <div className="rounded-xl bg-[var(--primitive-grey-50)] p-4">
+          <p className="text-body-4 text-[var(--primitive-grey-600)]">
+            로그인하면 팬트리 재료와 알레르기 정보를 반영한 레시피를 추천해 드려요.
+          </p>
+          <Link
+            className="mt-3 inline-flex h-10 items-center rounded-full bg-[var(--primitive-primary-400)] px-4 font-semibold"
+            href="/login?returnTo=%2Frecipe"
+          >
+            로그인하고 추천 받기
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
+  if (authState === 'loading' || isPending) {
+    return (
+      <section aria-label="레시피 추천" className="space-y-3" role="status">
+        <h2 className={RECIPE_RAIL_TYPOGRAPHY.titleClassName}>레시피 추천</h2>
+        <span className="sr-only">추천 레시피를 불러오는 중입니다.</span>
+        <div className="flex gap-2 overflow-hidden">
+          {[0, 1, 2].map((index) => (
+            <div
+              aria-hidden="true"
+              className="h-[216px] w-[164px] shrink-0 animate-pulse rounded-lg bg-[var(--primitive-grey-100)]"
+              key={index}
+            />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (isError || !data) {
+    const isUnavailable = error instanceof ApiError && error.status === 503;
+    return (
+      <section aria-label="레시피 추천" className="space-y-3">
+        <h2 className={RECIPE_RAIL_TYPOGRAPHY.titleClassName}>레시피 추천</h2>
+        <div className="rounded-xl bg-[var(--primitive-grey-50)] p-4" role="alert">
+          <p className="text-body-4 text-[var(--primitive-grey-600)]">
+            {isUnavailable
+              ? '알레르기 정보를 확인할 수 없어 추천을 잠시 중단했어요. 잠시 후 다시 시도해 주세요.'
+              : '추천 레시피를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'}
+          </p>
+          <button className="mt-3 font-semibold" onClick={onRetry} type="button">
+            다시 시도
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  if (data.items.length === 0) {
+    return (
+      <section aria-label="레시피 추천" className="space-y-3">
+        <h2 className={RECIPE_RAIL_TYPOGRAPHY.titleClassName}>
+          {getRecipeRecommendationTitle(data.source)}
+        </h2>
+        <p className="text-body-4 text-[var(--primitive-grey-500)]">추천할 레시피가 없어요.</p>
+      </section>
+    );
+  }
+
+  return (
+    <section aria-label={getRecipeRecommendationTitle(data.source)} className="flex flex-col gap-3">
+      <div className={RECIPE_ACTION_LAYOUT.sectionHeaderClassName}>
+        <div className={RECIPE_ACTION_LAYOUT.titleBlockClassName}>
+          <h2 className={RECIPE_RAIL_TYPOGRAPHY.titleClassName}>
+            {getRecipeRecommendationTitle(data.source)}
+          </h2>
+          <p className={RECIPE_RAIL_TYPOGRAPHY.descriptionClassName}>
+            {data.source === 'AI'
+              ? '팬트리 재료로 만들 수 있는 레시피를 확인해 보세요.'
+              : '인기 레시피를 확인해 보세요.'}
+          </p>
+        </div>
+        <Link
+          aria-label={`${getRecipeRecommendationTitle(data.source)} 더보기`}
+          className={RECIPE_ACTION_LAYOUT.containerClassName}
+          href={getRecipeMoreRoute('recommendations')}
+        >
+          <span className={RECIPE_ACTION_LAYOUT.textClassName}>더보기</span>
+          <RecipeActionIcon />
+        </Link>
+      </div>
+      <div className="-mx-4 flex [scrollbar-width:none] gap-2 overflow-x-auto px-4 pb-1">
+        {data.items.map((item: RecipeRecommendationItemDto) => (
+          <RecipeCard
+            key={`${data.requestId ?? data.source}-${item.rank}-${item.recipe.recipeId}`}
+            recipe={toRecipe(item.recipe)}
+            recommendationContext={{ requestId: data.requestId, position: item.rank }}
+          />
         ))}
       </div>
     </section>
@@ -384,7 +644,7 @@ export function ImminentIngredientChips({
               showAlert ? 'text-[var(--primitive-warning-600)]' : 'text-[var(--primitive-grey-600)]'
             }`}
           >
-            D-{ingredient.daysLeft}
+            {ingredient.daysLeft === null ? '미등록' : `D-${ingredient.daysLeft}`}
           </strong>
         </span>
       ))}
@@ -397,7 +657,7 @@ export function ImminentIngredientChips({
     <div className="rounded-xl bg-[var(--primitive-primary-200)] p-3">
       <h2 className="text-base leading-6 font-semibold">기한 임박 식재료가 있어요!</h2>
       <p className="text-[13px] leading-5 text-[var(--primitive-grey-600)]">
-        보유 재료 기반 추천은 아직 제공되지 않아요. 아래 전체 레시피를 확인해 주세요.
+        팬트리메이트가 활용할 수 있는 레시피를 추천해 드릴게요.
       </p>
       <div className="mt-3">{chips}</div>
     </div>
@@ -407,71 +667,189 @@ export function ImminentIngredientChips({
 function PantryRecipeIntro({
   imminentIngredients,
   pantryIngredients,
+  selectedIngredients,
+  pantryItems,
+  selectedIngredientIds,
+  selectedPantryItemIds,
+  recipeFilterIngredients,
+  selectedRecipes,
+  isSelectedRecipesPending,
+  selectedRecipesError,
 }: {
   imminentIngredients: ImminentIngredient[];
   pantryIngredients: ImminentIngredient[];
+  selectedIngredients: ImminentIngredient[];
+  pantryItems: PantryItem[];
+  selectedIngredientIds: number[];
+  selectedPantryItemIds: string[];
+  recipeFilterIngredients: RecipeFilterIngredientDto[];
+  selectedRecipes: Recipe[];
+  isSelectedRecipesPending: boolean;
+  selectedRecipesError: unknown;
 }) {
   const hasImminentIngredients = imminentIngredients.length > 0;
-  const ingredients = hasImminentIngredients ? imminentIngredients : pantryIngredients;
+  const isSelectionResult = selectedIngredients.length > 0;
+  const ingredients = isSelectionResult
+    ? selectedIngredients
+    : hasImminentIngredients
+      ? imminentIngredients
+      : pantryIngredients;
 
   return (
-    <section className="border-b-[8px] border-[var(--primitive-grey-100)] pb-4">
-      <div className={RECIPE_ACTION_LAYOUT.topHeaderClassName}>
-        <h1 className="text-title-3 font-semibold">내 재료로 만드는 레시피</h1>
-        <Link
-          className={RECIPE_ACTION_LAYOUT.topActionClassName}
-          href={getIngredientSelectionRoute()}
-        >
-          <span className={RECIPE_ACTION_LAYOUT.textClassName}>선택하기</span>
-          <RecipeActionIcon />
-        </Link>
-      </div>
-      {ingredients.length > 0 ? (
-        <div className={RECIPE_ACTION_LAYOUT.topPanelClassName}>
-          <ImminentIngredientChips ingredients={ingredients} showAlert={hasImminentIngredients} />
+    <>
+      <section className="pb-4">
+        <div className={RECIPE_ACTION_LAYOUT.topHeaderClassName}>
+          <h1 className="text-title-3 font-semibold">내 재료로 만드는 레시피</h1>
+          <Link
+            className={RECIPE_ACTION_LAYOUT.topActionClassName}
+            href={getIngredientSelectionRoute()}
+            onClick={() => {
+              const selectedItems = selectedPantryItemIds.length
+                ? selectedPantryItemIds
+                : pantryItems
+                    .filter((item) => {
+                      const ingredientId =
+                        item.ingredientId ??
+                        recipeFilterIngredients.find(
+                          (ingredient) => ingredient.name.trim() === item.name.trim(),
+                        )?.ingredientId;
+                      return ingredientId != null && selectedIngredientIds.includes(ingredientId);
+                    })
+                    .map((item) => item.id);
+              useRecipePantrySelectionStore.getState().beginSelection(
+                selectedItems.flatMap((pantryItemId) => {
+                  const item = pantryItems.find((pantryItem) => pantryItem.id === pantryItemId);
+                  if (!item) return [];
+                  const ingredientId =
+                    item.ingredientId ??
+                    recipeFilterIngredients.find(
+                      (ingredient) => ingredient.name.trim() === item.name.trim(),
+                    )?.ingredientId;
+                  return [{ pantryItemId: item.id, ingredientId }];
+                }),
+              );
+            }}
+          >
+            <span className={RECIPE_ACTION_LAYOUT.textClassName}>선택하기</span>
+            <RecipeActionIcon />
+          </Link>
         </div>
-      ) : null}
-    </section>
+        {ingredients.length > 0 ? (
+          <div className={RECIPE_ACTION_LAYOUT.topPanelClassName}>
+            <ImminentIngredientChips
+              ingredients={ingredients}
+              showAlert={!isSelectionResult && hasImminentIngredients}
+            />
+          </div>
+        ) : null}
+        {selectedPantryItemIds.length > 0 ? (
+          <div className="mt-4">
+            {isSelectedRecipesPending ? (
+              <p className="px-4 text-sm text-[var(--primitive-grey-500)]" role="status">
+                선택한 재료로 만들 수 있는 레시피를 찾고 있어요.
+              </p>
+            ) : selectedRecipesError ? (
+              <p className="px-4 text-sm text-[var(--primitive-grey-500)]" role="alert">
+                선택한 재료의 레시피를 불러오지 못했어요.
+              </p>
+            ) : selectedRecipes.length > 0 ? (
+              <div className="flex [scrollbar-width:none] gap-2 overflow-x-auto px-4 pb-1">
+                {selectedRecipes.map((recipe) => (
+                  <RecipeCard key={recipe.id} recipe={recipe} />
+                ))}
+              </div>
+            ) : (
+              <p className="px-4 text-sm text-[var(--primitive-grey-500)]">
+                선택한 재료로 만들 수 있는 레시피가 없어요.
+              </p>
+            )}
+          </div>
+        ) : null}
+      </section>
+      <div aria-hidden="true" className={RECIPE_PANTRY_DIVIDER_CLASS} />
+    </>
   );
 }
 
 export function RecipeListPage({
   selectedIngredientIds = [],
+  selectedPantryItemIds = [],
 }: {
   selectedIngredientIds?: number[];
+  selectedPantryItemIds?: string[];
 }) {
   const ingredientIds = selectedIngredientIds;
+  const { state: authState } = useAuthSession();
+  const recommendationQuery = useRecipeRecommendationsQuery(
+    authState === 'complete' || authState === 'onboarding',
+  );
   const [searchQuery, setSearchQuery] = useState('');
-  const { data: recipePage, error, isPending, refetch } = useRecipesQuery({ ingredientIds });
+  const [searchPageIndex, setSearchPageIndex] = useState(0);
+  const { data: pantryItems = [], isPending: isPantryPending } = usePantriesQuery();
+  const { data: recipeFilterIngredients = [], isPending: isRecipeFilterIngredientsPending } =
+    useRecipeFilterIngredientsQuery(ingredientIds.length > 0 || selectedPantryItemIds.length > 0);
+  const resolvedIngredientIds = getSelectedRecipeIngredientIds(
+    pantryItems,
+    selectedPantryItemIds,
+    recipeFilterIngredients,
+    ingredientIds,
+  );
+  const isResolvingSelectedPantryItems =
+    selectedPantryItemIds.length > 0 && (isPantryPending || isRecipeFilterIngredientsPending);
+  const cannotResolveSelectedPantryItems =
+    selectedPantryItemIds.length > 0 &&
+    !isResolvingSelectedPantryItems &&
+    resolvedIngredientIds.length === 0;
   const {
-    data: searchPage,
+    data: selectedRecipePage,
+    error: selectedRecipesError,
+    isPending: isSelectedRecipesPending,
+  } = useRecipesQuery(
+    { ingredientIds: resolvedIngredientIds },
+    selectedPantryItemIds.length > 0 &&
+      !isResolvingSelectedPantryItems &&
+      !cannotResolveSelectedPantryItems,
+  );
+  const { data: recipePage, error, isPending, refetch } = useRecipesQuery();
+  const {
+    data: searchResultsPage,
     error: searchError,
     isPending: isSearchPending,
     refetch: refetchSearch,
-  } = useRecipeSearchQuery(searchQuery.trim());
+  } = useRecipeSearchQuery(searchQuery.trim(), searchPageIndex, 20);
   const recipes = recipePage?.content ?? [];
   const sections = getRecipeSections(recipes);
-  const searchedRecipes = searchPage?.content ?? [];
+  const searchedRecipes = searchResultsPage?.content ?? [];
   const contentMode = getRecipeContentMode(searchQuery);
-  const { data: pantryItems = [] } = usePantriesQuery();
   const displayMode = getRecipeDisplayMode(pantryItems);
   const imminentIngredients = getImminentIngredients(pantryItems);
   const pantryIngredients = getAvailablePantryIngredients(pantryItems);
+  const selectedIngredients = getAvailablePantryIngredients(
+    pantryItems,
+    ingredientIds,
+    recipeFilterIngredients,
+    selectedPantryItemIds,
+  );
+
+  const handleSearchQueryChange = (query: string) => {
+    setSearchPageIndex(0);
+    setSearchQuery(query);
+  };
 
   if (getRecipeViewState(error) === 'error') {
     return (
       <main className="mobile-page bg-background text-foreground flex min-h-dvh flex-col">
-        <RecipeHeader onQueryChange={setSearchQuery} query={searchQuery} />
+        <RecipeHeader onQueryChange={handleSearchQueryChange} query={searchQuery} />
         <SystemErrorState onRetry={() => void refetch()} title="레시피를 불러오지 못했어요" />
         <BottomNavigation />
       </main>
     );
   }
 
-  if (isPending) {
+  if (isPending && !cannotResolveSelectedPantryItems) {
     return (
       <main className="mobile-page bg-background text-foreground flex min-h-dvh flex-col">
-        <RecipeHeader onQueryChange={setSearchQuery} query={searchQuery} />
+        <RecipeHeader onQueryChange={handleSearchQueryChange} query={searchQuery} />
         <div className="flex flex-1 items-center justify-center" role="status">
           <span className="sr-only">레시피를 불러오는 중입니다.</span>
         </div>
@@ -482,7 +860,7 @@ export function RecipeListPage({
 
   return (
     <main className="mobile-page bg-background text-foreground flex min-h-dvh flex-col">
-      <RecipeHeader onQueryChange={setSearchQuery} query={searchQuery} />
+      <RecipeHeader onQueryChange={handleSearchQueryChange} query={searchQuery} />
       {contentMode === 'search' ? (
         searchError ? (
           <SystemErrorState
@@ -496,7 +874,10 @@ export function RecipeListPage({
         ) : (
           <RecipeSearchResults
             recipes={searchedRecipes}
-            totalElements={searchPage?.totalElements ?? 0}
+            totalElements={searchResultsPage?.totalElements ?? 0}
+            totalPages={searchResultsPage?.totalPages ?? 0}
+            page={searchPageIndex}
+            onPageChange={setSearchPageIndex}
           />
         )
       ) : (
@@ -505,9 +886,28 @@ export function RecipeListPage({
             <PantryRecipeIntro
               imminentIngredients={imminentIngredients}
               pantryIngredients={pantryIngredients}
+              pantryItems={pantryItems}
+              selectedIngredients={selectedIngredients}
+              selectedIngredientIds={ingredientIds}
+              selectedPantryItemIds={selectedPantryItemIds}
+              selectedRecipes={selectedRecipePage?.content ?? []}
+              isSelectedRecipesPending={
+                selectedPantryItemIds.length > 0 &&
+                (isResolvingSelectedPantryItems || isSelectedRecipesPending)
+              }
+              selectedRecipesError={selectedRecipesError}
+              recipeFilterIngredients={recipeFilterIngredients}
             />
           ) : null}
           <div className="flex flex-1 flex-col gap-8 px-4 pt-2 pb-8">
+            <RecipeRecommendationsSection
+              authState={authState}
+              data={recommendationQuery.data}
+              error={recommendationQuery.error}
+              isError={recommendationQuery.isError}
+              isPending={recommendationQuery.isPending}
+              onRetry={() => void recommendationQuery.refetch()}
+            />
             {sections.map((section) => (
               <RecipeRail ingredientIds={ingredientIds} key={section.title} section={section} />
             ))}

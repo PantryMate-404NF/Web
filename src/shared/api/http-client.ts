@@ -44,8 +44,9 @@ export async function request<T>(
 ): Promise<T | void> {
   const requestHeaders = new Headers(headers);
   const token = getAccessToken();
+  const isFormDataBody = typeof FormData !== 'undefined' && body instanceof FormData;
 
-  if (body !== undefined) {
+  if (body !== undefined && !isFormDataBody) {
     requestHeaders.set('Content-Type', 'application/json');
   }
 
@@ -56,7 +57,7 @@ export async function request<T>(
   const response = await fetch(`${getApiBaseUrl()}${path}`, {
     ...options,
     headers: requestHeaders,
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: body === undefined ? undefined : isFormDataBody ? body : JSON.stringify(body),
   });
 
   if (response.status === 204) {

@@ -35,6 +35,63 @@ describe('PantryItemCard image-card icons', () => {
     expect(markup).toContain('/images/pantry/pantry-basic.svg');
   });
 
+  it('highlights a selected card in recipe selection mode', () => {
+    const markup = renderToStaticMarkup(
+      createElement(PantryItemCard, {
+        item: pantryItems[0],
+        variant: 'image',
+        selectionMode: true,
+        selected: true,
+      }),
+    );
+
+    expect(markup).toContain('border-[#FFCD55]');
+    expect(markup).toContain('bg-[#FAE9C2]');
+    expect(markup).toContain('aria-pressed="true"');
+  });
+
+  it('keeps an unavailable but recipe-mapped pantry card selectable', () => {
+    const markup = renderToStaticMarkup(
+      createElement(PantryItemCard, {
+        item: { ...pantryItems[0], availability: 'UNAVAILABLE', ingredientId: 44 },
+        variant: 'image',
+        selectionMode: true,
+        selectionIngredientId: 44,
+      }),
+    );
+
+    expect(markup).toContain('role="button"');
+    expect(markup).toContain('aria-disabled="false"');
+  });
+
+  it('keeps a pantry card clickable in recipe selection mode without a mapped ingredient ID', () => {
+    const markup = renderToStaticMarkup(
+      createElement(PantryItemCard, {
+        item: { ...pantryItems[0], ingredientId: null },
+        variant: 'image',
+        selectionMode: true,
+        selectionIngredientId: null,
+      }),
+    );
+
+    expect(markup).toContain('role="button"');
+    expect(markup).toContain('aria-disabled="false"');
+    expect(markup).not.toContain('aria-disabled="true"');
+  });
+
+  it('renders uploaded server images directly without the Next image optimizer', () => {
+    const imageUrl = 'http://localhost:8080/api/pantry-items/images/tomato.jpg';
+    const markup = renderToStaticMarkup(
+      createElement(PantryItemCard, {
+        item: { ...pantryItems[0], imageUrl },
+        variant: 'image',
+      }),
+    );
+
+    expect(markup).toContain(imageUrl);
+    expect(markup).not.toContain('srcSet=');
+  });
+
   it('uses the pantry SVG assets at their specified dimensions', () => {
     const refrigeratedMarkup = renderToStaticMarkup(
       createElement(PantryItemCard, { item: pantryItems[2], variant: 'image' }),
