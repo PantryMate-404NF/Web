@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { createAddress } from './create-address';
+import type { UserAddressDto } from './address.dto';
 import { setDefaultAddress } from './set-default-address';
 import { updateAddress } from './update-address';
 import { ADDRESS_QUERY_KEY } from './use-addresses-query';
@@ -29,6 +30,17 @@ export function useAddressMutations() {
       }) => updateAddress(addressId, payload),
       onSuccess: invalidateAddresses,
     }),
-    setDefault: useMutation({ mutationFn: setDefaultAddress, onSuccess: invalidateAddresses }),
+    setDefault: useMutation({
+      mutationFn: setDefaultAddress,
+      onSuccess: (selectedAddress) => {
+        queryClient.setQueryData(DEFAULT_ADDRESS_QUERY_KEY, selectedAddress);
+        queryClient.setQueryData<UserAddressDto[]>(ADDRESS_QUERY_KEY, (addresses) =>
+          addresses?.map((address) => ({
+            ...address,
+            isDefault: address.addressId === selectedAddress.addressId,
+          })),
+        );
+      },
+    }),
   };
 }

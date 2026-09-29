@@ -26,18 +26,30 @@ export function OrderRouteContent({
   const { state: authState } = useAuthSession();
   const isAuthLoading = apiEnabled === undefined && authState === 'loading';
   const shouldUseApi = apiEnabled ?? (authState === 'complete' || authState === 'onboarding');
-  const shouldQuery = shouldUseApi && !previewItems && !localPreview;
-  const { data, error, isPending, refetch } = useCartQuery(shouldQuery);
+  const shouldQueryCart = shouldUseApi && !previewItems && !localPreview;
+  const shouldQueryAddress = shouldUseApi;
+  const { data, error, isPending, refetch } = useCartQuery(shouldQueryCart);
   const {
     data: defaultAddress,
     error: addressError,
     isPending: isAddressPending,
     refetch: refetchAddress,
-  } = useDefaultAddressQuery(shouldQuery);
+  } = useDefaultAddressQuery(shouldQueryAddress);
+  const isAddressLoading = shouldQueryAddress && isAddressPending;
 
   if (localPreview) {
     return (
-      <OrderPage orderReturnTo={orderReturnTo} paymentDisabled selectedItemIds={selectedItemIds} />
+      <OrderPage
+        defaultAddress={defaultAddress ?? undefined}
+        errorMessage={addressError instanceof Error ? addressError.message : undefined}
+        isLoading={isAuthLoading || isAddressLoading}
+        onRetry={() => {
+          void refetchAddress();
+        }}
+        orderReturnTo={orderReturnTo}
+        paymentDisabled
+        selectedItemIds={selectedItemIds}
+      />
     );
   }
 
@@ -45,7 +57,12 @@ export function OrderRouteContent({
     return (
       <OrderPage
         defaultAddress={defaultAddress ?? undefined}
+        errorMessage={addressError instanceof Error ? addressError.message : undefined}
+        isLoading={isAuthLoading || isAddressLoading}
         items={previewItems}
+        onRetry={() => {
+          void refetchAddress();
+        }}
         orderReturnTo={orderReturnTo}
         selectedItemIds={selectedItemIds}
       />
@@ -76,7 +93,7 @@ export function OrderRouteContent({
             ? addressError.message
             : undefined
       }
-      isLoading={isPending || isAddressPending}
+      isLoading={isPending || isAddressLoading}
       items={data?.items ?? []}
       orderReturnTo={orderReturnTo}
       onRetry={() => {

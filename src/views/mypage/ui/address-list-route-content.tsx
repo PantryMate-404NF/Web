@@ -29,7 +29,11 @@ export function AddressListRouteContent({ returnTo }: { returnTo?: string }) {
         returnTo
           ? async (addressId) => {
               try {
-                await setDefault.mutateAsync(Number(addressId));
+                const selectedAddress = addresses.find((address) => address.id === addressId);
+                if (!selectedAddress) return;
+                if (!selectedAddress.isDefault) {
+                  await setDefault.mutateAsync(Number(addressId));
+                }
                 router.push(returnTo);
               } catch {
                 // Mutation error is rendered without replacing the address list.

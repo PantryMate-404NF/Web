@@ -32,7 +32,7 @@ const address = {
   addressLine1: '경기도 성남시 분당구 불정로 90',
   addressLine2: '101동 1001호',
   postalCode: '13485',
-  isDefault: true,
+  isDefault: false,
 };
 
 describe('AddressListRouteContent', () => {
@@ -79,6 +79,29 @@ describe('AddressListRouteContent', () => {
 
     expect(useAddressesQueryMock).toHaveBeenCalledWith(false);
     expect(page.props).toMatchObject({ isUnauthorized: true });
+  });
+
+  it('이미 기본 배송지인 항목은 설정 API를 다시 호출하지 않고 주문서로 복귀한다', async () => {
+    useAuthSessionMock.mockReturnValue({ state: 'complete' });
+    useAddressesQueryMock.mockReturnValue({
+      data: [{ ...address, isDefault: true }],
+      error: null,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+    useAddressMutationsMock.mockReturnValue({
+      setDefault: {
+        error: null,
+        isPending: false,
+        mutateAsync: setDefaultMutateAsyncMock,
+      },
+    });
+
+    const page = AddressListRouteContent({ returnTo: '/order?preview=local' });
+    await page.props.onSelect('12');
+
+    expect(setDefaultMutateAsyncMock).not.toHaveBeenCalled();
+    expect(pushMock).toHaveBeenCalledWith('/order?preview=local');
   });
 
   it('기본 배송지 설정 실패를 처리하고 목록 오류와 분리한다', async () => {
