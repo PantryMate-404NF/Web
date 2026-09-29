@@ -10,8 +10,8 @@ describe('HomePromotionCarousel', () => {
 
     expect(markup).toContain('href="/promotion"');
     expect(markup).toContain('/ 2');
-    expect(markup).toContain('banner-seasonal-food.png');
-    expect(markup).toContain('banner-sokcho-kimchi.png');
+    expect(markup).toContain('banner-gap-farm-upscaled.png');
+    expect(markup).toContain('banner-spring-ingredients-upscaled.png');
     expect(markup).toContain('transition-transform');
   });
 });

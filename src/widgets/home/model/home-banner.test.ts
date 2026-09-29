@@ -10,14 +10,11 @@ import {
 
 describe('HOME_CAROUSEL_BANNERS', () => {
   it('홈에 노출할 두 개의 Figma 배너만 제공한다', () => {
-    expect(HOME_BANNERS).toHaveLength(4);
-    expect(HOME_CAROUSEL_BANNERS.map(({ id }) => id)).toEqual([
-      'monthly-seasonal-food',
-      'sokcho-kimchi',
-    ]);
+    expect(HOME_BANNERS).toHaveLength(2);
+    expect(HOME_CAROUSEL_BANNERS.map(({ id }) => id)).toEqual(['gap-farm', 'spring-ingredients']);
     expect(HOME_CAROUSEL_BANNERS.map(({ imageSrc }) => imageSrc)).toEqual([
-      '/images/home/banner-seasonal-food.png',
-      '/images/home/banner-sokcho-kimchi.png',
+      '/images/home/banner-gap-farm-upscaled.png',
+      '/images/home/banner-spring-ingredients-upscaled.png',
     ]);
   });
 });
