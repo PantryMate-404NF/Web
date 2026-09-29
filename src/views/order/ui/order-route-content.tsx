@@ -1,6 +1,7 @@
 'use client';
 
 import type { CartItem } from '@/entities/cart/model/cart-store';
+import { useDefaultAddressQuery } from '@/entities/address/api/use-default-address-query';
 import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 import { useCartQuery } from '@/entities/cart/api/use-cart-query';
 
@@ -25,19 +26,43 @@ export function OrderRouteContent({
   const { state: authState } = useAuthSession();
   const isAuthLoading = apiEnabled === undefined && authState === 'loading';
   const shouldUseApi = apiEnabled ?? (authState === 'complete' || authState === 'onboarding');
-  const shouldQuery = shouldUseApi && !previewItems && !localPreview;
-  const { data, error, isPending, refetch } = useCartQuery(shouldQuery);
+  const shouldQueryCart = shouldUseApi && !previewItems && !localPreview;
+  const shouldQueryAddress = shouldUseApi;
+  const { data, error, isPending, refetch } = useCartQuery(shouldQueryCart);
+  const {
+    data: defaultAddress,
+    error: addressError,
+    isPending: isAddressPending,
+    refetch: refetchAddress,
+  } = useDefaultAddressQuery(shouldQueryAddress);
+  const isAddressLoading = shouldQueryAddress && isAddressPending;
 
   if (localPreview) {
     return (
-      <OrderPage orderReturnTo={orderReturnTo} paymentDisabled selectedItemIds={selectedItemIds} />
+      <OrderPage
+        defaultAddress={defaultAddress ?? undefined}
+        errorMessage={addressError instanceof Error ? addressError.message : undefined}
+        isLoading={isAuthLoading || isAddressLoading}
+        onRetry={() => {
+          void refetchAddress();
+        }}
+        orderReturnTo={orderReturnTo}
+        paymentDisabled
+        selectedItemIds={selectedItemIds}
+      />
     );
   }
 
   if (previewItems) {
     return (
       <OrderPage
+        defaultAddress={defaultAddress ?? undefined}
+        errorMessage={addressError instanceof Error ? addressError.message : undefined}
+        isLoading={isAuthLoading || isAddressLoading}
         items={previewItems}
+        onRetry={() => {
+          void refetchAddress();
+        }}
         orderReturnTo={orderReturnTo}
         selectedItemIds={selectedItemIds}
       />
@@ -49,6 +74,7 @@ export function OrderRouteContent({
   if (!shouldUseApi) {
     return (
       <OrderPage
+        defaultAddress={defaultAddress ?? undefined}
         errorMessage="로그인 후 주문서를 이용해 주세요."
         orderReturnTo={orderReturnTo}
         selectedItemIds={selectedItemIds}
@@ -59,12 +85,19 @@ export function OrderRouteContent({
   return (
     <OrderPage
       cartId={data?.cartId}
-      errorMessage={error instanceof Error ? error.message : undefined}
-      isLoading={isPending}
+      defaultAddress={defaultAddress ?? undefined}
+      errorMessage={
+        error instanceof Error
+          ? error.message
+          : addressError instanceof Error
+            ? addressError.message
+            : undefined
+      }
+      isLoading={isPending || isAddressLoading}
       items={data?.items ?? []}
       orderReturnTo={orderReturnTo}
       onRetry={() => {
-        void refetch();
+        void Promise.all([refetch(), refetchAddress()]);
       }}
       selectedItemIds={selectedItemIds}
     />

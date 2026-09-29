@@ -50,3 +50,7 @@ export function buildAddressListHref(returnTo?: string): string {
 export function buildAddressFormHref(returnTo?: string): string {
   return withReturnTo('/mypage/addresses/new', returnTo);
 }
+
+export function buildAddressEditHref(addressId: string, returnTo?: string): string {
+  return withReturnTo(`/mypage/addresses/${encodeURIComponent(addressId)}/edit`, returnTo);
+}

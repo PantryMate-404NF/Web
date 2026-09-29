@@ -9,6 +9,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 import type { CartItem } from '@/entities/cart/model/cart-store';
+import { DELIVERY_MOCK } from '@/entities/order/model/mock';
 
 import { OrderPage, OrderSheet } from './order-page';
 
@@ -18,6 +19,53 @@ const orderItems: CartItem[] = [
 ];
 
 describe('OrderSheet', () => {
+  it('서버 기본 배송지를 주문서에 표시한다', () => {
+    const markup = renderToStaticMarkup(
+      createElement(OrderSheet, {
+        defaultAddress: {
+          id: '12',
+          recipientName: '김지웅',
+          phoneNumber: '01012345678',
+          addressLine1: '경기도 성남시 분당구 불정로 90',
+          addressLine2: '101동 1001호',
+          postalCode: '13485',
+          isDefault: true,
+        },
+        items: orderItems,
+      }),
+    );
+
+    expect(markup).toContain('경기도 성남시 분당구 불정로 90, 101동 1001호 (13485)');
+  });
+
+  it('상세 주소가 없으면 불필요한 쉼표 없이 배송지를 표시한다', () => {
+    const markup = renderToStaticMarkup(
+      createElement(OrderSheet, {
+        defaultAddress: {
+          id: '12',
+          recipientName: '김지웅',
+          phoneNumber: '01012345678',
+          addressLine1: '경기도 성남시 분당구 불정로 90',
+          addressLine2: '',
+          postalCode: '13485',
+          isDefault: true,
+        },
+        items: orderItems,
+      }),
+    );
+
+    expect(markup).toContain('경기도 성남시 분당구 불정로 90 (13485)');
+    expect(markup).not.toContain('불정로 90,  (13485)');
+  });
+
+  it('기본 배송지가 없으면 등록 안내를 표시하고 결제를 비활성화한다', () => {
+    const markup = renderToStaticMarkup(createElement(OrderSheet, { items: orderItems }));
+
+    expect(markup).toContain('배송지를 등록해 주세요.');
+    expect(markup).not.toContain(DELIVERY_MOCK.address);
+    expect(markup).toContain('disabled=""');
+  });
+
   it('주문서 정보와 비활성 결제 CTA를 렌더링한다', () => {
     const markup = renderToStaticMarkup(
       createElement(OrderSheet, {
