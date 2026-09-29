@@ -7,6 +7,7 @@ export interface PantryItemFormValues {
   expirationDate: string;
   imageUrl: string;
   name: string;
+  purchaseDate?: string;
   storageType: CreatePantryItemRequest['storageType'];
 }
 
@@ -17,6 +18,7 @@ function getServerImageUrl(imageUrl: string) {
 export function toCreatePantryItemRequest(values: PantryItemFormValues): CreatePantryItemRequest {
   return {
     ingredientName: values.name.trim(),
+    ...(values.purchaseDate ? { purchaseDate: values.purchaseDate } : {}),
     sellByDate: values.expirationDate || undefined,
     expiryDate: values.consumptionDate || undefined,
     storageType: values.storageType,

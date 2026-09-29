@@ -32,6 +32,7 @@ export interface PantryImageUploadResponseDto {
 
 export interface CreatePantryItemRequest {
   ingredientName: string;
+  purchaseDate?: string;
   sellByDate?: string;
   expiryDate?: string;
   storageType: PantryStorageType;
