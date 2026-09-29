@@ -9,6 +9,29 @@ vi.mock('next/navigation', () => ({
 import { AddressFormPage } from './address-form-page';
 
 describe('AddressFormPage', () => {
+  it('기존 배송지를 편집할 때 값을 채우고 관리 동작을 제공한다', () => {
+    const markup = renderToStaticMarkup(
+      createElement(AddressFormPage, {
+        initialAddress: {
+          id: '12',
+          recipientName: '김지웅',
+          phoneNumber: '01012345678',
+          postalCode: '13485',
+          addressLine1: '경기도 성남시 분당구 불정로 90',
+          addressLine2: '101동 1001호',
+          isDefault: false,
+        },
+        onSubmit: async () => undefined,
+      }),
+    );
+
+    expect(markup).toContain('배송지 수정');
+    expect(markup).toContain('value="김지웅"');
+    expect(markup).toContain('value="13485"');
+    expect(markup).not.toContain('배송지 삭제');
+    expect(markup).toContain('수정 완료');
+  });
+
   it('피그마의 배송지 필수 입력과 비활성 확인 상태를 표시한다', () => {
     const markup = renderToStaticMarkup(createElement(AddressFormPage));
 

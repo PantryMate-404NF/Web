@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRef, useState } from 'react';
 
 import { buildAddressListHref } from '@/entities/address/model/address';
-import { selectSelectedAddress, useAddressStore } from '@/entities/address/model/address-store';
+import type { DeliveryAddress } from '@/entities/address/model/address';
 import { useCartStore } from '@/entities/cart/model/cart-store';
 import type { CartItem } from '@/entities/cart/model/cart-store';
 import { createOrder } from '@/entities/order/api/create-order';
@@ -83,12 +83,14 @@ function TossPaymentsBadge() {
 
 export function OrderSheet({
   cartId,
+  defaultAddress,
   items,
   orderReturnTo = '/order',
   paymentDisabled = false,
   selectedCartItemIds = [],
 }: {
   cartId?: number;
+  defaultAddress?: DeliveryAddress;
   items: CartItem[];
   orderReturnTo?: string;
   paymentDisabled?: boolean;
@@ -98,7 +100,6 @@ export function OrderSheet({
   const [isPaymentPending, setIsPaymentPending] = useState(false);
   const [selectedAgreements, setSelectedAgreements] = useState<string[]>([]);
   const [paymentNotice, setPaymentNotice] = useState('');
-  const selectedAddress = useAddressStore(selectSelectedAddress);
   const [executePayment] = useState(() =>
     createPaymentExecutor({
       createOrder,
@@ -201,8 +202,8 @@ export function OrderSheet({
         </h2>
         <div className="flex h-[49px] items-end justify-between gap-3">
           <p className="text-text-secondary h-full w-[259px] text-[15px] leading-[23px]">
-            {selectedAddress
-              ? `${selectedAddress.addressLine1}, ${selectedAddress.addressLine2} (${selectedAddress.postalCode})`
+            {defaultAddress
+              ? `${defaultAddress.addressLine1}, ${defaultAddress.addressLine2} (${defaultAddress.postalCode})`
               : DELIVERY_MOCK.address}
           </p>
           <Link
@@ -361,6 +362,7 @@ export function OrderSheet({
 
 export function OrderPage({
   cartId,
+  defaultAddress,
   errorMessage,
   isLoading = false,
   items,
@@ -370,6 +372,7 @@ export function OrderPage({
   selectedItemIds,
 }: {
   cartId?: number;
+  defaultAddress?: DeliveryAddress;
   errorMessage?: string;
   isLoading?: boolean;
   items?: CartItem[];
@@ -408,6 +411,7 @@ export function OrderPage({
   return (
     <OrderSheet
       cartId={cartId}
+      defaultAddress={defaultAddress}
       items={orderItems}
       orderReturnTo={orderReturnTo}
       paymentDisabled={paymentDisabled}

@@ -55,6 +55,20 @@ describe('AddressListPage', () => {
     expect(markup).toContain('text-body-3');
   });
 
+  it('조회 중, 오류, 비로그인 상태를 각각 안내한다', () => {
+    expect(
+      renderToStaticMarkup(createElement(AddressListPage, { addresses: [], isLoading: true })),
+    ).toContain('배송지 목록을 불러오는 중이에요');
+    expect(
+      renderToStaticMarkup(
+        createElement(AddressListPage, { addresses: [], errorMessage: '서버 오류' }),
+      ),
+    ).toContain('배송지 목록을 불러오지 못했어요');
+    expect(
+      renderToStaticMarkup(createElement(AddressListPage, { addresses: [], isUnauthorized: true })),
+    ).toContain('로그인 후 배송지를 관리해 주세요');
+  });
+
   it('주문서에서 진입하면 추가 화면과 주문서 복귀 주소를 연결한다', () => {
     const markup = renderToStaticMarkup(
       createElement(AddressListPage, {

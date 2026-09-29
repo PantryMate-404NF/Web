@@ -2,11 +2,16 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useId, useState, type FormEvent } from 'react';
+import { useId, useRef, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { buildAddressListHref, type DeliveryAddressInput } from '@/entities/address/model/address';
-import { useAddressStore } from '@/entities/address/model/address-store';
+import {
+  buildAddressListHref,
+  type DeliveryAddress,
+  type DeliveryAddressInput,
+} from '@/entities/address/model/address';
+import { openKakaoPostcode } from '@/features/address-search/model/kakao-postcode';
+import { KakaoPostcodeScript } from '@/features/address-search/ui/kakao-postcode-script';
 
 const EMPTY_FORM: DeliveryAddressInput = {
   recipientName: '',
@@ -36,10 +41,42 @@ function RequiredLabel({ children, htmlFor }: { children: string; htmlFor: strin
 const inputClassName =
   'border-border bg-surface-secondary text-text-secondary focus:border-primary focus:bg-[var(--primitive-primary-200)] h-12 w-full rounded-xl border px-4 text-base leading-6 outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed';
 
-export function AddressFormPage({ returnTo }: { returnTo?: string }) {
+export function AddressFormPage({
+  errorMessage,
+  initialAddress,
+  isLoading = false,
+  isSubmitting = false,
+  isUnauthorized = false,
+  isUnavailable = false,
+  onSubmit,
+  returnTo,
+}: {
+  errorMessage?: string;
+  initialAddress?: DeliveryAddress;
+  isLoading?: boolean;
+  isSubmitting?: boolean;
+  isUnauthorized?: boolean;
+  isUnavailable?: boolean;
+  onSubmit?: (input: DeliveryAddressInput) => Promise<unknown>;
+  returnTo?: string;
+}) {
   const router = useRouter();
-  const addAddress = useAddressStore((state) => state.addAddress);
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [form, setForm] = useState<DeliveryAddressInput>(() =>
+    initialAddress
+      ? {
+          recipientName: initialAddress.recipientName,
+          phoneNumber: initialAddress.phoneNumber,
+          addressLine1: initialAddress.addressLine1,
+          addressLine2: initialAddress.addressLine2,
+          postalCode: initialAddress.postalCode,
+          isDefault: initialAddress.isDefault,
+        }
+      : EMPTY_FORM,
+  );
+  const [postcodeError, setPostcodeError] = useState('');
+  const [isPostcodeReady, setIsPostcodeReady] = useState(false);
+  const postalCodeButtonRef = useRef<HTMLButtonElement>(null);
+  const detailAddressRef = useRef<HTMLInputElement>(null);
   const recipientId = useId();
   const phoneId = useId();
   const postalCodeId = useId();
@@ -59,29 +96,94 @@ export function AddressFormPage({ returnTo }: { returnTo?: string }) {
   }
 
   function handlePostalCodeSearch() {
-    setForm((currentForm) => ({
-      ...currentForm,
-      postalCode: '13485',
-      addressLine1: '서울특별시 신선하구 맛있동 425',
-    }));
+    setPostcodeError('');
+
+    try {
+      openKakaoPostcode({
+        onClose: () => postalCodeButtonRef.current?.focus(),
+        onSelect: ({ address, postalCode }) => {
+          setForm((currentForm) => ({
+            ...currentForm,
+            postalCode,
+            addressLine1: address,
+          }));
+          detailAddressRef.current?.focus();
+        },
+      });
+    } catch (error) {
+      setPostcodeError(
+        error instanceof Error ? error.message : '우편번호 검색을 시작하지 못했습니다.',
+      );
+    }
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit || !onSubmit) return;
 
-    addAddress({ ...form, id: crypto.randomUUID() });
-    router.replace(listHref);
+    try {
+      await onSubmit(form);
+      router.replace(listHref);
+    } catch {
+      // Mutation error is rendered from the route content.
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <main className="mobile-page bg-background flex min-h-dvh items-center justify-center">
+        <p className="text-text-secondary text-sm" role="status">
+          배송지 정보를 준비하는 중이에요.
+        </p>
+      </main>
+    );
+  }
+
+  if (isUnauthorized) {
+    return (
+      <main className="mobile-page bg-background flex min-h-dvh flex-col items-center justify-center">
+        <p className="text-text-secondary text-sm">로그인 후 배송지를 등록해 주세요.</p>
+        <Link
+          className="bg-primary text-primary-foreground mt-5 rounded-xl px-5 py-3"
+          href="/login"
+        >
+          로그인하기
+        </Link>
+      </main>
+    );
+  }
+
+  if (isUnavailable) {
+    return (
+      <main className="mobile-page bg-background flex min-h-dvh flex-col items-center justify-center">
+        <p className="text-text-secondary text-sm" role="alert">
+          배송지를 찾을 수 없습니다.
+        </p>
+        <Link className="border-border mt-5 rounded-xl border px-5 py-3" href={listHref}>
+          배송지 목록으로 이동
+        </Link>
+      </main>
+    );
   }
 
   return (
     <main className="mobile-page bg-background min-h-dvh">
+      <KakaoPostcodeScript
+        onError={() => {
+          setIsPostcodeReady(false);
+          setPostcodeError('우편번호 검색 서비스를 불러오지 못했습니다.');
+        }}
+        onReady={() => {
+          setIsPostcodeReady(true);
+          setPostcodeError('');
+        }}
+      />
       <header className="relative flex h-16 items-center justify-end pr-0.5">
         <h1 className="text-title-3 absolute left-1/2 -translate-x-1/2 font-semibold">
-          배송지 추가
+          {initialAddress ? '배송지 수정' : '배송지 추가'}
         </h1>
         <Link
-          aria-label="배송지 추가 닫기"
+          aria-label={`${initialAddress ? '배송지 수정' : '배송지 추가'} 닫기`}
           className="focus-visible:ring-ring grid size-10 place-items-center rounded-full focus-visible:ring-2"
           href={listHref}
         >
@@ -138,13 +240,21 @@ export function AddressFormPage({ returnTo }: { returnTo?: string }) {
               value={form.postalCode}
             />
             <button
+              aria-describedby={postcodeError ? 'postcode-error' : undefined}
               className="border-border-strong focus-visible:ring-ring h-12 w-[171px] shrink-0 rounded-xl border text-base leading-6 font-semibold focus-visible:ring-2"
+              disabled={!isPostcodeReady}
               onClick={handlePostalCodeSearch}
+              ref={postalCodeButtonRef}
               type="button"
             >
               우편번호 검색
             </button>
           </div>
+          {postcodeError ? (
+            <p className="text-destructive text-sm" id="postcode-error" role="alert">
+              {postcodeError}
+            </p>
+          ) : null}
           <input
             aria-label="기본 주소"
             aria-required="true"
@@ -159,6 +269,7 @@ export function AddressFormPage({ returnTo }: { returnTo?: string }) {
             id={detailAddressId}
             onChange={(event) => updateField('addressLine2', event.target.value)}
             placeholder="상세 주소를 입력해주세요."
+            ref={detailAddressRef}
             required
             value={form.addressLine2}
           />
@@ -170,6 +281,7 @@ export function AddressFormPage({ returnTo }: { returnTo?: string }) {
             <input
               checked={form.isDefault}
               className="peer sr-only"
+              disabled={initialAddress?.isDefault}
               id={defaultAddressId}
               onChange={(event) => updateField('isDefault', event.target.checked)}
               type="checkbox"
@@ -203,12 +315,17 @@ export function AddressFormPage({ returnTo }: { returnTo?: string }) {
           </Link>
           <button
             className="bg-primary text-primary-foreground focus-visible:ring-ring disabled:bg-surface-disabled disabled:text-disabled h-15 flex-1 rounded-xl text-lg leading-7 font-semibold focus-visible:ring-2"
-            disabled={!canSubmit}
+            disabled={!canSubmit || isSubmitting}
             type="submit"
           >
-            확인
+            {isSubmitting ? '저장 중' : initialAddress ? '수정 완료' : '확인'}
           </button>
         </footer>
+        {errorMessage ? (
+          <p className="text-destructive mt-3 text-center text-sm" role="alert">
+            {errorMessage}
+          </p>
+        ) : null}
       </form>
     </main>
   );

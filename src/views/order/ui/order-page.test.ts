@@ -18,6 +18,25 @@ const orderItems: CartItem[] = [
 ];
 
 describe('OrderSheet', () => {
+  it('서버 기본 배송지를 주문서에 표시한다', () => {
+    const markup = renderToStaticMarkup(
+      createElement(OrderSheet, {
+        defaultAddress: {
+          id: '12',
+          recipientName: '김지웅',
+          phoneNumber: '01012345678',
+          addressLine1: '경기도 성남시 분당구 불정로 90',
+          addressLine2: '101동 1001호',
+          postalCode: '13485',
+          isDefault: true,
+        },
+        items: orderItems,
+      }),
+    );
+
+    expect(markup).toContain('경기도 성남시 분당구 불정로 90, 101동 1001호 (13485)');
+  });
+
   it('주문서 정보와 비활성 결제 CTA를 렌더링한다', () => {
     const markup = renderToStaticMarkup(
       createElement(OrderSheet, {
