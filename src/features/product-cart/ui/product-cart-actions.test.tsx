@@ -48,4 +48,23 @@ describe('ProductCartActions', () => {
     expect(markup).toContain('disabled=""');
     expect(markup).toContain('판매 불가 상품은 장바구니에 담을 수 없습니다');
   });
+
+  it('장바구니 버튼에 피그마의 불투명 배경색과 전경색을 적용한다', () => {
+    const product = getProductById('free-range-eggs');
+
+    if (!product) throw new Error('판매 가능 상품 목업이 필요합니다.');
+
+    const queryClient = new QueryClient();
+    const markup = renderToStaticMarkup(
+      createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        createElement(ProductCartActions, { product }),
+      ),
+    );
+
+    expect(markup).toContain('bg-[var(--primitive-primary-100)]');
+    expect(markup).toContain('text-[var(--primitive-primary-700)]');
+    expect(markup).not.toContain('bg-primary/15 text-primary');
+  });
 });

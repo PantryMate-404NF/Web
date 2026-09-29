@@ -73,7 +73,7 @@ const comparisonProducts: RelatedProduct[] = [
 function ProductInfoRow({ label, value }: ProductInfoRowProps) {
   return (
     <div className="flex text-sm leading-[21px] font-medium">
-      <dt className="text-text-tertiary w-20 shrink-0">{label}</dt>
+      <dt className="text-disabled w-20 shrink-0">{label}</dt>
       <dd className="text-text-secondary min-w-0">{value}</dd>
     </div>
   );
@@ -213,7 +213,7 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
 
   return (
     <main className="mobile-page bg-background overflow-x-clip pb-16">
-      <header className="bg-background relative flex h-10 items-center px-2">
+      <header className="bg-background relative flex h-10 items-center pr-1">
         <BackButton />
         <h1 className="text-title-3 absolute left-1/2 -translate-x-1/2 font-semibold">상품 상세</h1>
         <Link
@@ -224,9 +224,9 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
           <Image
             alt=""
             aria-hidden="true"
-            height={22}
+            height={24}
             src="/icons/home/product-cart.svg"
-            width={22}
+            width={24}
           />
         </Link>
       </header>
@@ -248,7 +248,7 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
             <Image alt="" height={24} src="/icons/product/expand-screen-line.svg" width={24} />
           </button>
         </div>
-        <span className="bg-surface-secondary text-text-tertiary inline-flex self-start rounded px-2 py-1 text-xs leading-[18px]">
+        <span className="bg-surface-secondary text-text-secondary inline-flex self-start rounded px-2 py-1 text-xs leading-[18px]">
           {product.category}
         </span>
         <p className="text-title-3 w-full pr-20 font-bold">{product.name}</p>

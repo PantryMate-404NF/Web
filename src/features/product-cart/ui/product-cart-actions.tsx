@@ -239,7 +239,7 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
                 ? '장바구니 옵션 선택'
                 : '판매 불가 상품은 장바구니에 담을 수 없습니다'
             }
-            className="bg-primary/15 text-primary focus-visible:ring-ring h-12 flex-1 rounded-xl text-lg font-semibold focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="focus-visible:ring-ring h-12 flex-1 rounded-xl bg-[var(--primitive-primary-100)] text-lg font-semibold text-[var(--primitive-primary-700)] focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={isActionDisabled || isPending || isSubmitting}
             onClick={() => openOptionSheet('add')}
             ref={addTriggerRef}
