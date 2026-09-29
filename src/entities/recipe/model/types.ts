@@ -8,15 +8,6 @@ export interface RecipeIngredient {
   isOwned?: boolean;
   isImminent?: boolean;
   isMain?: boolean;
-  mappedProduct?: RecipeMappedProduct | null;
-}
-
-export interface RecipeMappedProduct {
-  productId: number;
-  productName: string;
-  price: number;
-  quantity: number;
-  productImageUrl?: string | null;
 }
 
 export interface RecipeStep {

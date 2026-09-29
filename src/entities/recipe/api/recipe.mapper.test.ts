@@ -124,7 +124,7 @@ describe('toRecipe', () => {
     expect(recipe.thumbnailUrl).toBeUndefined();
   });
 
-  it('maps the linked commerce product needed by recipe cart actions', () => {
+  it('does not infer commerce product mappings from recipe detail ingredients', () => {
     const recipe = toRecipeDetail({
       recipeId: 11,
       title: '양파 달걀 볶음',
@@ -140,27 +140,12 @@ describe('toRecipe', () => {
           requiredAmount: 1,
           unit: '개',
           isMain: true,
-          isOwned: false,
-          mappedProduct: {
-            productId: 101,
-            productName: '국내산 햇양파',
-            price: 3900,
-            quantity: 2,
-            productImageUrl: 'https://cdn.example.test/onion.jpg',
-          },
         },
       ],
       steps: [],
     });
 
-    expect(recipe.ingredients[0]?.mappedProduct).toEqual({
-      productId: 101,
-      productName: '국내산 햇양파',
-      price: 3900,
-      quantity: 2,
-      productImageUrl: 'https://cdn.example.test/onion.jpg',
-    });
-    expect(recipe.ingredients[0]?.isOwned).toBe(false);
+    expect(recipe.ingredients[0]).not.toHaveProperty('mappedProduct');
   });
 
   it('조리 완료 요청을 레시피 endpoint로 전송한다', async () => {

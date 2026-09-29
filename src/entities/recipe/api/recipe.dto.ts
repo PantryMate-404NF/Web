@@ -18,14 +18,6 @@ export interface RecipeIngredientDto {
   requiredAmount?: number | null;
   unit?: string | null;
   isMain: boolean;
-  isOwned?: boolean;
-  mappedProduct?: {
-    productId: number;
-    productName: string;
-    price: number;
-    quantity: number;
-    productImageUrl?: string | null;
-  } | null;
 }
 
 export interface RecipeStepDto {
@@ -75,6 +67,32 @@ export interface RecipeIngredientPantryMatchDto {
 export interface RecipePantryMatchDto {
   recipeId: number;
   ingredients: RecipeIngredientPantryMatchDto[];
+}
+
+export type RecipeProductMatchStatus = 'MATCHED' | 'NO_PRODUCT' | 'UNSUPPORTED';
+
+export interface MatchedRecipeProductDto {
+  productId: number;
+  name: string;
+  price: number;
+  thumbnailUrl?: string | null;
+  unit?: string;
+  capacity?: number;
+  packageCount?: number | null;
+  capacitySufficient?: boolean;
+}
+
+export interface RecipeIngredientProductMatchDto {
+  ingredientId: number;
+  name: string;
+  hasIngredient: boolean;
+  matchStatus: RecipeProductMatchStatus;
+  product?: MatchedRecipeProductDto | null;
+}
+
+export interface RecipeProductMatchDto {
+  recipeId: number;
+  ingredients: RecipeIngredientProductMatchDto[];
 }
 
 export interface CookingCompleteRequestDto {
