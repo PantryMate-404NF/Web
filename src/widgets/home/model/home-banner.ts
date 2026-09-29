@@ -20,11 +20,21 @@ export const HOME_BANNERS = [
     kind: 'spring',
     label: '봄맞이 제철 식재료 안내',
   },
+  {
+    id: 'monthly-seasonal-food',
+    imageSrc: '/images/home/banner-seasonal-food.png',
+    kind: 'image',
+    label: '이달의 제철음식 안내',
+  },
+  {
+    id: 'sokcho-kimchi',
+    imageSrc: '/images/home/banner-sokcho-kimchi.png',
+    kind: 'image',
+    label: '속초 오마니젓갈 안내',
+  },
 ] as const satisfies readonly HomeBanner[];
 
-export const HOME_CAROUSEL_BANNERS = HOME_BANNERS.filter(
-  (banner) => banner.id === 'gap-farm' || banner.id === 'spring-ingredients',
-);
+export const HOME_CAROUSEL_BANNERS = HOME_BANNERS;
 
 export function getNextHomeBannerIndex(currentIndex: number, bannerCount: number) {
   if (bannerCount <= 0) return 0;
