@@ -113,6 +113,7 @@ export function AddressListPage({
   onRetry,
   onSelect,
   returnTo,
+  selectionErrorMessage,
 }: {
   addresses?: readonly DeliveryAddress[];
   errorMessage?: string;
@@ -121,6 +122,7 @@ export function AddressListPage({
   onRetry?: () => void;
   onSelect?: (addressId: string) => Promise<void> | void;
   returnTo?: string;
+  selectionErrorMessage?: string;
 }) {
   let content;
 
@@ -164,6 +166,11 @@ export function AddressListPage({
   } else if (addresses.length > 0) {
     content = (
       <div className="flex flex-col gap-5 pt-3">
+        {selectionErrorMessage ? (
+          <p className="text-destructive text-sm" role="alert">
+            {selectionErrorMessage}
+          </p>
+        ) : null}
         <section aria-label="등록된 배송지 목록" className="flex flex-col gap-3">
           {addresses.map((address) => (
             <AddressCard

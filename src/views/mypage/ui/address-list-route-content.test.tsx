@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AddressListRouteContent } from './address-list-route-content';
 
@@ -36,6 +36,10 @@ const address = {
 };
 
 describe('AddressListRouteContent', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('주문서에서 배송지를 선택하면 서버 기본 배송지를 바꾼 뒤 복귀한다', async () => {
     const refetch = vi.fn();
     useAuthSessionMock.mockReturnValue({ state: 'complete' });
@@ -75,5 +79,31 @@ describe('AddressListRouteContent', () => {
 
     expect(useAddressesQueryMock).toHaveBeenCalledWith(false);
     expect(page.props).toMatchObject({ isUnauthorized: true });
+  });
+
+  it('기본 배송지 설정 실패를 처리하고 목록 오류와 분리한다', async () => {
+    const mutationError = new Error('기본 배송지를 설정하지 못했습니다.');
+    setDefaultMutateAsyncMock.mockRejectedValueOnce(mutationError);
+    useAuthSessionMock.mockReturnValue({ state: 'complete' });
+    useAddressesQueryMock.mockReturnValue({
+      data: [address],
+      error: null,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+    useAddressMutationsMock.mockReturnValue({
+      setDefault: {
+        error: mutationError,
+        isPending: false,
+        mutateAsync: setDefaultMutateAsyncMock,
+      },
+    });
+
+    const page = AddressListRouteContent({ returnTo: '/order' });
+
+    expect(page.props.errorMessage).toBeUndefined();
+    expect(page.props.selectionErrorMessage).toBe(mutationError.message);
+    await expect(page.props.onSelect('12')).resolves.toBeUndefined();
+    expect(pushMock).not.toHaveBeenCalled();
   });
 });

@@ -19,10 +19,7 @@ export function AddressListRouteContent({ returnTo }: { returnTo?: string }) {
   return (
     <AddressListPage
       addresses={addresses}
-      errorMessage={
-        (error instanceof Error ? error.message : undefined) ??
-        (setDefault.error instanceof Error ? setDefault.error.message : undefined)
-      }
+      errorMessage={error instanceof Error ? error.message : undefined}
       isLoading={isAuthLoading || (shouldQuery && isPending) || setDefault.isPending}
       isUnauthorized={!isAuthLoading && !shouldQuery}
       onRetry={() => {
@@ -31,12 +28,19 @@ export function AddressListRouteContent({ returnTo }: { returnTo?: string }) {
       onSelect={
         returnTo
           ? async (addressId) => {
-              await setDefault.mutateAsync(Number(addressId));
-              router.push(returnTo);
+              try {
+                await setDefault.mutateAsync(Number(addressId));
+                router.push(returnTo);
+              } catch {
+                // Mutation error is rendered without replacing the address list.
+              }
             }
           : undefined
       }
       returnTo={returnTo}
+      selectionErrorMessage={
+        setDefault.error instanceof Error ? setDefault.error.message : undefined
+      }
     />
   );
 }

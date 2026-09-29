@@ -69,6 +69,30 @@ describe('AddressListPage', () => {
     ).toContain('로그인 후 배송지를 관리해 주세요');
   });
 
+  it('기본 배송지 설정 오류가 발생해도 배송지 목록을 유지한다', () => {
+    const markup = renderToStaticMarkup(
+      createElement(AddressListPage, {
+        addresses: [
+          {
+            id: 'home',
+            recipientName: '집밥사랑',
+            phoneNumber: '010-1234-2222',
+            addressLine1: '서울특별시 신선하구 맛있동 425',
+            addressLine2: '',
+            postalCode: '13485',
+            isDefault: true,
+          },
+        ],
+        selectionErrorMessage: '기본 배송지를 설정하지 못했습니다.',
+      }),
+    );
+
+    expect(markup).toContain('등록된 배송지 목록');
+    expect(markup).toContain('집밥사랑');
+    expect(markup).toContain('기본 배송지를 설정하지 못했습니다.');
+    expect(markup).not.toContain('배송지 목록을 불러오지 못했어요.');
+  });
+
   it('주문서에서 진입하면 추가 화면과 주문서 복귀 주소를 연결한다', () => {
     const markup = renderToStaticMarkup(
       createElement(AddressListPage, {

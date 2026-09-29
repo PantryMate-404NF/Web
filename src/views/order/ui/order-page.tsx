@@ -36,6 +36,15 @@ function formatPrice(price: number) {
   return price.toLocaleString('ko-KR');
 }
 
+function formatDeliveryAddress(address: DeliveryAddress) {
+  const detailAddress = address.addressLine2.trim();
+  const addressText = detailAddress
+    ? `${address.addressLine1}, ${detailAddress}`
+    : address.addressLine1;
+
+  return `${addressText} (${address.postalCode})`;
+}
+
 function MiniAction({ children, disabled = false }: { children: string; disabled?: boolean }) {
   return (
     <button
@@ -202,9 +211,7 @@ export function OrderSheet({
         </h2>
         <div className="flex h-[49px] items-end justify-between gap-3">
           <p className="text-text-secondary h-full w-[259px] text-[15px] leading-[23px]">
-            {defaultAddress
-              ? `${defaultAddress.addressLine1}, ${defaultAddress.addressLine2} (${defaultAddress.postalCode})`
-              : DELIVERY_MOCK.address}
+            {defaultAddress ? formatDeliveryAddress(defaultAddress) : '배송지를 등록해 주세요.'}
           </p>
           <Link
             className="border-border-strong text-text-secondary focus-visible:ring-ring shrink-0 rounded-full border px-3 py-1 text-sm leading-[21px] font-medium focus-visible:ring-2"
@@ -347,7 +354,7 @@ export function OrderSheet({
         <button
           aria-describedby={paymentNotice ? 'payment-notice' : undefined}
           className="bg-primary text-primary-foreground focus-visible:ring-ring h-15 w-full rounded-xl text-lg font-semibold focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={paymentDisabled || !isAllAgreed || isPaymentPending}
+          disabled={paymentDisabled || !defaultAddress || !isAllAgreed || isPaymentPending}
           onClick={() => {
             void handlePayment();
           }}
