@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { CART_HREF } from '@/shared/config/cart-write-mode';
+
 export function HomeHeader() {
   return (
     <header className="flex h-16 items-center justify-between pr-4 pl-4">
@@ -20,7 +22,7 @@ export function HomeHeader() {
       <Link
         aria-label="장바구니"
         className="focus-visible:ring-ring grid size-10 place-items-center rounded-full p-2 focus-visible:ring-2"
-        href="/cart"
+        href={CART_HREF}
       >
         <Image alt="" aria-hidden="true" height={24} src="/icons/header/Icon-Cart.svg" width={24} />
       </Link>

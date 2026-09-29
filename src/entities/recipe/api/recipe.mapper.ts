@@ -53,6 +53,10 @@ export function toRecipeDetail(dto: RecipeDetailDto): RecipeDetail {
       imageUrl: ingredient.imageUrl ?? null,
       amount: `${ingredient.requiredAmount ?? ''}${ingredient.unit ?? ''}`,
       isMain: ingredient.isMain,
+      ...(ingredient.isOwned === undefined ? {} : { isOwned: ingredient.isOwned }),
+      ...(ingredient.mappedProduct === undefined
+        ? {}
+        : { mappedProduct: ingredient.mappedProduct }),
     })),
     cookingSteps: steps.map((step) => step.description),
     steps,

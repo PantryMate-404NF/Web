@@ -6,12 +6,14 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 import { getCartItemCount, useCartStore } from '@/entities/cart/model/cart-store';
+import { RecipeCartActions } from '@/features/recipe-cart/ui/recipe-cart-actions';
 import { useRecipeMutations } from '@/entities/recipe/api/use-recipe-mutations';
 import { useRecipeDetailQuery } from '@/entities/recipe/api/use-recipe-detail-query';
 import type { RecipeRecommendationContext } from '@/entities/recipe/api/recipe.dto';
 import { useRecipePantryMatchQuery } from '@/entities/recipe/api/use-recipe-pantry-match-query';
 import { useScrappedRecipesQuery } from '@/entities/recipe/api/use-scrapped-recipes-query';
 import type { RecipeDetail } from '@/entities/recipe/model/types';
+import { CART_HREF } from '@/shared/config/cart-write-mode';
 import { SystemErrorState } from '@/shared/ui/system-error-state';
 
 interface RecipeDetailPageProps {
@@ -331,23 +333,11 @@ function RecipeDetailContent({
               </li>
             ))}
           </ul>
-          <div className="mt-4 flex gap-2">
-            <button
-              className="text-label-3 h-10 flex-1 rounded-full border-[1.5px] border-[var(--primitive-primary-400)] bg-[var(--surface-default)] font-medium text-[var(--primitive-black)]"
-              disabled
-              type="button"
-            >
-              선택 담기
-            </button>
-            <button
-              className="text-label-3 h-10 flex-1 rounded-full border-[1.5px] border-[var(--primitive-primary-500)] bg-[var(--primitive-primary-300)] font-medium text-[var(--primitive-black)]"
-              disabled
-              style={{ borderColor: 'var(--primitive-primary-500)' }}
-              type="button"
-            >
-              부족한 재료 담기
-            </button>
-          </div>
+          <RecipeCartActions
+            ingredients={ingredients}
+            returnTo={`/recipe/${recipe.id}`}
+            selectedIngredientIds={selectedIngredientIds}
+          />
         </section>
 
         <section
@@ -394,7 +384,7 @@ function RecipeDetailContent({
       <Link
         aria-label={`장바구니 ${cartItemCount}개 상품`}
         className="fixed bottom-8 left-1/2 z-40 ml-[130px] grid size-10 place-items-center rounded-full bg-[var(--primitive-primary-500)] shadow-[var(--shadow-floating)]"
-        href="/cart"
+        href={CART_HREF}
       >
         <Image
           alt=""

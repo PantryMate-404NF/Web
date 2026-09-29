@@ -41,6 +41,7 @@ vi.mock('@/entities/recipe/api/use-recipe-filter-ingredients-query', () => ({
 vi.mock('@/entities/recipe/api/use-recipe-recommendations-query', () => ({
   useRecipeRecommendationsQuery: useRecipeRecommendationsQueryMock,
 }));
+vi.mock('@/shared/config/cart-write-mode', () => ({ CART_HREF: '/cart?preview=local' }));
 vi.mock('@/features/auth/ui/auth-session-provider', () => ({ useAuthSession: useAuthSessionMock }));
 vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams() }));
 
@@ -99,6 +100,13 @@ describe('RecipeActionIcon', () => {
     expect(markup).toContain('<button');
     expect(markup).toContain('right-2.5');
     expect(markup).toContain('bg-card/80');
+  });
+
+  it('routes the recipe list cart icon to the local preview cart in development', () => {
+    const markup = renderToStaticMarkup(<RecipeListPage />);
+
+    expect(markup).toContain('aria-label="장바구니"');
+    expect(markup).toContain('href="/cart?preview=local"');
   });
 
   it('renders search pagination with the current page and correct boundary buttons', () => {

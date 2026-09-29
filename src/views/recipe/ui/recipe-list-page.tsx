@@ -24,6 +24,7 @@ import { useRecipePantrySelectionStore } from '@/entities/pantry/model/recipe-pa
 import type { PantryItem } from '@/entities/pantry/model/types';
 import type { Recipe } from '@/entities/recipe/model/types';
 import { ApiError } from '@/shared/api/api-error';
+import { CART_HREF } from '@/shared/config/cart-write-mode';
 import { SystemErrorState } from '@/shared/ui/system-error-state';
 import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
@@ -273,7 +274,7 @@ function RecipeHeader({
           value={query}
         />
       </label>
-      <Link aria-label="장바구니" className="grid size-10 place-items-center p-2" href="/cart">
+      <Link aria-label="장바구니" className="grid size-10 place-items-center p-2" href={CART_HREF}>
         <Image
           alt=""
           aria-hidden="true"

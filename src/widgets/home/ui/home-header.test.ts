@@ -1,6 +1,8 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('@/shared/config/cart-write-mode', () => ({ CART_HREF: '/cart?preview=local' }));
 
 import { HomeHeader } from './home-header';
 
@@ -12,5 +14,12 @@ describe('HomeHeader', () => {
     expect(markup).toContain('w-[151px]');
     expect(markup).toContain('width="150"');
     expect(markup).toContain('height="64"');
+  });
+
+  it('개발용 로컬 장바구니 경로로 이동한다', () => {
+    const markup = renderToStaticMarkup(createElement(HomeHeader));
+
+    expect(markup).toContain('aria-label="장바구니"');
+    expect(markup).toContain('href="/cart?preview=local"');
   });
 });

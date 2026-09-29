@@ -1,220 +1,149 @@
 'use client';
 
-import { Check, Minus, Plus, ShoppingCart } from 'lucide-react';
-import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-import { type CartProduct, useCartStore } from '@/entities/cart/model/cart-store';
-import { resolveAddToCartAction } from '@/features/recipe-cart/model/resolve-add-to-cart-action';
-import {
-  type LinkedRecipeProduct,
-  selectPurchasableProducts,
-} from '@/features/recipe-cart/model/select-purchasable-products';
+import type { RecipeIngredient } from '@/entities/recipe/model/types';
+import { useCartStore } from '@/entities/cart/model/cart-store';
+import { useAddProductToCart } from '@/features/product-cart/model/use-add-product-to-cart';
+import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
+import { CART_HREF, CART_WRITE_MODE } from '@/shared/config/cart-write-mode';
+
+import { getLocalRecipeCartProducts, getRecipeCartRequests } from '../model/recipe-cart-selection';
 
 interface RecipeCartActionsProps {
-  linkedProducts: LinkedRecipeProduct[];
+  ingredients: RecipeIngredient[];
+  selectedIngredientIds: string[];
+  returnTo: string;
 }
 
-export function RecipeCartActions({ linkedProducts }: RecipeCartActionsProps) {
-  const addProducts = useCartStore((state) => state.addProducts);
-  const purchasableProducts = selectPurchasableProducts(linkedProducts);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [addedMessage, setAddedMessage] = useState<string | null>(null);
-  const dialogRef = useRef<HTMLElement>(null);
-  const selectButtonRef = useRef<HTMLButtonElement>(null);
-  const [quantities, setQuantities] = useState<Record<string, number>>(() =>
-    Object.fromEntries(purchasableProducts.map((product) => [product.id, 1])),
+export function RecipeCartActions({
+  ingredients,
+  selectedIngredientIds,
+  returnTo,
+}: RecipeCartActionsProps) {
+  const router = useRouter();
+  const addPreviewProducts = useCartStore((state) => state.addProducts);
+  const { restore, state: authState } = useAuthSession();
+  const { addProduct } = useAddProductToCart();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const allRequests = getRecipeCartRequests(ingredients, [], 'all');
+  const selectedRequests = getRecipeCartRequests(ingredients, selectedIngredientIds, 'selected');
+  const allLocalProducts = getLocalRecipeCartProducts(ingredients, [], 'all');
+  const selectedLocalProducts = getLocalRecipeCartProducts(
+    ingredients,
+    selectedIngredientIds,
+    'selected',
   );
+  const isPreview = CART_WRITE_MODE === 'preview';
+  const isCartDisabled = CART_WRITE_MODE === 'disabled';
+  const unavailableMessage = isCartDisabled
+    ? '장바구니 기능을 사용할 수 없어요. 잠시 후 다시 시도해 주세요.'
+    : !isPreview && allRequests.length === 0
+      ? '장바구니에 담을 수 있는 연동 상품이 없어요.'
+      : isPreview && allLocalProducts.length === 0
+        ? '장바구니에 담을 재료가 없어요.'
+        : !isPreview && selectedIngredientIds.length > 0 && selectedRequests.length === 0
+          ? '선택한 재료와 연결된 상품이 없어요.'
+          : null;
+  const statusMessage = message ?? unavailableMessage;
 
-  function showAddedMessage(message: string) {
-    setAddedMessage(message);
-    setIsSheetOpen(false);
-  }
+  async function addToCart(mode: 'all' | 'selected') {
+    const requests = mode === 'all' ? allRequests : selectedRequests;
+    const previewProducts = mode === 'all' ? allLocalProducts : selectedLocalProducts;
+    setMessage(null);
 
-  function closeSheet() {
-    setIsSheetOpen(false);
-    selectButtonRef.current?.focus();
-  }
-
-  function updateQuantity(productId: string, amount: number) {
-    setQuantities((currentQuantities) => ({
-      ...currentQuantities,
-      [productId]: Math.max(1, currentQuantities[productId] + amount),
-    }));
-  }
-
-  function addToCart(products: CartProduct[], message: string) {
-    addProducts(products);
-    showAddedMessage(message);
-  }
-
-  function handleAdd(message: string) {
-    const action = resolveAddToCartAction(purchasableProducts.length);
-
-    if (action === 'unavailable') {
-      showAddedMessage('연동된 상품이 없어요.');
+    if (isCartDisabled) {
+      setMessage('장바구니 기능을 사용할 수 없어요. 잠시 후 다시 시도해 주세요.');
       return;
     }
-
-    if (action === 'direct-add') {
-      addToCart(purchasableProducts, message);
-      return;
-    }
-
-    setIsSheetOpen(true);
-  }
-
-  useEffect(() => {
-    if (!isSheetOpen) {
-      return;
-    }
-
-    const dialog = dialogRef.current;
-    const focusableSelector =
-      'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-    const focusableElements = dialog
-      ? Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector))
-      : [];
-
-    focusableElements[0]?.focus();
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        closeSheet();
+    if (isPreview) {
+      if (previewProducts.length === 0) {
+        setMessage('장바구니에 담을 재료가 없어요.');
         return;
       }
 
-      if (event.key !== 'Tab' || focusableElements.length === 0) {
+      addPreviewProducts(previewProducts);
+      router.push(CART_HREF);
+      return;
+    }
+    if (requests.length === 0) {
+      setMessage(
+        mode === 'all'
+          ? '장바구니에 담을 수 있는 연동 상품이 없어요.'
+          : '선택한 재료와 연결된 상품이 없어요.',
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const resolvedAuthState = authState === 'loading' ? await restore() : authState;
+      if (resolvedAuthState === 'guest') {
+        router.push(`/login?returnTo=${encodeURIComponent(returnTo)}`);
         return;
       }
 
-      const firstElement = focusableElements[0];
-      const lastElement = focusableElements.at(-1);
-
-      if (event.shiftKey && document.activeElement === firstElement) {
-        event.preventDefault();
-        lastElement?.focus();
-      } else if (!event.shiftKey && document.activeElement === lastElement) {
-        event.preventDefault();
-        firstElement.focus();
+      const results = await Promise.allSettled(requests.map((request) => addProduct(request)));
+      const failures = results.filter((result) => result.status === 'rejected');
+      if (failures.length > 0) {
+        const succeededCount = results.length - failures.length;
+        setMessage(
+          succeededCount > 0
+            ? '일부 상품만 장바구니에 담겼어요. 장바구니를 확인해 주세요.'
+            : failures[0]?.reason instanceof Error
+              ? failures[0].reason.message
+              : '장바구니에 담지 못했어요.',
+        );
+        return;
       }
-    }
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isSheetOpen]);
+      router.push(CART_HREF);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '장바구니에 담지 못했어요.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
-    <>
-      <div className="bg-background border-border fixed right-0 bottom-0 left-0 z-10 mx-auto flex w-full max-w-[var(--layout-mobile-design-frame)] gap-2 border-t px-4 py-3">
+    <div className="mt-4">
+      <div className="flex gap-2">
         <button
-          className="bg-muted text-foreground text-label-3 h-11 flex-1 rounded-2xl font-semibold"
-          onClick={() => handleAdd('부족 식재료를 장바구니에 담았어요.')}
-          type="button"
-        >
-          전체 담기
-        </button>
-        <button
-          className="bg-secondary text-secondary-foreground text-label-3 h-11 flex-1 rounded-2xl font-semibold"
-          onClick={() => handleAdd('상품을 장바구니에 담았어요.')}
-          ref={selectButtonRef}
+          className="text-label-3 h-10 flex-1 rounded-full border-[1.5px] border-[var(--primitive-grey-200)] bg-[var(--surface-default)] font-medium text-[var(--primitive-black)] disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={
+            isSubmitting ||
+            isCartDisabled ||
+            (isPreview ? !selectedLocalProducts.length : !selectedRequests.length)
+          }
+          onClick={() => void addToCart('selected')}
           type="button"
         >
           선택 담기
         </button>
-      </div>
-
-      {addedMessage && (
-        <div
-          aria-live="polite"
-          className="bg-foreground text-background text-label-3 shadow-floating fixed right-4 bottom-24 left-4 z-20 mx-auto max-w-[var(--layout-mobile-design-frame)] rounded-xl px-4 py-3 text-center font-medium"
+        <button
+          className="text-label-3 h-10 flex-1 rounded-full border-[1.5px] border-[var(--primitive-primary-500)] bg-[var(--primitive-primary-300)] font-medium text-[var(--primitive-black)] disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={
+            isSubmitting ||
+            isCartDisabled ||
+            (isPreview ? !allLocalProducts.length : !allRequests.length)
+          }
+          onClick={() => void addToCart('all')}
+          type="button"
         >
-          <span className="inline-flex items-center gap-2">
-            <Check className="size-4" aria-hidden="true" />
-            {addedMessage}
-          </span>
-          <Link className="mt-2 block underline underline-offset-2" href="/cart">
-            장바구니 확인
-          </Link>
-        </div>
-      )}
-
-      {isSheetOpen && (
-        <div className="bg-overlay/40 fixed inset-0 z-30 flex items-end" role="presentation">
-          <section
-            aria-label="부족 식재료 상품 선택"
-            aria-modal="true"
-            className="bg-card shadow-modal mx-auto w-full max-w-[var(--layout-mobile-design-frame)] rounded-t-[20px] px-4 pt-3 pb-4"
-            ref={dialogRef}
-            role="dialog"
-          >
-            <div className="bg-placeholder-icon mx-auto h-1.5 w-20 rounded-full" />
-            <ul className="mt-4 space-y-2">
-              {purchasableProducts.map((product) => (
-                <li key={product.id} className="bg-muted flex min-h-20 items-center rounded-lg p-3">
-                  <div className="bg-placeholder text-placeholder-icon-subtle grid size-[52px] shrink-0 place-items-center rounded-lg">
-                    <ShoppingCart className="size-5" aria-hidden="true" strokeWidth={1.5} />
-                  </div>
-                  <div className="min-w-0 flex-1 px-3">
-                    <p className="text-label-4 text-muted-foreground">{product.ingredient}</p>
-                    <p className="text-body-4 mt-0.5 truncate font-semibold">{product.name}</p>
-                    <p className="text-label-4 text-muted-foreground mt-1">
-                      {product.price.toLocaleString()}원
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      aria-label={`${product.name} 수량 줄이기`}
-                      className="bg-background text-muted-foreground grid size-8 place-items-center rounded-full"
-                      onClick={() => updateQuantity(product.id, -1)}
-                      type="button"
-                    >
-                      <Minus className="size-4" aria-hidden="true" />
-                    </button>
-                    <span
-                      aria-label={`${product.name} 수량`}
-                      className="text-title-4 w-5 text-center font-bold"
-                    >
-                      {quantities[product.id]}
-                    </span>
-                    <button
-                      aria-label={`${product.name} 수량 늘리기`}
-                      className="bg-background text-muted-foreground grid size-8 place-items-center rounded-full"
-                      onClick={() => updateQuantity(product.id, 1)}
-                      type="button"
-                    >
-                      <Plus className="size-4" aria-hidden="true" />
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-4 flex gap-2">
-              <button
-                className="bg-muted text-foreground text-label-3 h-11 flex-1 rounded-2xl font-semibold"
-                onClick={closeSheet}
-                type="button"
-              >
-                닫기
-              </button>
-              <button
-                className="bg-primary text-primary-foreground text-label-3 h-11 flex-1 rounded-2xl font-semibold"
-                onClick={() =>
-                  addToCart(
-                    purchasableProducts.flatMap((product) =>
-                      Array.from({ length: quantities[product.id] }, () => product),
-                    ),
-                    '선택한 상품을 장바구니에 담았어요.',
-                  )
-                }
-                type="button"
-              >
-                선택 담기
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
-    </>
+          부족 재료 담기
+        </button>
+      </div>
+      {statusMessage ? (
+        <p
+          aria-live="polite"
+          className="text-label-4 mt-2 text-[var(--primitive-grey-600)]"
+          role="status"
+        >
+          {statusMessage}
+        </p>
+      ) : null}
+    </div>
   );
 }

@@ -15,6 +15,15 @@ vi.mock('@/entities/recipe/api/use-scrapped-recipes-query', () => ({
   useScrappedRecipesQuery: useScrappedRecipesQueryMock,
 }));
 
+vi.mock('@/features/recipe-cart/ui/recipe-cart-actions', () => ({
+  RecipeCartActions: () => <div>레시피 재료 장바구니 동작</div>,
+}));
+
+vi.mock('@/shared/config/cart-write-mode', () => ({
+  CART_HREF: '/cart?preview=local',
+  CART_WRITE_MODE: 'preview',
+}));
+
 import {
   COOKING_GUIDE_DELAY_MS,
   COOKING_GUIDE_VISIBLE_MS,
@@ -74,6 +83,7 @@ describe('RecipeDetailPage', () => {
     expect(markup).toContain('필요 재료');
     expect(markup).toContain('조리 순서');
     expect(markup).toContain('조리 완료');
+    expect(markup).toContain('href="/cart?preview=local"');
     expect(markup).toContain('https://cdn.example.test/recipe.jpg');
     expect(markup).toContain('https://cdn.example.test/step.jpg');
     expect(markup).not.toContain('토마토 달걀 볶음');

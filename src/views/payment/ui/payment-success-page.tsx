@@ -10,6 +10,7 @@ import {
   readPaymentAttempt,
 } from '@/features/payment/model/payment-redirect';
 import { ApiError } from '@/shared/api/api-error';
+import { CART_HREF } from '@/shared/config/cart-write-mode';
 
 import { PaymentCompleteView } from './payment-complete-view';
 
@@ -84,7 +85,7 @@ export function PaymentSuccessPage({
           </p>
           <Link
             className="border-border mt-8 rounded-xl border px-6 py-3 font-semibold"
-            href="/cart"
+            href={CART_HREF}
           >
             장바구니 확인
           </Link>

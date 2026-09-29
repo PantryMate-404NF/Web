@@ -18,6 +18,14 @@ export interface RecipeIngredientDto {
   requiredAmount?: number | null;
   unit?: string | null;
   isMain: boolean;
+  isOwned?: boolean;
+  mappedProduct?: {
+    productId: number;
+    productName: string;
+    price: number;
+    quantity: number;
+    productImageUrl?: string | null;
+  } | null;
 }
 
 export interface RecipeStepDto {
