@@ -1,5 +1,5 @@
 import { getSafeOrderReturnTo } from '@/entities/address/model/address';
-import { AddressFormPage } from '@/views/mypage/ui/address-form-page';
+import { AddressFormRouteContent } from '@/views/mypage/ui/address-form-route-content';
 
 type AddressFormRouteProps = {
   searchParams: Promise<{ returnTo?: string | string[] }>;
@@ -9,7 +9,7 @@ export default async function AddressFormRoute({ searchParams }: AddressFormRout
   const { returnTo } = await searchParams;
 
   return (
-    <AddressFormPage
+    <AddressFormRouteContent
       returnTo={getSafeOrderReturnTo(typeof returnTo === 'string' ? returnTo : undefined)}
     />
   );
