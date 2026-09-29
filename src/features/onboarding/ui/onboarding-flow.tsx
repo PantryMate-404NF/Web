@@ -552,7 +552,7 @@ export function OnboardingFlow() {
         </>
       ) : null}
 
-      <footer className="mt-auto w-full px-4 pt-4 pb-14">
+      <footer className="mt-auto w-full px-4 pt-4 pb-[max(3.5rem,env(safe-area-inset-bottom))]">
         {saveError ? (
           <p className="text-body-4 text-destructive mb-2 text-center" role="alert">
             {saveError}

@@ -61,7 +61,9 @@ describe('OnboardingFlow', () => {
 
     expect(markup).toContain('flex min-h-dvh flex-col');
     expect(markup).toContain('mt-auto');
+    expect(markup).toContain('pb-[max(3.5rem,env(safe-area-inset-bottom))]');
     expect(markup).not.toContain('fixed inset-x-0 bottom-14');
+    expect(markup).not.toContain('pb-14');
   });
 
   it('온보딩 정보를 불러오는 동안 상태 안내를 렌더링한다', () => {
