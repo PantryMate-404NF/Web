@@ -29,22 +29,20 @@ describe('RecipeCartActions', () => {
   it('shows selection first with the Grey-200 outline, followed by the shortage action', () => {
     const markup = renderToStaticMarkup(
       createElement(RecipeCartActions, {
-        ingredients: [
+        productMatches: [
           {
-            id: 'onion',
+            ingredientId: 11,
             name: '양파',
-            amount: '1개',
-            isOwned: false,
-            mappedProduct: {
-              productId: 101,
-              productName: '국내산 양파',
-              price: 3900,
-              quantity: 1,
-            },
+            hasIngredient: false,
+            matchStatus: 'MATCHED',
+            product: { productId: 101, name: '국내산 양파', price: 3900 },
           },
         ],
+        isProductMatchPending: false,
+        isProductMatchError: false,
+        onRetryProductMatch: vi.fn(),
         returnTo: '/recipe/42',
-        selectedIngredientIds: ['onion'],
+        selectedIngredientIds: ['11'],
       }),
     );
 
@@ -55,14 +53,59 @@ describe('RecipeCartActions', () => {
   it('keeps both add actions enabled for selected ingredients without linked products in preview mode', () => {
     const markup = renderToStaticMarkup(
       createElement(RecipeCartActions, {
-        ingredients: [{ id: 'salt', name: '소금', amount: '약간', mappedProduct: null }],
+        productMatches: [
+          { ingredientId: 15, name: '소금', hasIngredient: false, matchStatus: 'UNSUPPORTED' },
+        ],
+        isProductMatchPending: false,
+        isProductMatchError: false,
+        onRetryProductMatch: vi.fn(),
         returnTo: '/recipe/42',
-        selectedIngredientIds: ['salt'],
+        selectedIngredientIds: ['15'],
       }),
     );
 
     const buttonMarkup = markup.match(/<button[^>]*>.*?<\/button>/g) ?? [];
     expect(buttonMarkup).toHaveLength(2);
     expect(buttonMarkup.every((button) => !button.includes('disabled=""'))).toBe(true);
+  });
+
+  it('does not report missing mappings while product matches are loading', () => {
+    const markup = renderToStaticMarkup(
+      createElement(RecipeCartActions, {
+        productMatches: [],
+        isProductMatchPending: true,
+        isProductMatchError: false,
+        onRetryProductMatch: vi.fn(),
+        returnTo: '/recipe/42',
+        selectedIngredientIds: [],
+      }),
+    );
+
+    expect(markup).toContain('상품 정보를 확인하고 있어요.');
+    expect(markup).not.toContain('연동 상품이 없어요.');
+  });
+
+  it('distinguishes having no shortages from having no product mapping', () => {
+    const markup = renderToStaticMarkup(
+      createElement(RecipeCartActions, {
+        productMatches: [
+          {
+            ingredientId: 11,
+            name: '양파',
+            hasIngredient: true,
+            matchStatus: 'MATCHED',
+            product: { productId: 101, name: '국내산 양파', price: 3900 },
+          },
+        ],
+        isProductMatchPending: false,
+        isProductMatchError: false,
+        onRetryProductMatch: vi.fn(),
+        returnTo: '/recipe/42',
+        selectedIngredientIds: [],
+      }),
+    );
+
+    expect(markup).toContain('부족한 재료가 없어요.');
+    expect(markup).not.toContain('연동 상품이 없어요.');
   });
 });

@@ -4,6 +4,7 @@
  */
 import { getMyProfile } from '@/entities/user/api/get-my-profile';
 import { reissueAccessToken } from '@/features/auth/api/reissue-access-token';
+import { setAuthenticatedUserId } from '@/shared/model/access-token-store';
 
 export type AuthHomeState = 'complete' | 'onboarding';
 
@@ -11,6 +12,7 @@ export type AuthHomeState = 'complete' | 'onboarding';
 export async function restoreAuthSession(): Promise<AuthHomeState> {
   await reissueAccessToken();
   const profile = await getMyProfile();
+  setAuthenticatedUserId(profile.userId);
 
   return profile.onboardingCompleted ? 'complete' : 'onboarding';
 }

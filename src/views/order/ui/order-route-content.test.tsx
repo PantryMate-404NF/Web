@@ -8,7 +8,7 @@ const { useAuthSessionMock, useCartQueryMock } = vi.hoisted(() => ({
 }));
 
 vi.mock('@/features/auth/ui/auth-session-provider', () => ({ useAuthSession: useAuthSessionMock }));
-vi.mock('@/views/cart/model/use-cart-query', () => ({ useCartQuery: useCartQueryMock }));
+vi.mock('@/entities/cart/api/use-cart-query', () => ({ useCartQuery: useCartQueryMock }));
 
 describe('OrderRouteContent', () => {
   it('주문서에 서버 장바구니와 선택 항목을 전달한다', () => {

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import type { RecipeIngredient } from '@/entities/recipe/model/types';
+import type { RecipeIngredientProductMatchDto } from '@/entities/recipe/api/recipe.dto';
 import { useCartStore } from '@/entities/cart/model/cart-store';
 import { useAddProductToCart } from '@/features/product-cart/model/use-add-product-to-cart';
 import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
@@ -12,13 +12,19 @@ import { CART_HREF, CART_WRITE_MODE } from '@/shared/config/cart-write-mode';
 import { getLocalRecipeCartProducts, getRecipeCartRequests } from '../model/recipe-cart-selection';
 
 interface RecipeCartActionsProps {
-  ingredients: RecipeIngredient[];
+  productMatches: RecipeIngredientProductMatchDto[];
+  isProductMatchPending: boolean;
+  isProductMatchError: boolean;
+  onRetryProductMatch: () => void;
   selectedIngredientIds: string[];
   returnTo: string;
 }
 
 export function RecipeCartActions({
-  ingredients,
+  productMatches,
+  isProductMatchPending,
+  isProductMatchError,
+  onRetryProductMatch,
   selectedIngredientIds,
   returnTo,
 }: RecipeCartActionsProps) {
@@ -28,25 +34,32 @@ export function RecipeCartActions({
   const { addProduct } = useAddProductToCart();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const allRequests = getRecipeCartRequests(ingredients, [], 'all');
-  const selectedRequests = getRecipeCartRequests(ingredients, selectedIngredientIds, 'selected');
-  const allLocalProducts = getLocalRecipeCartProducts(ingredients, [], 'all');
+  const allRequests = getRecipeCartRequests(productMatches, [], 'all');
+  const selectedRequests = getRecipeCartRequests(productMatches, selectedIngredientIds, 'selected');
+  const allLocalProducts = getLocalRecipeCartProducts(productMatches, [], 'all');
   const selectedLocalProducts = getLocalRecipeCartProducts(
-    ingredients,
+    productMatches,
     selectedIngredientIds,
     'selected',
   );
   const isPreview = CART_WRITE_MODE === 'preview';
   const isCartDisabled = CART_WRITE_MODE === 'disabled';
+  const hasShortages = productMatches.some((ingredient) => !ingredient.hasIngredient);
   const unavailableMessage = isCartDisabled
     ? '장바구니 기능을 사용할 수 없어요. 잠시 후 다시 시도해 주세요.'
-    : !isPreview && allRequests.length === 0
-      ? '장바구니에 담을 수 있는 연동 상품이 없어요.'
-      : isPreview && allLocalProducts.length === 0
-        ? '장바구니에 담을 재료가 없어요.'
-        : !isPreview && selectedIngredientIds.length > 0 && selectedRequests.length === 0
-          ? '선택한 재료와 연결된 상품이 없어요.'
-          : null;
+    : isProductMatchPending
+      ? '상품 정보를 확인하고 있어요.'
+      : isProductMatchError
+        ? '상품 정보를 불러오지 못했어요.'
+        : productMatches.length > 0 && !hasShortages
+          ? '부족한 재료가 없어요.'
+          : !isPreview && allRequests.length === 0
+            ? '장바구니에 담을 수 있는 연동 상품이 없어요.'
+            : isPreview && allLocalProducts.length === 0
+              ? '장바구니에 담을 재료가 없어요.'
+              : !isPreview && selectedIngredientIds.length > 0 && selectedRequests.length === 0
+                ? '선택한 재료와 연결된 상품이 없어요.'
+                : null;
   const statusMessage = message ?? unavailableMessage;
 
   async function addToCart(mode: 'all' | 'selected') {
@@ -114,6 +127,8 @@ export function RecipeCartActions({
           className="text-label-3 h-10 flex-1 rounded-full border-[1.5px] border-[var(--primitive-grey-200)] bg-[var(--surface-default)] font-medium text-[var(--primitive-black)] disabled:cursor-not-allowed disabled:opacity-50"
           disabled={
             isSubmitting ||
+            isProductMatchPending ||
+            isProductMatchError ||
             isCartDisabled ||
             (isPreview ? !selectedLocalProducts.length : !selectedRequests.length)
           }
@@ -126,6 +141,8 @@ export function RecipeCartActions({
           className="text-label-3 h-10 flex-1 rounded-full border-[1.5px] border-[var(--primitive-primary-500)] bg-[var(--primitive-primary-300)] font-medium text-[var(--primitive-black)] disabled:cursor-not-allowed disabled:opacity-50"
           disabled={
             isSubmitting ||
+            isProductMatchPending ||
+            isProductMatchError ||
             isCartDisabled ||
             (isPreview ? !allLocalProducts.length : !allRequests.length)
           }
@@ -143,6 +160,11 @@ export function RecipeCartActions({
         >
           {statusMessage}
         </p>
+      ) : null}
+      {isProductMatchError ? (
+        <button className="text-label-4 mt-1 underline" onClick={onRetryProductMatch} type="button">
+          다시 시도
+        </button>
       ) : null}
     </div>
   );
