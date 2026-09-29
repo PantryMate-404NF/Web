@@ -12,6 +12,25 @@ vi.mock('next/navigation', () => ({
 }));
 
 describe('ProductCartActions', () => {
+  it('상품 상세 하단 CTA에 64px 높이와 8px 상단 여백을 적용한다', () => {
+    const product = getProductById('free-range-eggs');
+
+    if (!product) throw new Error('판매 가능 상품 목업이 필요합니다.');
+
+    const queryClient = new QueryClient();
+    const markup = renderToStaticMarkup(
+      createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        createElement(ProductCartActions, { product }),
+      ),
+    );
+
+    expect(markup).toContain('h-16');
+    expect(markup).toContain('pt-2');
+    expect(markup).toContain('gap-2');
+  });
+
   it('판매 불가 상품의 장바구니 버튼을 비활성화한다', () => {
     const product = getProductById('organic-broccoli');
 

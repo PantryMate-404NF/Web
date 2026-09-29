@@ -1,10 +1,15 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { getProductById } from '@/entities/product/model/mock';
 
-import { ProductDetailImages, ProductImage } from './product-detail-page';
+import { ProductDetailImages, ProductDetailPage, ProductImage } from './product-detail-page';
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ back: vi.fn(), push: vi.fn() }),
+}));
 
 describe('product detail images', () => {
   it('대표 이미지가 없으면 대체 UI를 표시한다', () => {
@@ -25,5 +30,25 @@ describe('product detail images', () => {
     const markup = renderToStaticMarkup(createElement(ProductDetailImages, { product }));
 
     expect(markup).toBe('');
+  });
+});
+
+describe('product detail section separators', () => {
+  it('섹션 사이에 밝은 surface-secondary 구분 영역을 사용한다', () => {
+    const product = getProductById('free-range-eggs');
+
+    if (!product) throw new Error('상품 상세 목업이 필요합니다.');
+
+    const queryClient = new QueryClient();
+    const markup = renderToStaticMarkup(
+      createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        createElement(ProductDetailPage, { product }),
+      ),
+    );
+
+    expect(markup).toContain('border-[var(--surface-secondary)]');
+    expect(markup).not.toContain('border-border border-t-8');
   });
 });

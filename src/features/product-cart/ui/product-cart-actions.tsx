@@ -231,7 +231,7 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
         </div>
       ) : null}
 
-      <footer className="bg-background fixed right-0 bottom-0 left-0 z-20 mx-auto h-[52px] w-full max-w-[var(--layout-mobile-design-frame)] px-4 pt-1">
+      <footer className="bg-background fixed right-0 bottom-0 left-0 z-20 mx-auto h-16 w-full max-w-[var(--layout-mobile-design-frame)] px-4 pt-2">
         <div className="flex gap-2">
           <button
             aria-label={
