@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -50,5 +53,63 @@ describe('product detail section separators', () => {
 
     expect(markup).toContain('border-[var(--surface-secondary)]');
     expect(markup).not.toContain('border-border border-t-8');
+  });
+});
+
+describe('product detail header', () => {
+  it('피그마 기준 헤더 여백과 24px 장바구니 아이콘을 사용한다', () => {
+    const product = getProductById('free-range-eggs');
+
+    if (!product) throw new Error('상품 상세 목업이 필요합니다.');
+
+    const queryClient = new QueryClient();
+    const markup = renderToStaticMarkup(
+      createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        createElement(ProductDetailPage, { product }),
+      ),
+    );
+
+    expect(markup).toContain('relative flex h-10 items-center pr-1');
+    expect(markup).toMatch(/width="24" height="24"[^>]+src="\/icons\/home\/product-cart\.svg"/);
+    expect(markup).toContain('absolute top-0 right-4 flex h-12 items-center');
+    expect(markup).toContain('h-12 w-10');
+    expect(markup).toMatch(/width="24" height="24"[^>]+src="\/icons\/product\/like-line\.svg"/);
+    expect(markup).toMatch(
+      /width="24" height="24"[^>]+src="\/icons\/product\/expand-screen-line\.svg"/,
+    );
+  });
+});
+
+describe('product detail action icons', () => {
+  it.each(['like-line.svg', 'expand-screen-line.svg'])(
+    '최신 피그마의 채움형 외곽선 자산을 사용한다: %s',
+    (fileName) => {
+      const svg = readFileSync(join(process.cwd(), 'public/icons/product', fileName), 'utf8');
+
+      expect(svg).toContain('id="Vector (Stroke)"');
+      expect(svg).not.toContain('stroke-linecap="round"');
+    },
+  );
+});
+
+describe('product detail colors', () => {
+  it('카테고리와 정보 라벨에 피그마 색상 토큰을 사용한다', () => {
+    const product = getProductById('free-range-eggs');
+
+    if (!product) throw new Error('상품 상세 목업이 필요합니다.');
+
+    const queryClient = new QueryClient();
+    const markup = renderToStaticMarkup(
+      createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        createElement(ProductDetailPage, { product }),
+      ),
+    );
+
+    expect(markup).toContain('bg-surface-secondary text-text-secondary');
+    expect(markup).toContain('text-disabled w-20 shrink-0');
   });
 });
