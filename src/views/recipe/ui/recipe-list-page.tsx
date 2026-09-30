@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import { useRecipesQuery } from '@/entities/recipe/api/use-recipes-query';
+import { useCartItemCount } from '@/entities/cart/model/use-cart-item-count';
+import { CartCountBadge } from '@/shared/ui/cart-count-badge';
 import { toRecipe } from '@/entities/recipe/api/recipe.mapper';
 import { useRecipeSearchQuery } from '@/entities/recipe/api/use-recipe-search-query';
 import { useRecipeFilterIngredientsQuery } from '@/entities/recipe/api/use-recipe-filter-ingredients-query';
@@ -253,6 +255,8 @@ function RecipeHeader({
   query: string;
   onQueryChange: (query: string) => void;
 }) {
+  const cartItemCount = useCartItemCount();
+
   return (
     <header className="flex h-16 items-center justify-between px-4">
       <label className="focus-within:ring-ring flex h-12 w-[274px] items-center rounded-full border border-[var(--primitive-grey-300)] px-1.5 focus-within:ring-2">
@@ -274,7 +278,11 @@ function RecipeHeader({
           value={query}
         />
       </label>
-      <Link aria-label="장바구니" className="grid size-10 place-items-center p-2" href={CART_HREF}>
+      <Link
+        aria-label={`장바구니 ${cartItemCount}개 상품`}
+        className="relative grid size-10 place-items-center p-2"
+        href={CART_HREF}
+      >
         <Image
           alt=""
           aria-hidden="true"
@@ -282,6 +290,7 @@ function RecipeHeader({
           src="/images/recipe/shopping-cart-icon.svg"
           width={24}
         />
+        <CartCountBadge count={cartItemCount} />
       </Link>
     </header>
   );

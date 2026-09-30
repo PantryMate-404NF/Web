@@ -1,9 +1,15 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { useCartItemCount } from '@/entities/cart/model/use-cart-item-count';
 import { CART_HREF } from '@/shared/config/cart-write-mode';
+import { CartCountBadge } from '@/shared/ui/cart-count-badge';
 
 export function HomeHeader() {
+  const cartItemCount = useCartItemCount();
+
   return (
     <header className="flex h-16 items-center justify-between pr-4 pl-4">
       <Link
@@ -20,11 +26,18 @@ export function HomeHeader() {
         />
       </Link>
       <Link
-        aria-label="장바구니"
-        className="focus-visible:ring-ring grid size-10 place-items-center rounded-full p-2 focus-visible:ring-2"
+        aria-label={`장바구니 ${cartItemCount}개 상품`}
+        className="focus-visible:ring-ring relative grid size-10 place-items-center rounded-full p-2 focus-visible:ring-2"
         href={CART_HREF}
       >
-        <Image alt="" aria-hidden="true" height={24} src="/icons/header/Icon-Cart.svg" width={24} />
+        <Image
+          alt=""
+          aria-hidden="true"
+          height={24}
+          src="/images/recipe/shopping-cart-icon.svg"
+          width={24}
+        />
+        <CartCountBadge count={cartItemCount} />
       </Link>
     </header>
   );

@@ -126,6 +126,7 @@ describe('RecipeDetailPage', () => {
     expect(markup).toContain('조리 완료');
     expect(markup).toContain('href="/cart"');
     expect(markup).toContain('aria-label="장바구니 4개 상품"');
+    expect(markup).toContain('shopping-cart-icon.svg');
     expect(markup).toContain('https://cdn.example.test/recipe.jpg');
     expect(markup).toContain('https://cdn.example.test/step.jpg');
     expect(markup).not.toContain('토마토 달걀 볶음');

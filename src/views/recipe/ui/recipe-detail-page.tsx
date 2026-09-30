@@ -5,8 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
-import { getCartItemCount, useCartStore } from '@/entities/cart/model/cart-store';
-import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
+import { useCartItemCount } from '@/entities/cart/model/use-cart-item-count';
+import { CartCountBadge } from '@/shared/ui/cart-count-badge';
 import { RecipeCartActions } from '@/features/recipe-cart/ui/recipe-cart-actions';
 import { useRecipeMutations } from '@/entities/recipe/api/use-recipe-mutations';
 import { useRecipeDetailQuery } from '@/entities/recipe/api/use-recipe-detail-query';
@@ -15,9 +15,8 @@ import { useRecipePantryMatchQuery } from '@/entities/recipe/api/use-recipe-pant
 import { useRecipeProductMatchQuery } from '@/entities/recipe/api/use-recipe-product-match-query';
 import { useScrappedRecipesQuery } from '@/entities/recipe/api/use-scrapped-recipes-query';
 import type { RecipeDetail } from '@/entities/recipe/model/types';
-import { CART_HREF, CART_WRITE_MODE } from '@/shared/config/cart-write-mode';
+import { CART_HREF } from '@/shared/config/cart-write-mode';
 import { SystemErrorState } from '@/shared/ui/system-error-state';
-import { useCartQuery } from '@/entities/cart/api/use-cart-query';
 
 interface RecipeDetailPageProps {
   recipeId: string;
@@ -78,15 +77,10 @@ function RecipeDetailContent({
   recommendationContext?: RecipeRecommendationContext;
 }) {
   const { completeCooking, scrap, unscrap } = useRecipeMutations();
-  const { state: authState } = useAuthSession();
   const pantryMatchQuery = useRecipePantryMatchQuery(recipe.id);
   const productMatchQuery = useRecipeProductMatchQuery(recipe.id);
   const scrappedRecipesQuery = useScrappedRecipesQuery();
-  const cartItems = useCartStore((state) => state.items);
-  const isServerCartMode = CART_WRITE_MODE === 'api' || CART_WRITE_MODE === 'mock-api';
-  const canQueryServerCart =
-    isServerCartMode && (authState === 'complete' || authState === 'onboarding');
-  const serverCartQuery = useCartQuery(canQueryServerCart);
+  const cartItemCount = useCartItemCount();
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
   const [completionMessage, setCompletionMessage] = useState<string | null>(null);
   const [isPantryCleanupOpen, setIsPantryCleanupOpen] = useState(false);
@@ -96,9 +90,6 @@ function RecipeDetailContent({
   const stepsSectionRef = useRef<HTMLElement>(null);
   const hasStartedCookingGuideTimerRef = useRef(false);
   const hasSelectedIngredient = selectedIngredientIds.length > 0;
-  const cartItemCount = isServerCartMode
-    ? getCartItemCount(canQueryServerCart ? (serverCartQuery.data?.items ?? []) : [])
-    : getCartItemCount(cartItems);
   const isScrapped =
     scrappedRecipesQuery.data?.some((scrapped) => scrapped.id === recipe.id) ?? false;
   const isScrapPending =
@@ -404,14 +395,10 @@ function RecipeDetailContent({
           alt=""
           aria-hidden="true"
           height={24}
-          src="/images/recipe-detail/shoppingcart.svg"
+          src="/images/recipe/shopping-cart-icon.svg"
           width={24}
         />
-        {cartItemCount > 0 ? (
-          <span className="text-caption absolute top-0 -right-1 grid size-[14px] place-items-center rounded-full bg-[var(--primitive-grey-800)] font-medium text-[var(--primitive-white)]">
-            {cartItemCount}
-          </span>
-        ) : null}
+        <CartCountBadge count={cartItemCount} />
       </Link>
       {isCookingGuideVisible ? (
         <p
