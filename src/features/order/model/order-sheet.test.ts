@@ -18,6 +18,16 @@ const items: CartItem[] = [
   { id: 'potato', ingredient: '감자', name: '무농약 감자', price: 6600, quantity: 2 },
 ];
 
+const defaultAddress = {
+  id: '12',
+  recipientName: '김지웅',
+  phoneNumber: '01012345678',
+  postalCode: '13485',
+  addressLine1: '경기도 성남시 분당구 불정로 90',
+  addressLine2: '101동 1001호',
+  isDefault: true,
+};
+
 describe('order sheet model', () => {
   it('장바구니에서 선택한 상품 ID를 주문 경로에 전달한다', () => {
     expect(buildOrderHref(3, ['10', '12'])).toBe('/order?cartId=3&items=10%2C12');
@@ -64,10 +74,17 @@ describe('order sheet model', () => {
   });
 
   it('서버 장바구니 식별자로 결제 실행 입력을 만든다', () => {
-    expect(buildPaymentExecutionInput(3, [10, 12], 'uuid')).toEqual({
+    expect(buildPaymentExecutionInput(3, [10, 12], 'uuid', defaultAddress)).toEqual({
       cartId: 3,
       idempotencyKey: 'uuid',
       selectedCartItemIds: [10, 12],
+      deliveryAddress: {
+        recipientName: '김지웅',
+        recipientPhone: '01012345678',
+        zipCode: '13485',
+        address: '경기도 성남시 분당구 불정로 90',
+        addressDetail: '101동 1001호',
+      },
     });
     expect(() => buildPaymentExecutionInput(undefined, [10], 'uuid')).toThrow(
       '장바구니 API 정보가 필요합니다.',
@@ -75,5 +92,6 @@ describe('order sheet model', () => {
     expect(() => buildPaymentExecutionInput(3, [], 'uuid')).toThrow(
       '주문할 장바구니 상품이 필요합니다.',
     );
+    expect(() => buildPaymentExecutionInput(3, [10], 'uuid')).toThrow('배송지를 등록해 주세요.');
   });
 });

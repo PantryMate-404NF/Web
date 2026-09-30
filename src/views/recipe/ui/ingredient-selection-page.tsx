@@ -1,101 +1,110 @@
 'use client';
 
-import { ArrowLeft, Image as ImageIcon, Plus, Search } from 'lucide-react';
+import { ArrowLeft, Check, Plus } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
-const ingredientMocks = [
-  { id: 'egg', name: '계란', category: '축산물', quantity: '2개' },
-  { id: 'potato', name: '감자', category: '채소', quantity: '2개' },
-  { id: 'green-onion', name: '대파', category: '채소', quantity: '1대' },
-  { id: 'tofu', name: '두부', category: '가공식품', quantity: '1모' },
-  { id: 'pork', name: '돼지고기', category: '축산물', quantity: '200g' },
-  { id: 'carrot', name: '당근', category: '채소', quantity: '1개' },
-  { id: 'mushroom', name: '버섯', category: '채소', quantity: '100g' },
-  { id: 'kimchi', name: '김치', category: '반찬', quantity: '200g' },
-  { id: 'milk', name: '우유', category: '유제품', quantity: '1팩' },
-];
+import { useRecipeFilterIngredientsQuery } from '@/entities/recipe/api/use-recipe-filter-ingredients-query';
+import { SystemErrorState } from '@/shared/ui/system-error-state';
+
+const MAX_SELECTED_INGREDIENTS = 3;
 
 export function IngredientSelectionPage() {
-  const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
+  const { data: ingredients, error, isPending, refetch } = useRecipeFilterIngredientsQuery();
+  const [selectedIds, setSelectedIds] = useState<number[] | null>(null);
+  const defaultIds = useMemo(
+    () =>
+      ingredients?.filter((item) => item.defaultSelected).map((item) => item.ingredientId) ?? [],
+    [ingredients],
+  );
 
-  function toggleIngredient(ingredientId: string) {
-    setSelectedIngredientIds((currentIds) =>
-      currentIds.includes(ingredientId)
-        ? currentIds.filter((id) => id !== ingredientId)
-        : [...currentIds, ingredientId],
-    );
+  const activeSelectedIds = selectedIds ?? defaultIds.slice(0, MAX_SELECTED_INGREDIENTS);
+
+  function toggleIngredient(id: number) {
+    setSelectedIds((currentSelection) => {
+      const current = currentSelection ?? defaultIds.slice(0, MAX_SELECTED_INGREDIENTS);
+      if (current.includes(id)) return current.filter((selectedId) => selectedId !== id);
+      return current.length >= MAX_SELECTED_INGREDIENTS ? current : [...current, id];
+    });
   }
 
+  const search = new URLSearchParams();
+  activeSelectedIds.forEach((id) => search.append('ingredientIds', String(id)));
+  const recipeHref = `/recipe?${search.toString()}`;
+
   return (
-    <main className="mobile-page bg-background text-foreground pb-8">
+    <main className="mobile-page bg-background text-foreground min-h-dvh pb-8">
       <header className="flex h-12 items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <Link
-            aria-label="주재료 레시피로 돌아가기"
-            className="flex size-10 items-center justify-center"
+            aria-label="레시피로 돌아가기"
+            className="grid size-10 place-items-center"
             href="/recipe"
           >
             <ArrowLeft aria-hidden="true" className="size-5" />
           </Link>
-          <div aria-hidden="true" className="bg-placeholder-icon h-8 w-[180px] rounded-full" />
+          <h1 className="text-base font-semibold">재료 선택</h1>
         </div>
-        <button
-          aria-label="재료 검색"
-          className="flex size-10 items-center justify-center"
-          type="button"
+        <Link
+          aria-label="선택 완료"
+          className="grid size-10 place-items-center rounded-full bg-[var(--primitive-primary-500)]"
+          href={recipeHref}
         >
-          <Search aria-hidden="true" className="size-5" />
-        </button>
+          <Check aria-hidden="true" className="size-5" />
+        </Link>
       </header>
 
-      <div className="mt-6 flex [scrollbar-width:none] gap-1 overflow-x-auto px-4">
-        {['카테고리', '팬트리 재료', '유형 구분'].map((filter) => (
-          <button
-            className="bg-muted text-label-3 h-[34px] shrink-0 rounded-full px-6 font-medium"
-            key={filter}
-            type="button"
-          >
-            {filter}
-          </button>
-        ))}
-      </div>
+      <p className="px-4 py-3 text-sm text-[var(--primitive-grey-500)]">
+        팬트리 재료를 최대 {MAX_SELECTED_INGREDIENTS}개 선택해 레시피를 찾아보세요.
+      </p>
 
-      <section aria-label="선택할 식재료" className="mt-4 grid grid-cols-3 gap-2 px-4">
-        {ingredientMocks.map((ingredient) => {
-          const isSelected = selectedIngredientIds.includes(ingredient.id);
-
-          return (
-            <button
-              aria-pressed={isSelected}
-              className={`relative flex h-[136px] flex-col items-center justify-center rounded-lg p-2 text-center transition-colors ${
-                isSelected ? 'bg-accent ring-ring ring-2' : 'bg-card'
-              }`}
-              key={ingredient.id}
-              onClick={() => toggleIngredient(ingredient.id)}
-              type="button"
-            >
-              <span
-                aria-label={isSelected ? `${ingredient.name} 선택 취소` : `${ingredient.name} 선택`}
-                className="bg-placeholder absolute top-0 right-0 flex size-8 items-center justify-center rounded-full"
+      {error ? (
+        <SystemErrorState onRetry={() => void refetch()} title="팬트리 재료를 불러오지 못했어요" />
+      ) : isPending ? (
+        <div className="py-16 text-center" role="status">
+          <span className="sr-only">팬트리 재료를 불러오는 중입니다.</span>
+        </div>
+      ) : ingredients?.length ? (
+        <section aria-label="선택할 팬트리 재료" className="grid grid-cols-2 gap-3 px-4">
+          {ingredients.map((ingredient) => {
+            const selected = activeSelectedIds.includes(ingredient.ingredientId);
+            const disabled = !selected && activeSelectedIds.length >= MAX_SELECTED_INGREDIENTS;
+            return (
+              <button
+                aria-pressed={selected}
+                className={`flex min-h-24 items-center justify-between rounded-xl border p-4 text-left ${
+                  selected
+                    ? 'border-[var(--primitive-primary-500)] bg-[var(--primitive-primary-100)]'
+                    : 'bg-card border-[var(--primitive-grey-200)]'
+                }`}
+                disabled={disabled}
+                key={ingredient.ingredientId}
+                onClick={() => toggleIngredient(ingredient.ingredientId)}
+                type="button"
               >
-                <Plus
+                <span>
+                  <strong className="block text-sm font-semibold">{ingredient.name}</strong>
+                  <span className="mt-1 block text-xs text-[var(--primitive-grey-500)]">
+                    {ingredient.expired ? '소비기한 경과' : `소비기한 ${ingredient.expiryDate}`}
+                  </span>
+                </span>
+                <span
                   aria-hidden="true"
-                  className={`size-4 transition-transform ${isSelected ? 'rotate-45' : ''}`}
-                />
-              </span>
-              <span className="bg-placeholder text-placeholder-icon flex size-20 items-center justify-center rounded-lg">
-                <ImageIcon aria-hidden="true" className="size-5" />
-              </span>
-              <strong className="text-body-4 mt-1 font-medium">{ingredient.name}</strong>
-              <span className="text-label-4 mt-1 flex gap-1">
-                <span className="bg-muted rounded-full px-2 py-0.5">{ingredient.category}</span>
-                <span className="bg-muted rounded-full px-2 py-0.5">{ingredient.quantity}</span>
-              </span>
-            </button>
-          );
-        })}
-      </section>
+                  className="bg-card grid size-8 place-items-center rounded-full"
+                >
+                  {selected ? <Check className="size-4" /> : <Plus className="size-4" />}
+                </span>
+              </button>
+            );
+          })}
+        </section>
+      ) : (
+        <section className="px-4 py-12 text-center" aria-label="선택 가능한 재료 없음">
+          <p className="text-sm text-[var(--primitive-grey-500)]">
+            선택할 수 있는 팬트리 재료가 없어요.
+          </p>
+        </section>
+      )}
     </main>
   );
 }

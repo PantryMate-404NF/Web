@@ -4,8 +4,16 @@ export interface RecipeIngredient {
   id: string;
   name: string;
   amount: string;
-  isOwned: boolean;
+  imageUrl?: string | null;
+  isOwned?: boolean;
   isImminent?: boolean;
+  isMain?: boolean;
+}
+
+export interface RecipeStep {
+  number: number;
+  description: string;
+  imageUrl: string | null;
 }
 
 export interface RecipeLinkedProduct {
@@ -22,8 +30,15 @@ export interface Recipe {
   category: string;
   cookTime: string;
   description: string;
+  thumbnailUrl?: string | null;
   cookingSteps: string[];
   missingCount: number;
   ingredients: RecipeIngredient[];
   linkedProducts: RecipeLinkedProduct[];
+}
+
+export interface RecipeDetail extends Recipe {
+  servings: number;
+  difficulty: 'EASY' | 'NORMAL' | 'HARD';
+  steps: RecipeStep[];
 }

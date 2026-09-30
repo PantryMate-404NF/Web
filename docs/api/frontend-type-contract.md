@@ -131,24 +131,37 @@ export interface RecipeSummaryDto {
 
 export interface RecipeIngredientDto {
   ingredientId: number;
-  ingredientName: string;
-  requiredCapacity: string;
-  isOwned: boolean;
-  mappedProduct: {
+  name: string;
+  imageUrl?: string | null;
+  requiredAmount?: number | null;
+  unit?: string | null;
+  isMain: boolean;
+}
+
+export interface RecipeProductMatchIngredientDto {
+  ingredientId: number;
+  name: string;
+  hasIngredient: boolean;
+  matchStatus: 'MATCHED' | 'NO_PRODUCT' | 'UNSUPPORTED';
+  product?: {
     productId: number;
-    productName: string;
+    name: string;
     price: number;
-    quantity: number;
-    productImageUrl: string;
+    thumbnailUrl?: string | null;
+    unit?: string;
+    capacity?: number;
+    packageCount?: number | null;
+    capacitySufficient?: boolean;
   } | null;
 }
 
-export interface RecipeDetailDto extends RecipeSummaryDto {
-  description: string;
-  steps: Array<{ stepNumber: number; instruction: string }>;
-  ingredients: RecipeIngredientDto[];
+export interface RecipeProductMatchDto {
+  recipeId: number;
+  ingredients: RecipeProductMatchIngredientDto[];
 }
 ```
+
+상품 매칭은 레시피 상세 응답에 포함되지 않는다. 상세 조회와 별도로 `GET /api/recipes/{recipeId}/product-match`를 호출한다.
 
 ## Order and Payment
 
@@ -156,6 +169,13 @@ export interface RecipeDetailDto extends RecipeSummaryDto {
 export interface CreateOrderRequestDto {
   cartId: number;
   selectedCartItemIds: number[];
+  deliveryAddress: {
+    recipientName: string;
+    recipientPhone: string;
+    zipCode: string;
+    address: string;
+    addressDetail: string;
+  };
 }
 
 export interface PreparePaymentDto {

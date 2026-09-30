@@ -71,7 +71,7 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
         <div aria-hidden="true" className="bg-border mt-4 h-px" />
       </section>
 
-      <section className="border-border border-b-8 px-4 py-4" aria-labelledby="order-items-heading">
+      <section className="px-4 py-4" aria-labelledby="order-items-heading">
         <div className="flex items-center justify-between">
           <h2 className="text-base leading-6 font-semibold" id="order-items-heading">
             결제 완료
@@ -107,8 +107,9 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
           주문 취소
         </Link>
       </section>
+      <div aria-hidden="true" className="h-2 w-full bg-[var(--primitive-grey-100)]" />
 
-      <section className="border-border border-b-8 px-4 py-5" aria-labelledby="order-info-heading">
+      <section className="px-4 py-5" aria-labelledby="order-info-heading">
         <h2 className="text-base leading-6 font-semibold" id="order-info-heading">
           주문 정보
         </h2>
@@ -123,6 +124,7 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
           />
         </dl>
       </section>
+      <div aria-hidden="true" className="h-2 w-full bg-[var(--primitive-grey-100)]" />
 
       <section className="px-4 py-5" aria-labelledby="payment-summary-heading">
         <h2 className="text-base leading-6 font-semibold" id="payment-summary-heading">

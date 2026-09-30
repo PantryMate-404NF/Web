@@ -5,7 +5,7 @@ import { useState } from 'react';
 import type { CartItem } from '@/entities/cart/model/cart-store';
 import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 
-import { useCartQuery } from '../model/use-cart-query';
+import { useCartQuery } from '@/entities/cart/api/use-cart-query';
 import { useCartMutations } from '../model/use-cart-mutations';
 import { CartPage } from './cart-page';
 
@@ -55,4 +55,8 @@ export function CartPreviewRouteContent({ initialItems }: { initialItems: CartIt
       }}
     />
   );
+}
+
+export function CartLocalPreviewRouteContent() {
+  return <CartPage />;
 }

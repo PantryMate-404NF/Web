@@ -14,7 +14,8 @@ describe('OrderDetailPage', () => {
     expect(markup).not.toContain('<header class="border-border');
     expect(markup).toContain('bg-border mt-4 h-px');
     expect(markup).toContain('px-4 pt-4 pb-0');
-    expect(markup).toContain('border-b-8 px-4 py-4');
+    expect(markup).not.toContain('border-b-8');
+    expect(markup.match(/h-2 w-full bg-\[var\(--primitive-grey-100\)\]/g)).toHaveLength(2);
     expect(markup).toContain('mt-4 flex h-11');
     expect(markup).toContain('gap-[35px]');
     expect(markup).toContain('py-2.5');

@@ -1,21 +1,30 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { useCartStore } from '@/entities/cart/model/cart-store';
 import type { ProductDetail, ProductOption } from '@/entities/product/model/types';
+import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
+import { buildOrderHref } from '@/features/order/model/order-sheet';
 import {
   createInitialOptionQuantities,
+  getSelectedCartRequests,
+  hasAnyCartProductIdentifier,
   selectCartProducts,
   updateOptionQuantity,
 } from '@/features/product-cart/model/product-cart-selection';
+import { useAddProductToCart } from '@/features/product-cart/model/use-add-product-to-cart';
+import { CART_HREF, CART_WRITE_MODE } from '@/shared/config/cart-write-mode';
 
 import { ProductCartOptionSheet } from './product-cart-option-sheet';
 
 interface ProductCartActionsProps {
   product: ProductDetail;
 }
+
+type CartAction = 'add' | 'buy';
 
 function getProductOptions(product: ProductDetail): ProductOption[] {
   return product.options ?? [{ id: 'default', label: product.weight, price: product.price }];
@@ -30,19 +39,29 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
 }
 
 export function ProductCartActions({ product }: ProductCartActionsProps) {
+  const router = useRouter();
   const options = getProductOptions(product);
-  const addProducts = useCartStore((state) => state.addProducts);
+  const addPreviewProducts = useCartStore((state) => state.addProducts);
+  const { restore, state: authState } = useAuthSession();
+  const { addProduct, error, isPending, loadCart, reset } = useAddProductToCart();
+  const [action, setAction] = useState<CartAction>('add');
+  const [actionError, setActionError] = useState<string>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [lockedOptionIds, setLockedOptionIds] = useState<string[]>([]);
   const [showToast, setShowToast] = useState(false);
   const [quantities, setQuantities] = useState(() => createInitialOptionQuantities(options));
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const addTriggerRef = useRef<HTMLButtonElement>(null);
+  const buyTriggerRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
+  const isSubmittingRef = useRef(false);
+  const pendingCartItemsRef = useRef(new Map<number, { cartItemId: number; optionId: string }>());
 
   useEffect(() => {
     if (!isOpen) return;
 
     const dialog = dialogRef.current;
-    const trigger = triggerRef.current;
+    const trigger = action === 'add' ? addTriggerRef.current : buyTriggerRef.current;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
@@ -52,6 +71,7 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
+        if (isSubmittingRef.current) return;
         event.preventDefault();
         setIsOpen(false);
         return;
@@ -83,7 +103,7 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
       document.removeEventListener('keydown', handleKeyDown);
       trigger?.focus();
     };
-  }, [isOpen]);
+  }, [action, isOpen]);
 
   useEffect(() => {
     if (!showToast) return;
@@ -92,16 +112,106 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
     return () => window.clearTimeout(timeoutId);
   }, [showToast]);
 
-  function handleAdd() {
-    if (!product.isAvailable) return;
-
-    const selectedProducts = selectCartProducts(product, quantities);
-    if (selectedProducts.length === 0) return;
-
-    addProducts(selectedProducts);
-    setIsOpen(false);
-    setShowToast(true);
+  function openOptionSheet(nextAction: CartAction) {
+    reset();
+    setActionError(undefined);
+    setAction(nextAction);
+    setIsOpen(true);
   }
+
+  async function handleAdd() {
+    if (!product.isAvailable || CART_WRITE_MODE === 'disabled') return;
+
+    if (CART_WRITE_MODE === 'preview') {
+      const selectedProducts = selectCartProducts(product, quantities);
+      addPreviewProducts(selectedProducts);
+
+      if (action === 'buy') {
+        const searchParams = new URLSearchParams({
+          items: selectedProducts.map((item) => item.id).join(','),
+          preview: 'local',
+        });
+        router.push(`/order?${searchParams}`);
+        return;
+      }
+
+      setIsOpen(false);
+      setShowToast(true);
+      return;
+    }
+
+    if (CART_WRITE_MODE !== 'api' && CART_WRITE_MODE !== 'mock-api') return;
+
+    const cartRequests = getSelectedCartRequests(product, quantities, CART_WRITE_MODE);
+    if (!cartRequests) {
+      setActionError('선택한 옵션의 상품 정보가 아직 준비되지 않았어요.');
+      return;
+    }
+    if (cartRequests.length === 0) return;
+
+    setActionError(undefined);
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
+
+    try {
+      const resolvedAuthState = authState === 'loading' ? await restore() : authState;
+
+      if (resolvedAuthState === 'guest') {
+        router.push(`/login?returnTo=${encodeURIComponent(`/product/${product.id}`)}`);
+        return;
+      }
+
+      for (const request of cartRequests) {
+        if (pendingCartItemsRef.current.has(request.productId)) continue;
+
+        const result = await addProduct({
+          productId: request.productId,
+          quantity: request.quantity,
+        });
+        pendingCartItemsRef.current.set(request.productId, {
+          cartItemId: result.cartItemId,
+          optionId: request.optionId,
+        });
+        setLockedOptionIds((current) =>
+          current.includes(request.optionId) ? current : [...current, request.optionId],
+        );
+      }
+
+      if (action === 'buy') {
+        try {
+          const cart = await loadCart();
+          router.push(
+            buildOrderHref(
+              cart.cartId,
+              [...pendingCartItemsRef.current.values()].map(({ cartItemId }) => String(cartItemId)),
+            ),
+          );
+        } catch {
+          setActionError('상품은 담겼지만 주문 정보를 불러오지 못했어요. 다시 시도해 주세요.');
+        }
+        return;
+      }
+
+      setIsOpen(false);
+      setShowToast(true);
+      pendingCartItemsRef.current.clear();
+      setLockedOptionIds([]);
+    } catch (caughtError) {
+      setActionError(
+        caughtError instanceof Error ? caughtError.message : '장바구니에 담지 못했어요.',
+      );
+    } finally {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+    }
+  }
+
+  const isActionDisabled =
+    !product.isAvailable ||
+    CART_WRITE_MODE === 'disabled' ||
+    ((CART_WRITE_MODE === 'api' || CART_WRITE_MODE === 'mock-api') &&
+      !hasAnyCartProductIdentifier(product, CART_WRITE_MODE));
+  const errorMessage = actionError ?? (error instanceof Error ? error.message : undefined);
 
   return (
     <>
@@ -114,14 +224,14 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
           <span>상품을 장바구니에 담았어요.</span>
           <Link
             className="focus-visible:ring-ring rounded-sm font-semibold underline focus-visible:ring-2"
-            href="/cart"
+            href={CART_HREF}
           >
             장바구니 보기
           </Link>
         </div>
       ) : null}
 
-      <footer className="bg-background fixed right-0 bottom-0 left-0 z-20 mx-auto h-[52px] w-full max-w-[var(--layout-mobile-design-frame)] px-4 pt-1">
+      <footer className="bg-background fixed right-0 bottom-0 left-0 z-20 mx-auto h-16 w-full max-w-[var(--layout-mobile-design-frame)] px-4 pt-2">
         <div className="flex gap-2">
           <button
             aria-label={
@@ -129,18 +239,24 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
                 ? '장바구니 옵션 선택'
                 : '판매 불가 상품은 장바구니에 담을 수 없습니다'
             }
-            className="bg-primary/15 text-primary focus-visible:ring-ring h-12 flex-1 rounded-xl text-lg font-semibold focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={!product.isAvailable}
-            onClick={() => setIsOpen(true)}
-            ref={triggerRef}
+            className="focus-visible:ring-ring h-12 flex-1 rounded-xl bg-[var(--primitive-primary-100)] text-lg font-semibold text-[var(--primitive-primary-700)] focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={isActionDisabled || isPending || isSubmitting}
+            onClick={() => openOptionSheet('add')}
+            ref={addTriggerRef}
             type="button"
           >
             장바구니
           </button>
           <button
-            aria-disabled="true"
-            aria-label="구매하기 기능 준비 중"
-            className="bg-primary text-primary-foreground h-12 flex-1 rounded-xl text-lg font-semibold"
+            aria-label={
+              product.isAvailable
+                ? '상품 옵션 선택 후 구매하기'
+                : '판매 불가 상품은 구매할 수 없습니다'
+            }
+            className="bg-primary text-primary-foreground h-12 flex-1 rounded-xl text-lg font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={isActionDisabled || isPending || isSubmitting}
+            onClick={() => openOptionSheet('buy')}
+            ref={buyTriggerRef}
             type="button"
           >
             구매하기
@@ -150,9 +266,15 @@ export function ProductCartActions({ product }: ProductCartActionsProps) {
 
       {isOpen ? (
         <ProductCartOptionSheet
+          actionLabel={action === 'buy' ? '구매하기' : '장바구니 담기'}
           dialogRef={dialogRef}
+          errorMessage={errorMessage}
+          isPending={isPending || isSubmitting}
+          lockedOptionIds={lockedOptionIds}
           onAdd={handleAdd}
-          onClose={() => setIsOpen(false)}
+          onClose={() => {
+            if (!isPending && !isSubmitting) setIsOpen(false);
+          }}
           onQuantityChange={(optionId, amount) =>
             setQuantities((current) => updateOptionQuantity(current, optionId, amount))
           }

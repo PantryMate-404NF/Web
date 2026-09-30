@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 import { requestTossPayment } from '@/features/payment/lib/request-toss-payment';
 import { readPaymentAttempt, type PaymentAttempt } from '@/features/payment/model/payment-redirect';
+import { CART_HREF } from '@/shared/config/cart-write-mode';
 
 export function PaymentFailPage({
   code,
@@ -36,6 +37,7 @@ export function PaymentFailPage({
 
     try {
       await requestTossPayment({
+        completionSnapshot: attempt.completionSnapshot,
         name: attempt.name,
         orderId: attempt.orderId,
         totalAmount: attempt.amount,
@@ -77,7 +79,7 @@ export function PaymentFailPage({
       ) : (
         <Link
           className="bg-primary text-primary-foreground mt-8 rounded-xl px-6 py-3 font-semibold"
-          href="/cart"
+          href={CART_HREF}
         >
           장바구니로 이동
         </Link>

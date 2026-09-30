@@ -117,14 +117,14 @@ export function SearchPage({ initialQuery = '', previewState }: SearchPageProps)
             width={24}
           />
         </button>
-        <label className="flex h-[42px] min-w-0 flex-1 items-center rounded-full border border-[var(--primitive-grey-300)] px-1.5">
+        <label className="focus-within:ring-ring flex h-[42px] min-w-0 flex-1 items-center rounded-full border border-[var(--primitive-grey-300)] px-1.5 focus-within:ring-2">
           <span className="grid size-10 shrink-0 place-items-center">
             <Image alt="" aria-hidden="true" height={24} src="/icons/search-line.svg" width={24} />
           </span>
           <span className="sr-only">상품 검색</span>
           <input
             autoFocus
-            className="text-title-4 placeholder:text-muted-foreground focus-visible:ring-ring min-w-0 flex-1 rounded-sm bg-transparent font-medium outline-none focus-visible:ring-2"
+            className="text-title-4 placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent font-medium outline-none"
             onChange={(event) => setQuery(event.target.value)}
             placeholder="검색"
             value={query}

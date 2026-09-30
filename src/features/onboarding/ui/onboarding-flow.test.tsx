@@ -54,6 +54,18 @@ describe('OnboardingFlow', () => {
     expect(markup).toContain('src="/icons/navigation/back.svg"');
   });
 
+  it('CTA를 문서 흐름에 두어 작은 화면에서도 콘텐츠와 겹치지 않게 한다', () => {
+    navigationState.searchParams = new URLSearchParams('preview=1');
+
+    const markup = renderToStaticMarkup(<OnboardingFlow />);
+
+    expect(markup).toContain('flex min-h-dvh flex-col');
+    expect(markup).toContain('mt-auto');
+    expect(markup).toContain('pb-[max(3.5rem,env(safe-area-inset-bottom))]');
+    expect(markup).not.toContain('fixed inset-x-0 bottom-14');
+    expect(markup).not.toContain('pb-14');
+  });
+
   it('온보딩 정보를 불러오는 동안 상태 안내를 렌더링한다', () => {
     const markup = renderToStaticMarkup(<OnboardingFlow />);
 
@@ -71,12 +83,12 @@ describe('TastePreferenceSelector', () => {
     expect(markup).toContain('peer-focus-visible:ring-2');
   });
 
-  it('선택된 표정을 어둡게 만드는 multiply 효과를 사용하지 않는다', () => {
+  it('선택된 표정을 원본 밝기로 강조한다', () => {
     const markup = renderToStaticMarkup(
       <TastePreferenceSelector name="짠맛" onChange={vi.fn()} scaleSrc="/taste.svg" value={3} />,
     );
 
-    expect(markup).toContain('mix-blend-color');
+    expect(markup).toContain('bg-[var(--primitive-primary-500)]');
     expect(markup).not.toContain('mix-blend-multiply');
     expect(markup).not.toContain('opacity-80');
   });

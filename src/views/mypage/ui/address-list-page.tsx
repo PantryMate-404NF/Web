@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import {
+  buildAddressEditHref,
   buildAddressFormHref,
   deliveryAddressMocks,
   type DeliveryAddress,
@@ -36,7 +37,7 @@ function AddressCard({
   returnTo,
 }: {
   address: DeliveryAddress;
-  onSelect?: (addressId: string) => void;
+  onSelect?: (addressId: string) => Promise<void> | void;
   returnTo?: string;
 }) {
   const cardClassName =
@@ -44,26 +45,30 @@ function AddressCard({
 
   if (returnTo) {
     return (
-      <Link className={cardClassName} href={returnTo} onClick={() => onSelect?.(address.id)}>
+      <button
+        className={cardClassName}
+        disabled={!onSelect}
+        onClick={() => void onSelect?.(address.id)}
+        type="button"
+      >
         <AddressDetails address={address} />
         <span className="text-text-tertiary flex size-10 shrink-0 items-end justify-center self-end text-[13px] leading-5 font-bold">
           선택
         </span>
-      </Link>
+      </button>
     );
   }
 
   return (
     <article className={cardClassName}>
       <AddressDetails address={address} />
-      <button
-        aria-label={`${address.recipientName} 배송지 수정 (준비 중)`}
-        className="text-text-tertiary flex size-10 shrink-0 items-end justify-center self-end text-[13px] leading-5 font-bold"
-        disabled
-        type="button"
+      <Link
+        aria-label={`${address.recipientName} 배송지 수정`}
+        className="text-text-tertiary focus-visible:ring-ring flex size-10 shrink-0 items-end justify-center self-end rounded-sm text-[13px] leading-5 font-bold focus-visible:ring-2"
+        href={buildAddressEditHref(address.id, returnTo)}
       >
         수정
-      </button>
+      </Link>
     </article>
   );
 }
@@ -102,13 +107,92 @@ function AddAddressLink({ returnTo }: { returnTo?: string }) {
 
 export function AddressListPage({
   addresses = deliveryAddressMocks,
+  errorMessage,
+  isLoading = false,
+  isUnauthorized = false,
+  onRetry,
   onSelect,
   returnTo,
+  selectionErrorMessage,
 }: {
   addresses?: readonly DeliveryAddress[];
-  onSelect?: (addressId: string) => void;
+  errorMessage?: string;
+  isLoading?: boolean;
+  isUnauthorized?: boolean;
+  onRetry?: () => void;
+  onSelect?: (addressId: string) => Promise<void> | void;
   returnTo?: string;
+  selectionErrorMessage?: string;
 }) {
+  let content;
+
+  if (isLoading) {
+    content = (
+      <section className="flex h-[578px] items-center justify-center" role="status">
+        <p className="text-text-secondary text-sm">배송지 목록을 불러오는 중이에요.</p>
+      </section>
+    );
+  } else if (isUnauthorized) {
+    content = (
+      <section className="flex h-[578px] flex-col items-center justify-center text-center">
+        <p className="text-text-secondary text-sm">로그인 후 배송지를 관리해 주세요.</p>
+        <Link
+          className="bg-primary text-primary-foreground mt-5 rounded-xl px-5 py-3"
+          href="/login"
+        >
+          로그인하기
+        </Link>
+      </section>
+    );
+  } else if (errorMessage) {
+    content = (
+      <section
+        className="flex h-[578px] flex-col items-center justify-center text-center"
+        role="alert"
+      >
+        <h2 className="text-title-3 font-semibold">배송지 목록을 불러오지 못했어요.</h2>
+        <p className="text-text-secondary mt-2 text-sm">{errorMessage}</p>
+        {onRetry ? (
+          <button
+            className="border-border mt-5 rounded-full border px-4 py-2"
+            onClick={onRetry}
+            type="button"
+          >
+            다시 시도
+          </button>
+        ) : null}
+      </section>
+    );
+  } else if (addresses.length > 0) {
+    content = (
+      <div className="flex flex-col gap-5 pt-3">
+        {selectionErrorMessage ? (
+          <p className="text-destructive text-sm" role="alert">
+            {selectionErrorMessage}
+          </p>
+        ) : null}
+        <section aria-label="등록된 배송지 목록" className="flex flex-col gap-3">
+          {addresses.map((address) => (
+            <AddressCard
+              address={address}
+              key={address.id}
+              onSelect={onSelect}
+              returnTo={returnTo}
+            />
+          ))}
+        </section>
+        <AddAddressLink returnTo={returnTo} />
+      </div>
+    );
+  } else {
+    content = (
+      <>
+        <EmptyAddressState />
+        <AddAddressLink returnTo={returnTo} />
+      </>
+    );
+  }
+
   return (
     <main className="mobile-page bg-background min-h-dvh">
       <header className="relative flex h-16 items-center px-2">
@@ -130,28 +214,7 @@ export function AddressListPage({
         </h1>
       </header>
 
-      <div className="mx-auto w-[358px] max-w-[calc(100%-2rem)]">
-        {addresses.length > 0 ? (
-          <div className="flex flex-col gap-5 pt-3">
-            <section aria-label="등록된 배송지 목록" className="flex flex-col gap-3">
-              {addresses.map((address) => (
-                <AddressCard
-                  address={address}
-                  key={address.id}
-                  onSelect={onSelect}
-                  returnTo={returnTo}
-                />
-              ))}
-            </section>
-            <AddAddressLink returnTo={returnTo} />
-          </div>
-        ) : (
-          <>
-            <EmptyAddressState />
-            <AddAddressLink returnTo={returnTo} />
-          </>
-        )}
-      </div>
+      <div className="mx-auto w-[358px] max-w-[calc(100%-2rem)]">{content}</div>
     </main>
   );
 }

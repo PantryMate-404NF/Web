@@ -17,10 +17,14 @@ export interface ProductOption {
   id: string;
   label: string;
   price: number;
+  commerceProductId?: number;
+  mockCommerceProductId?: number;
 }
 
 export interface ProductDetail {
   id: ProductId;
+  commerceProductId?: number;
+  mockCommerceProductId?: number;
   detailImageUrls?: string[];
   imageUrl?: string;
   thumbnailUrl?: string;

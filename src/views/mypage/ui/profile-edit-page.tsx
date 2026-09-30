@@ -2,9 +2,12 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
 import { getMyProfile } from '@/entities/user/api/get-my-profile';
+import { updateMyProfile } from '@/entities/user/api/update-my-profile';
+import { MY_PROFILE_QUERY_KEY } from '@/entities/user/api/use-my-profile-query';
 import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 import { ApiError } from '@/shared/api/api-error';
 
@@ -18,6 +21,7 @@ interface ProfileFormState {
 
 export function ProfileEditPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { state, setGuestState } = useAuthSession();
   const [form, setForm] = useState<ProfileFormState>({
     nickname: '',
@@ -26,6 +30,8 @@ export function ProfileEditPage() {
   });
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const redirectPath = getMyPageAccessRoute(state);
 
   useEffect(() => {
@@ -69,8 +75,30 @@ export function ProfileEditPage() {
     setForm((previous) => ({ ...previous, [field]: value }));
   }
 
-  function handleSubmit() {
-    router.back();
+  async function handleSubmit() {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    try {
+      const updatedProfile = await updateMyProfile({
+        nickname: form.nickname.trim(),
+        ...(form.phoneNumber.trim() ? { phoneNumber: form.phoneNumber.replace(/\D/g, '') } : {}),
+        ...(form.birthDate.trim() ? { birthDate: form.birthDate.trim() } : {}),
+      });
+
+      queryClient.setQueryData(MY_PROFILE_QUERY_KEY, updatedProfile);
+      router.back();
+    } catch (error: unknown) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : '회원 정보를 수정하지 못했습니다. 다시 시도해 주세요.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   if (state === 'loading' || isLoading) {
@@ -130,29 +158,38 @@ export function ProfileEditPage() {
           <ProfileField
             label="이름"
             onChange={(value) => handleChange('nickname', value)}
+            disabled={isSubmitting}
             value={form.nickname}
           />
           <ProfileField
             label="생년월일"
             onChange={(value) => handleChange('birthDate', value)}
+            disabled={isSubmitting}
             placeholder="2000-01-01"
             value={form.birthDate}
           />
           <ProfileField
             label="휴대폰 번호"
             onChange={(value) => handleChange('phoneNumber', value)}
+            disabled={isSubmitting}
             placeholder="010-1234-2222"
             value={form.phoneNumber}
           />
         </section>
       </div>
       <div className="bg-background mt-auto shrink-0 px-4 pt-4 pb-14">
+        {errorMessage ? (
+          <p className="text-status-danger mb-3 text-sm leading-5" role="alert">
+            {errorMessage}
+          </p>
+        ) : null}
         <button
-          className="text-title-3 h-[60px] w-full rounded-xl bg-[var(--primitive-primary-500)] font-semibold"
+          className="text-title-3 h-[60px] w-full rounded-xl bg-[var(--primitive-primary-500)] font-semibold disabled:opacity-60"
+          disabled={isSubmitting}
           onClick={handleSubmit}
           type="button"
         >
-          수정 완료
+          {isSubmitting ? '저장 중...' : '수정 완료'}
         </button>
       </div>
     </main>
@@ -163,16 +200,18 @@ interface ProfileFieldProps {
   label: string;
   value: string;
   placeholder?: string;
+  disabled?: boolean;
   onChange: (value: string) => void;
 }
 
-function ProfileField({ label, value, placeholder, onChange }: ProfileFieldProps) {
+function ProfileField({ label, value, placeholder, disabled, onChange }: ProfileFieldProps) {
   return (
     <label className="flex flex-col gap-2">
       <span className="text-base leading-6 font-medium">{label}</span>
       <input
         className="border-primary focus:border-primary h-12 w-full rounded-xl border bg-[var(--primitive-primary-200)] px-4 text-base leading-6 text-[var(--primitive-grey-600)] transition-colors outline-none"
         onChange={(event) => onChange(event.target.value)}
+        disabled={disabled}
         placeholder={placeholder}
         type="text"
         value={value}

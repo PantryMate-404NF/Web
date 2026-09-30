@@ -1,20 +1,96 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { OrderRouteContent } from './order-route-content';
 
-const { useAuthSessionMock, useCartQueryMock } = vi.hoisted(() => ({
-  useAuthSessionMock: vi.fn(),
-  useCartQueryMock: vi.fn(),
-}));
+const { useAuthSessionMock, useCartQueryMock, useDefaultAddressQueryMock, useMyProfileQueryMock } =
+  vi.hoisted(() => ({
+    useAuthSessionMock: vi.fn(),
+    useCartQueryMock: vi.fn(),
+    useDefaultAddressQueryMock: vi.fn(),
+    useMyProfileQueryMock: vi.fn(),
+  }));
 
 vi.mock('@/features/auth/ui/auth-session-provider', () => ({ useAuthSession: useAuthSessionMock }));
-vi.mock('@/views/cart/model/use-cart-query', () => ({ useCartQuery: useCartQueryMock }));
+vi.mock('@/entities/cart/api/use-cart-query', () => ({ useCartQuery: useCartQueryMock }));
+vi.mock('@/entities/address/api/use-default-address-query', () => ({
+  useDefaultAddressQuery: useDefaultAddressQueryMock,
+}));
+vi.mock('@/entities/user/api/use-my-profile-query', () => ({
+  useMyProfileQuery: useMyProfileQueryMock,
+}));
+
+const profile = {
+  birthDate: '1998-06-12',
+  createdAt: '2026-01-01T00:00:00Z',
+  email: 'anseongjin@example.com',
+  nickname: '안성진',
+  onboardingCompleted: true,
+  phoneNumber: '01012345678',
+  profileImageUrl: null,
+  provider: 'KAKAO' as const,
+  role: 'ROLE_USER' as const,
+  updatedAt: '2026-01-01T00:00:00Z',
+  userId: 'user-1',
+};
 
 describe('OrderRouteContent', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useMyProfileQueryMock.mockReturnValue({
+      data: profile,
+      error: null,
+      isPending: false,
+    });
+  });
+
+  it('현재 로그인한 사용자의 프로필을 조회해 주문서에 전달한다', () => {
+    useAuthSessionMock.mockReturnValue({ state: 'complete' });
+    useCartQueryMock.mockReturnValue({
+      data: { cartId: 3, items: [{ id: '10', name: '양파', price: 3900, quantity: 1 }] },
+      error: null,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+    useDefaultAddressQueryMock.mockReturnValue({
+      data: null,
+      error: null,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+    useMyProfileQueryMock.mockReturnValue({
+      data: profile,
+      error: null,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+
+    const page = OrderRouteContent({ selectedItemIds: ['10'] });
+
+    expect(useMyProfileQueryMock).toHaveBeenCalledWith(true);
+    expect(page.props).toMatchObject({
+      orderer: { email: 'anseongjin@example.com', nickname: '안성진', phoneNumber: '01012345678' },
+    });
+  });
+
   it('주문서에 서버 장바구니와 선택 항목을 전달한다', () => {
     const items = [{ id: '10', ingredient: '기본 옵션', name: '양파', price: 3900, quantity: 1 }];
     useCartQueryMock.mockReturnValue({
       data: { cartId: 3, items },
+      error: null,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+    const defaultAddress = {
+      id: '12',
+      recipientName: '김지웅',
+      phoneNumber: '01012345678',
+      addressLine1: '경기도 성남시 분당구 불정로 90',
+      addressLine2: '101동 1001호',
+      postalCode: '13485',
+      isDefault: true,
+    };
+    useDefaultAddressQueryMock.mockReturnValue({
+      data: defaultAddress,
       error: null,
       isPending: false,
       refetch: vi.fn(),
@@ -27,16 +103,100 @@ describe('OrderRouteContent', () => {
     });
 
     expect(useCartQueryMock).toHaveBeenCalledWith(true);
-    expect(page.props).toMatchObject({ cartId: 3, items, selectedItemIds: ['10'] });
+    expect(useDefaultAddressQueryMock).toHaveBeenCalledWith(true);
+    expect(page.props).toMatchObject({
+      cartId: 3,
+      defaultAddress,
+      items,
+      selectedItemIds: ['10'],
+    });
   });
 
   it('로그인 세션 복구 중에는 주문 장바구니 조회를 시작하지 않는다', () => {
     useAuthSessionMock.mockReturnValue({ state: 'loading' });
     useCartQueryMock.mockReturnValue({ data: undefined, error: null, isPending: true });
+    useDefaultAddressQueryMock.mockReturnValue({
+      data: undefined,
+      error: null,
+      isPending: false,
+      refetch: vi.fn(),
+    });
 
     const page = OrderRouteContent({ selectedItemIds: ['10'] });
 
     expect(useCartQueryMock).toHaveBeenCalledWith(false);
+    expect(useMyProfileQueryMock).toHaveBeenCalledWith(false);
     expect(page.props).toMatchObject({ isLoading: true });
+  });
+
+  it('로컬 미리보기에서는 장바구니 조회를 생략하고 기본 배송지는 조회한다', () => {
+    const defaultAddress = {
+      id: '12',
+      recipientName: '김지웅',
+      phoneNumber: '01012345678',
+      addressLine1: '경기도 성남시 분당구 불정로 90',
+      addressLine2: '101동 1001호',
+      postalCode: '13485',
+      isDefault: true,
+    };
+    useAuthSessionMock.mockReturnValue({ state: 'complete' });
+    useCartQueryMock.mockReturnValue({ data: undefined, error: null, isPending: false });
+    useDefaultAddressQueryMock.mockReturnValue({
+      data: defaultAddress,
+      error: null,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+
+    const page = OrderRouteContent({ localPreview: true, selectedItemIds: ['local-item'] });
+
+    expect(useCartQueryMock).toHaveBeenCalledWith(false);
+    expect(useDefaultAddressQueryMock).toHaveBeenCalledWith(true);
+    expect(page.props).toMatchObject({ defaultAddress, paymentDisabled: true });
+  });
+
+  it('비로그인 로컬 미리보기에서 비활성 쿼리의 pending 상태로 무한 로딩하지 않는다', () => {
+    useAuthSessionMock.mockReturnValue({ state: 'guest' });
+    useCartQueryMock.mockReturnValue({ data: undefined, error: null, isPending: true });
+    useDefaultAddressQueryMock.mockReturnValue({
+      data: undefined,
+      error: null,
+      isPending: true,
+      refetch: vi.fn(),
+    });
+
+    const page = OrderRouteContent({ localPreview: true, selectedItemIds: ['local-item'] });
+
+    expect(useDefaultAddressQueryMock).toHaveBeenCalledWith(false);
+    expect(page.props).toMatchObject({ isLoading: false, paymentDisabled: true });
+  });
+
+  it('목 상품 주문서에서도 로그인 사용자의 기본 배송지는 조회한다', () => {
+    const previewItems = [
+      { id: 'preview-item', ingredient: '양파', name: '국산 양파', price: 3900, quantity: 1 },
+    ];
+    const defaultAddress = {
+      id: '12',
+      recipientName: '김지웅',
+      phoneNumber: '01012345678',
+      addressLine1: '경기도 성남시 분당구 불정로 90',
+      addressLine2: '101동 1001호',
+      postalCode: '13485',
+      isDefault: true,
+    };
+    useAuthSessionMock.mockReturnValue({ state: 'complete' });
+    useCartQueryMock.mockReturnValue({ data: undefined, error: null, isPending: false });
+    useDefaultAddressQueryMock.mockReturnValue({
+      data: defaultAddress,
+      error: null,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+
+    const page = OrderRouteContent({ previewItems, selectedItemIds: [] });
+
+    expect(useCartQueryMock).toHaveBeenCalledWith(false);
+    expect(useDefaultAddressQueryMock).toHaveBeenCalledWith(true);
+    expect(page.props).toMatchObject({ defaultAddress, items: previewItems });
   });
 });

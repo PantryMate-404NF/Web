@@ -6,11 +6,12 @@ import Link from 'next/link';
 import { useRef, useState } from 'react';
 
 import { buildAddressListHref } from '@/entities/address/model/address';
-import { selectSelectedAddress, useAddressStore } from '@/entities/address/model/address-store';
+import type { DeliveryAddress } from '@/entities/address/model/address';
 import { useCartStore } from '@/entities/cart/model/cart-store';
 import type { CartItem } from '@/entities/cart/model/cart-store';
 import { createOrder } from '@/entities/order/api/create-order';
-import { DELIVERY_MOCK, ORDERER_MOCK } from '@/entities/order/model/mock';
+import type { UserProfile } from '@/entities/user/api/user.dto';
+import { DELIVERY_MOCK } from '@/entities/order/model/mock';
 import {
   areAllRequiredAgreementsSelected,
   buildPaymentExecutionInput,
@@ -24,6 +25,7 @@ import type { OrderAgreementId } from '@/features/order/model/order-sheet';
 import { preparePayment } from '@/features/payment/api/prepare-payment';
 import { requestTossPayment } from '@/features/payment/lib/request-toss-payment';
 import { createPaymentExecutor } from '@/features/payment/model/payment-flow';
+import { CART_HREF } from '@/shared/config/cart-write-mode';
 import { BackButton } from '@/shared/ui/back-button';
 
 const AGREEMENT_LABELS: Record<OrderAgreementId, string> = {
@@ -34,6 +36,31 @@ const AGREEMENT_LABELS: Record<OrderAgreementId, string> = {
 
 function formatPrice(price: number) {
   return price.toLocaleString('ko-KR');
+}
+
+function formatDeliveryAddress(address: DeliveryAddress) {
+  const detailAddress = address.addressLine2.trim();
+  const addressText = detailAddress
+    ? `${address.addressLine1}, ${detailAddress}`
+    : address.addressLine1;
+
+  return `${addressText} (${address.postalCode})`;
+}
+
+function formatPhoneNumber(phoneNumber: string | null) {
+  if (!phoneNumber?.trim()) return '연락처 미등록';
+
+  const digits = phoneNumber.replace(/\D/g, '');
+
+  if (digits.length === 11) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+  }
+
+  if (digits.length === 10) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+
+  return phoneNumber;
 }
 
 function MiniAction({ children, disabled = false }: { children: string; disabled?: boolean }) {
@@ -83,20 +110,29 @@ function TossPaymentsBadge() {
 
 export function OrderSheet({
   cartId,
+  defaultAddress,
   items,
+  orderer,
+  ordererErrorMessage,
+  ordererLoading = false,
   orderReturnTo = '/order',
+  paymentDisabled = false,
   selectedCartItemIds = [],
 }: {
   cartId?: number;
+  defaultAddress?: DeliveryAddress;
   items: CartItem[];
+  orderer?: Pick<UserProfile, 'email' | 'nickname' | 'phoneNumber'>;
+  ordererErrorMessage?: string;
+  ordererLoading?: boolean;
   orderReturnTo?: string;
+  paymentDisabled?: boolean;
   selectedCartItemIds?: number[];
 }) {
   const [isOrdererExpanded, setIsOrdererExpanded] = useState(false);
   const [isPaymentPending, setIsPaymentPending] = useState(false);
   const [selectedAgreements, setSelectedAgreements] = useState<string[]>([]);
   const [paymentNotice, setPaymentNotice] = useState('');
-  const selectedAddress = useAddressStore(selectSelectedAddress);
   const [executePayment] = useState(() =>
     createPaymentExecutor({
       createOrder,
@@ -112,7 +148,7 @@ export function OrderSheet({
     return (
       <main className="mobile-page bg-background min-h-dvh">
         <header className="relative flex h-16 items-center px-2">
-          <BackButton fallbackHref="/cart" />
+          <BackButton fallbackHref={CART_HREF} />
           <h1 className="text-title-3 absolute left-1/2 -translate-x-1/2 font-semibold">주문서</h1>
         </header>
         <section className="flex min-h-[560px] flex-col items-center justify-center px-4 text-center">
@@ -120,7 +156,7 @@ export function OrderSheet({
           <p className="text-text-secondary mt-2 text-sm">장바구니에서 상품을 선택해 주세요.</p>
           <Link
             className="bg-primary text-primary-foreground focus-visible:ring-ring mt-6 rounded-xl px-5 py-3 font-semibold focus-visible:ring-2"
-            href="/cart"
+            href={CART_HREF}
           >
             장바구니로 이동
           </Link>
@@ -143,9 +179,22 @@ export function OrderSheet({
         cartId,
         selectedCartItemIds,
         idempotencyKeyRef.current,
+        defaultAddress,
       );
 
-      await executePayment(input);
+      if (!defaultAddress) throw new Error('배송지를 등록해 주세요.');
+
+      await executePayment({
+        ...input,
+        completionDetails: {
+          deliveryAddress: defaultAddress,
+          deliveryRequest: { detail: DELIVERY_MOCK.detail, location: DELIVERY_MOCK.location },
+          items,
+          orderer: orderer
+            ? { nickname: orderer.nickname, phoneNumber: orderer.phoneNumber }
+            : undefined,
+        },
+      });
     } catch (error) {
       setPaymentNotice(error instanceof Error ? error.message : '결제를 시작하지 못했습니다.');
     } finally {
@@ -156,7 +205,7 @@ export function OrderSheet({
   return (
     <main className="mobile-page bg-background min-h-dvh pb-24">
       <header className="relative flex h-16 items-center px-2">
-        <BackButton fallbackHref="/cart" />
+        <BackButton fallbackHref={CART_HREF} />
         <h1 className="text-title-3 absolute left-1/2 -translate-x-1/2 font-semibold">주문서</h1>
       </header>
 
@@ -173,10 +222,28 @@ export function OrderSheet({
             type="button"
           >
             <span className="text-right">
-              <span className="block">
-                {ORDERER_MOCK.name} <span className="text-disabled">l</span> {ORDERER_MOCK.phone}
-              </span>
-              {isOrdererExpanded ? <span className="block">{ORDERER_MOCK.email}</span> : null}
+              {orderer ? (
+                <>
+                  <span className="block">
+                    {orderer.nickname} <span className="text-disabled">l</span>{' '}
+                    {formatPhoneNumber(orderer.phoneNumber)}
+                  </span>
+                  {isOrdererExpanded && orderer.email ? (
+                    <span className="block">{orderer.email}</span>
+                  ) : null}
+                </>
+              ) : (
+                <span
+                  className="text-text-tertiary block"
+                  role={ordererLoading ? 'status' : 'alert'}
+                >
+                  {ordererLoading
+                    ? '주문자 정보를 불러오는 중이에요.'
+                    : ordererErrorMessage
+                      ? '주문자 정보를 불러오지 못했어요.'
+                      : '주문자 정보를 확인할 수 없어요.'}
+                </span>
+              )}
             </span>
             <Image
               alt=""
@@ -199,9 +266,7 @@ export function OrderSheet({
         </h2>
         <div className="flex h-[49px] items-end justify-between gap-3">
           <p className="text-text-secondary h-full w-[259px] text-[15px] leading-[23px]">
-            {selectedAddress
-              ? `${selectedAddress.addressLine1}, ${selectedAddress.addressLine2} (${selectedAddress.postalCode})`
-              : DELIVERY_MOCK.address}
+            {defaultAddress ? formatDeliveryAddress(defaultAddress) : '배송지를 등록해 주세요.'}
           </p>
           <Link
             className="border-border-strong text-text-secondary focus-visible:ring-ring shrink-0 rounded-full border px-3 py-1 text-sm leading-[21px] font-medium focus-visible:ring-2"
@@ -332,7 +397,11 @@ export function OrderSheet({
       </section>
 
       <footer className="bg-background fixed bottom-0 left-1/2 z-20 w-full max-w-[390px] -translate-x-1/2 px-4 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
-        {paymentNotice ? (
+        {paymentDisabled ? (
+          <p className="text-text-secondary mb-2 text-center text-sm" role="status">
+            로컬 미리보기에서는 결제를 진행할 수 없어요.
+          </p>
+        ) : paymentNotice ? (
           <p className="text-destructive mb-2 text-center text-sm" id="payment-notice" role="alert">
             {paymentNotice}
           </p>
@@ -340,7 +409,7 @@ export function OrderSheet({
         <button
           aria-describedby={paymentNotice ? 'payment-notice' : undefined}
           className="bg-primary text-primary-foreground focus-visible:ring-ring h-15 w-full rounded-xl text-lg font-semibold focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={!isAllAgreed || isPaymentPending}
+          disabled={paymentDisabled || !defaultAddress || !isAllAgreed || isPaymentPending}
           onClick={() => {
             void handlePayment();
           }}
@@ -355,19 +424,29 @@ export function OrderSheet({
 
 export function OrderPage({
   cartId,
+  defaultAddress,
   errorMessage,
   isLoading = false,
   items,
+  orderer,
+  ordererErrorMessage,
+  ordererLoading,
   onRetry,
   orderReturnTo = '/order',
+  paymentDisabled = false,
   selectedItemIds,
 }: {
   cartId?: number;
+  defaultAddress?: DeliveryAddress;
   errorMessage?: string;
   isLoading?: boolean;
   items?: CartItem[];
+  orderer?: Pick<UserProfile, 'email' | 'nickname' | 'phoneNumber'>;
+  ordererErrorMessage?: string;
+  ordererLoading?: boolean;
   onRetry?: () => void;
   orderReturnTo?: string;
+  paymentDisabled?: boolean;
   selectedItemIds: string[];
 }) {
   const cartItems = useCartStore((state) => state.items);
@@ -400,8 +479,13 @@ export function OrderPage({
   return (
     <OrderSheet
       cartId={cartId}
+      defaultAddress={defaultAddress}
       items={orderItems}
+      orderer={orderer}
+      ordererErrorMessage={ordererErrorMessage}
+      ordererLoading={ordererLoading}
       orderReturnTo={orderReturnTo}
+      paymentDisabled={paymentDisabled}
       selectedCartItemIds={getSelectedCartItemIds(orderItems)}
     />
   );

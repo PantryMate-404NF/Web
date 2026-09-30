@@ -11,11 +11,18 @@ export function DeliveryTrackingCopyButton({ trackingNumber }: { trackingNumber:
   return (
     <button
       aria-label="운송장번호 복사"
-      className="absolute top-1/2 left-full ml-2 grid size-6 -translate-y-1/2 place-items-center"
+      className="absolute top-1/2 left-full ml-1 grid size-6 -translate-y-1/2 place-items-center"
       onClick={() => void copyTrackingNumber(trackingNumber)}
       type="button"
     >
-      <Image alt="" aria-hidden="true" height={18} src="/icons/delivery/copy.svg" width={18} />
+      <Image
+        alt=""
+        aria-hidden="true"
+        className="h-auto w-4 shrink-0"
+        height={18}
+        src="/icons/delivery/copy.svg"
+        width={18}
+      />
     </button>
   );
 }

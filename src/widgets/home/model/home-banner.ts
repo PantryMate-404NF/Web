@@ -9,11 +9,17 @@ export interface HomeBanner {
 export const HOME_BANNERS = [
   {
     id: 'gap-farm',
+    imageSrc: '/images/home/banner-gap-farm-upscaled.png',
     kind: 'farm',
     label: 'GAP 인증 농산물 안내',
     thumbnailSrc: '/images/home/promotion-gap.png',
   },
-  { id: 'spring-ingredients', kind: 'spring', label: '봄맞이 제철 식재료 안내' },
+  {
+    id: 'spring-ingredients',
+    imageSrc: '/images/home/banner-spring-ingredients-upscaled.png',
+    kind: 'spring',
+    label: '봄맞이 제철 식재료 안내',
+  },
   {
     id: 'monthly-seasonal-food',
     imageSrc: '/images/home/banner-seasonal-food.png',
@@ -28,10 +34,7 @@ export const HOME_BANNERS = [
   },
 ] as const satisfies readonly HomeBanner[];
 
-export const HOME_CAROUSEL_BANNERS = HOME_BANNERS.filter(
-  (banner): banner is Extract<(typeof HOME_BANNERS)[number], { kind: 'image' }> =>
-    banner.kind === 'image',
-);
+export const HOME_CAROUSEL_BANNERS = HOME_BANNERS;
 
 export function getNextHomeBannerIndex(currentIndex: number, bannerCount: number) {
   if (bannerCount <= 0) return 0;

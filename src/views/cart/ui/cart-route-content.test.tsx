@@ -12,7 +12,7 @@ const { useAuthSessionMock, useCartMutationsMock, useCartQueryMock } = vi.hoiste
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ back: vi.fn() }) }));
 vi.mock('@/features/auth/ui/auth-session-provider', () => ({ useAuthSession: useAuthSessionMock }));
-vi.mock('../model/use-cart-query', () => ({ useCartQuery: useCartQueryMock }));
+vi.mock('@/entities/cart/api/use-cart-query', () => ({ useCartQuery: useCartQueryMock }));
 vi.mock('../model/use-cart-mutations', () => ({ useCartMutations: useCartMutationsMock }));
 
 describe('CartRouteContent', () => {

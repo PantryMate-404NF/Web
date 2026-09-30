@@ -1,6 +1,15 @@
 'use client';
 
-import { ChevronDown, ChevronLeft, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronLeft,
+  Paperclip,
+  Pencil,
+  Plus,
+  Search,
+  SquarePen,
+  Trash2,
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { RefObject } from 'react';
@@ -8,6 +17,12 @@ import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { usePantryMutations } from '@/entities/pantry/api/use-pantry-mutations';
+import { useRecipeFilterIngredientsQuery } from '@/entities/recipe/api/use-recipe-filter-ingredients-query';
+import {
+  consumeRecipePantrySelectionIntent,
+  MAX_RECIPE_PANTRY_SELECTION,
+  useRecipePantrySelectionStore,
+} from '@/entities/pantry/model/recipe-pantry-selection-store';
 import {
   filterPantryItems,
   sortPantryItems,
@@ -22,6 +37,14 @@ import type {
 import { PantryItemCard } from '@/entities/pantry/ui/pantry-item-card';
 import type { DataViewState } from '@/shared/model/ui-state';
 import { PantryLoadingSkeleton } from '@/widgets/pantry-list/ui/pantry-loading-skeleton';
+import {
+  recognizeReceipt,
+  ReceiptOcrError,
+  type ReceiptOcrResult,
+} from '@/entities/pantry/api/recognize-receipt';
+import { getReceiptImageValidationError } from '@/entities/pantry/model/receipt-image';
+
+import { ReceiptOcrFlow } from './receipt-ocr-flow';
 
 type PantryViewState = Extract<DataViewState, 'content' | 'empty' | 'error' | 'loading'>;
 type StorageFilter = PantryStorageType | 'ALL';
@@ -46,6 +69,11 @@ interface PantryMenuTriggerRect {
   right: number;
   top: number;
 }
+
+type ReceiptOcrFlowState =
+  | { file: File; kind: 'loading'; previewUrl: string }
+  | { error: ReceiptOcrError; file: File; kind: 'error'; previewUrl: string }
+  | { file: File; kind: 'result'; previewUrl: string; result: ReceiptOcrResult };
 
 export function getPantryMenuPosition(trigger: PantryMenuTriggerRect, viewportWidth: number) {
   const rightSidePosition = trigger.right - 7;
@@ -91,11 +119,26 @@ export function getVisiblePantryItems(
 }
 
 export function getDeleteConfirmationTitle(itemName: string) {
+  const itemNameCharacters = Array.from(itemName);
+  const displayName =
+    itemNameCharacters.length >= 13 ? `${itemNameCharacters.slice(0, 12).join('')}...` : itemName;
   const lastCharacter = itemName.at(-1);
   const codePoint = lastCharacter?.charCodeAt(0) ?? 0;
   const hasFinalConsonant =
     codePoint >= 0xac00 && codePoint <= 0xd7a3 && (codePoint - 0xac00) % 28 !== 0;
-  return `${itemName}${hasFinalConsonant ? '을' : '를'} 삭제할까요?`;
+  return `${displayName}${hasFinalConsonant ? '을' : '를'} 삭제할까요?`;
+}
+
+export function getRecipeResultsHref(ingredientIds: number[], pantryItemIds: string[] = []) {
+  const search = new URLSearchParams();
+  [...new Set(ingredientIds)].forEach((ingredientId) =>
+    search.append('ingredientIds', String(ingredientId)),
+  );
+  [...new Set(pantryItemIds)].forEach((pantryItemId) =>
+    search.append('pantryItemIds', pantryItemId),
+  );
+  const query = search.toString();
+  return query ? `/recipe?${query}` : '/recipe';
 }
 
 export function PantryErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
@@ -132,6 +175,38 @@ export function PantryEmptyState() {
   );
 }
 
+export function PantryAddOptions({ onReceiptUpload }: { onReceiptUpload: () => void }) {
+  return (
+    <div
+      aria-label="재료 추가 방식"
+      className="bg-card absolute top-11 right-0 z-20 flex w-max min-w-[152px] flex-col rounded-xl py-2 pr-4 pl-2 shadow-[0_4px_4px_rgb(26_26_26/16%),0_0_2px_rgb(26_26_26/12%)]"
+      role="menu"
+    >
+      <button
+        className="text-label-2 flex h-10 items-center gap-0.5 whitespace-nowrap"
+        onClick={onReceiptUpload}
+        role="menuitem"
+        type="button"
+      >
+        <span className="grid size-10 place-items-center">
+          <Paperclip aria-hidden="true" className="size-6" />
+        </span>
+        영수증 업로드
+      </button>
+      <Link
+        className="text-label-2 flex h-10 items-center gap-0.5 whitespace-nowrap"
+        href="/pantry?state=register"
+        role="menuitem"
+      >
+        <span className="grid size-10 place-items-center">
+          <SquarePen aria-hidden="true" className="size-6" />
+        </span>
+        직접 등록하기
+      </Link>
+    </div>
+  );
+}
+
 export function PantryFilterEmptyState() {
   return (
     <section aria-live="polite" className="text-muted-foreground px-4 pt-24 text-center">
@@ -163,11 +238,11 @@ export function PantryDeleteDialog({
       role="dialog"
       tabIndex={-1}
     >
-      <div className="text-title-4 flex w-40 flex-col items-center gap-3 text-center">
+      <div className="text-title-4 flex w-[255px] flex-col items-center gap-3 text-center">
         <h2 className="w-full font-bold" id="delete-title">
           {getDeleteConfirmationTitle(itemName)}
         </h2>
-        <p className="text-muted-foreground w-full font-medium">
+        <p className="text-muted-foreground w-40 font-medium">
           삭제하면 팬트리에서 다시
           <br />
           확인할 수 없어요.
@@ -202,6 +277,20 @@ export function PantryPage({
 }: PantryPageProps) {
   const storedItems = usePantryStore((state) => state.items);
   const { remove: removePantryItem } = usePantryMutations();
+  const isRecipeSelectionMode = useRecipePantrySelectionStore(
+    (state) => state.isSelectingForRecipe,
+  );
+  const selectedPantryItemIds = useRecipePantrySelectionStore(
+    (state) => state.selectedPantryItemIds,
+  );
+  const selectedIngredientIdsByPantryItemId = useRecipePantrySelectionStore(
+    (state) => state.selectedIngredientIdsByPantryItemId,
+  );
+  const toggleRecipeSelection = useRecipePantrySelectionStore((state) => state.toggleSelection);
+  const clearRecipeSelection = useRecipePantrySelectionStore((state) => state.clearSelection);
+  const resumeRecipeSelection = useRecipePantrySelectionStore((state) => state.resumeSelection);
+  const { data: recipeFilterIngredients = [] } =
+    useRecipeFilterIngredientsQuery(isRecipeSelectionMode);
   const currentItems = items ?? storedItems;
   const [query, setQuery] = useState('');
   const [storage, setStorage] = useState<StorageFilter>('ALL');
@@ -213,13 +302,70 @@ export function PantryPage({
   const menuRef = useRef<HTMLDivElement>(null);
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const deleteDialogRef = useRef<HTMLElement>(null);
-  const addItemLinkRef = useRef<HTMLAnchorElement>(null);
+  const addItemButtonRef = useRef<HTMLButtonElement>(null);
+  const receiptInputRef = useRef<HTMLInputElement>(null);
+  const [isAddOptionsOpen, setIsAddOptionsOpen] = useState(false);
+  const [receiptFlow, setReceiptFlow] = useState<ReceiptOcrFlowState | null>(null);
+  const receiptRequestIdRef = useRef(0);
+  const [receiptInputError, setReceiptInputError] = useState<string | null>(null);
   const visibleItems = getVisiblePantryItems(currentItems, query, storage, sort);
   const viewState = getPantryViewState({ items: currentItems, errorMessage, isLoading });
+
+  useEffect(() => {
+    if (consumeRecipePantrySelectionIntent()) resumeRecipeSelection();
+  }, [resumeRecipeSelection]);
 
   function closeDeleteDialog() {
     setDeleteItem(null);
     menuTriggerRef.current?.focus();
+  }
+
+  function openReceiptFilePicker() {
+    setIsAddOptionsOpen(false);
+    receiptInputRef.current?.click();
+  }
+
+  async function runReceiptOcr(file: File, previewUrl: string) {
+    const requestVersion = ++receiptRequestIdRef.current;
+    setReceiptFlow({ file, kind: 'loading', previewUrl });
+
+    try {
+      const result = await recognizeReceipt(file, crypto.randomUUID(), crypto.randomUUID());
+      if (requestVersion === receiptRequestIdRef.current) {
+        setReceiptFlow({ file, kind: 'result', previewUrl, result });
+      }
+    } catch (error) {
+      if (requestVersion !== receiptRequestIdRef.current) return;
+      setReceiptFlow({
+        error:
+          error instanceof ReceiptOcrError
+            ? error
+            : new ReceiptOcrError('영수증을 인식하지 못했어요. 다시 시도해 주세요.'),
+        file,
+        kind: 'error',
+        previewUrl,
+      });
+    }
+  }
+
+  function closeReceiptFlow() {
+    receiptRequestIdRef.current += 1;
+    setReceiptFlow(null);
+  }
+
+  function selectReceiptImage(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = '';
+    if (!file) return;
+
+    const validationError = getReceiptImageValidationError(file);
+    if (validationError) {
+      setReceiptInputError(validationError);
+      return;
+    }
+
+    setReceiptInputError(null);
+    void runReceiptOcr(file, URL.createObjectURL(file));
   }
 
   useEffect(() => {
@@ -293,6 +439,45 @@ export function PantryPage({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [deleteItem]);
 
+  useEffect(() => {
+    if (!isAddOptionsOpen) return;
+
+    function closeAddOptions(event: KeyboardEvent) {
+      if (event.key !== 'Escape') return;
+      setIsAddOptionsOpen(false);
+      addItemButtonRef.current?.focus();
+    }
+
+    window.addEventListener('keydown', closeAddOptions);
+    return () => window.removeEventListener('keydown', closeAddOptions);
+  }, [isAddOptionsOpen]);
+
+  useEffect(() => {
+    const previewUrl = receiptFlow?.previewUrl;
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [receiptFlow?.previewUrl]);
+
+  if (receiptFlow) {
+    return (
+      <ReceiptOcrFlow
+        onClose={closeReceiptFlow}
+        onFileSelected={(file, previewUrl) => void runReceiptOcr(file, previewUrl)}
+        onManualEntry={() =>
+          setReceiptFlow({
+            file: receiptFlow.file,
+            kind: 'result',
+            previewUrl: receiptFlow.previewUrl,
+            result: { receiptId: crypto.randomUUID(), purchasedAt: null, items: [] },
+          })
+        }
+        onRetry={() => void runReceiptOcr(receiptFlow.file, receiptFlow.previewUrl)}
+        state={receiptFlow}
+      />
+    );
+  }
+
   if (viewState === 'loading') return <PantryLoadingSkeleton variant={cardVariant} />;
   if (viewState === 'error')
     return (
@@ -306,7 +491,15 @@ export function PantryPage({
           <Link
             aria-label="이전 페이지"
             className="grid size-10 shrink-0 place-items-center"
-            href="/"
+            href={
+              isRecipeSelectionMode
+                ? getRecipeResultsHref(
+                    Object.values(selectedIngredientIdsByPantryItemId),
+                    selectedPantryItemIds,
+                  )
+                : '/'
+            }
+            onClick={isRecipeSelectionMode ? clearRecipeSelection : undefined}
           >
             <ChevronLeft className="size-6" />
           </Link>
@@ -322,18 +515,37 @@ export function PantryPage({
               value={query}
             />
           </label>
-          <Button
-            asChild
-            className="ml-[18px] size-10 shrink-0 rounded-full p-0 has-[>svg]:p-0"
-            size="icon"
-          >
-            <Link href="/pantry?state=register" ref={addItemLinkRef}>
+          <div className="relative ml-[18px] shrink-0">
+            <Button
+              aria-expanded={isAddOptionsOpen}
+              aria-haspopup="menu"
+              className="size-10 rounded-full p-0 has-[>svg]:p-0"
+              onClick={() => setIsAddOptionsOpen((isOpen) => !isOpen)}
+              ref={addItemButtonRef}
+              size="icon"
+              type="button"
+            >
               <Plus className="size-6" />
               <span className="sr-only">재료 추가</span>
-            </Link>
-          </Button>
+            </Button>
+            {isAddOptionsOpen ? <PantryAddOptions onReceiptUpload={openReceiptFilePicker} /> : null}
+            <input
+              accept="image/jpeg,image/png,image/webp,image/heic,.heic"
+              aria-label="영수증 이미지 업로드"
+              className="sr-only"
+              onChange={selectReceiptImage}
+              ref={receiptInputRef}
+              type="file"
+            />
+          </div>
         </div>
       </header>
+
+      {receiptInputError ? (
+        <p aria-live="polite" className="text-destructive text-body-4 px-4 pt-2" role="alert">
+          {receiptInputError}
+        </p>
+      ) : null}
 
       <div className="relative flex h-12 items-center justify-between pr-1 pl-4">
         <strong className="text-title-3 leading-[27px] font-semibold">
@@ -399,6 +611,9 @@ export function PantryPage({
             <PantryItemCard
               item={item}
               key={item.id}
+              onSelect={(selectedItem, ingredientId) =>
+                toggleRecipeSelection(selectedItem, ingredientId)
+              }
               onOptions={(trigger) => {
                 menuTriggerRef.current = trigger;
                 setMenuItem(item);
@@ -406,6 +621,18 @@ export function PantryPage({
                   getPantryMenuPosition(trigger.getBoundingClientRect(), window.innerWidth),
                 );
               }}
+              selectionIngredientId={
+                item.ingredientId ??
+                recipeFilterIngredients.find(
+                  (ingredient) => ingredient.name.trim() === item.name.trim(),
+                )?.ingredientId
+              }
+              selectionDisabled={
+                !selectedPantryItemIds.includes(item.id) &&
+                selectedPantryItemIds.length >= MAX_RECIPE_PANTRY_SELECTION
+              }
+              selected={selectedPantryItemIds.includes(item.id)}
+              selectionMode={isRecipeSelectionMode}
               variant={cardVariant}
             />
           ))}
@@ -470,7 +697,7 @@ export function PantryPage({
               const deletedItemId = deleteItem.id;
               void removePantryItem.mutateAsync(deletedItemId).then(() => {
                 setDeleteItem(null);
-                requestAnimationFrame(() => addItemLinkRef.current?.focus());
+                requestAnimationFrame(() => addItemButtonRef.current?.focus());
               });
             }}
           />

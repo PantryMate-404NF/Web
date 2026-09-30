@@ -9,6 +9,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 import type { CartItem } from '@/entities/cart/model/cart-store';
+import { DELIVERY_MOCK } from '@/entities/order/model/mock';
 
 import { OrderPage, OrderSheet } from './order-page';
 
@@ -18,6 +19,53 @@ const orderItems: CartItem[] = [
 ];
 
 describe('OrderSheet', () => {
+  it('서버 기본 배송지를 주문서에 표시한다', () => {
+    const markup = renderToStaticMarkup(
+      createElement(OrderSheet, {
+        defaultAddress: {
+          id: '12',
+          recipientName: '김지웅',
+          phoneNumber: '01012345678',
+          addressLine1: '경기도 성남시 분당구 불정로 90',
+          addressLine2: '101동 1001호',
+          postalCode: '13485',
+          isDefault: true,
+        },
+        items: orderItems,
+      }),
+    );
+
+    expect(markup).toContain('경기도 성남시 분당구 불정로 90, 101동 1001호 (13485)');
+  });
+
+  it('상세 주소가 없으면 불필요한 쉼표 없이 배송지를 표시한다', () => {
+    const markup = renderToStaticMarkup(
+      createElement(OrderSheet, {
+        defaultAddress: {
+          id: '12',
+          recipientName: '김지웅',
+          phoneNumber: '01012345678',
+          addressLine1: '경기도 성남시 분당구 불정로 90',
+          addressLine2: '',
+          postalCode: '13485',
+          isDefault: true,
+        },
+        items: orderItems,
+      }),
+    );
+
+    expect(markup).toContain('경기도 성남시 분당구 불정로 90 (13485)');
+    expect(markup).not.toContain('불정로 90,  (13485)');
+  });
+
+  it('기본 배송지가 없으면 등록 안내를 표시하고 결제를 비활성화한다', () => {
+    const markup = renderToStaticMarkup(createElement(OrderSheet, { items: orderItems }));
+
+    expect(markup).toContain('배송지를 등록해 주세요.');
+    expect(markup).not.toContain(DELIVERY_MOCK.address);
+    expect(markup).toContain('disabled=""');
+  });
+
   it('주문서 정보와 비활성 결제 CTA를 렌더링한다', () => {
     const markup = renderToStaticMarkup(
       createElement(OrderSheet, {
@@ -35,6 +83,56 @@ describe('OrderSheet', () => {
     expect(markup).toContain(
       'href="/mypage/addresses?returnTo=%2Forder%3Fpreview%3D1%26items%3Donion"',
     );
+  });
+
+  it('로그인 프로필의 이름과 연락처를 주문자 정보에 표시한다', () => {
+    const markup = renderToStaticMarkup(
+      createElement(OrderSheet, {
+        items: orderItems,
+        orderer: {
+          email: 'anseongjin@example.com',
+          nickname: '안성진',
+          phoneNumber: '01012345678',
+        },
+      }),
+    );
+
+    expect(markup).toContain('안성진');
+    expect(markup).toContain('010-1234-5678');
+    expect(markup).not.toContain('집밥사랑');
+  });
+
+  it('프로필 전화번호가 null이어도 주문서가 오류 없이 표시된다', () => {
+    const markup = renderToStaticMarkup(
+      createElement(OrderSheet, {
+        items: orderItems,
+        orderer: { email: null, nickname: '안성진', phoneNumber: null },
+      }),
+    );
+
+    expect(markup).toContain('안성진');
+    expect(markup).toContain('연락처 미등록');
+  });
+
+  it('프로필 조회 중에는 목업 주문자 정보를 보여주지 않는다', () => {
+    const markup = renderToStaticMarkup(
+      createElement(OrderSheet, { items: orderItems, ordererLoading: true }),
+    );
+
+    expect(markup).toContain('주문자 정보를 불러오는 중이에요.');
+    expect(markup).not.toContain('집밥사랑');
+  });
+
+  it('로컬 미리보기에서는 결제 버튼과 안내를 제공한다', () => {
+    const markup = renderToStaticMarkup(
+      createElement(OrderSheet, {
+        items: orderItems,
+        paymentDisabled: true,
+      }),
+    );
+
+    expect(markup).toContain('로컬 미리보기에서는 결제를 진행할 수 없어요.');
+    expect(markup).toContain('disabled=""');
   });
 
   it('피그마 기준 섹션 높이와 구분선을 유지한다', () => {

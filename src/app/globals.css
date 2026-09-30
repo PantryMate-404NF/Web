@@ -160,6 +160,7 @@
   --surface-secondary: var(--primitive-grey-100);
   --surface-disabled: var(--primitive-grey-200);
   --surface-subtle: var(--primitive-primary-50);
+  --surface-complete: var(--primitive-primary-200);
   --surface-selected: var(--primitive-primary-300);
   --surface-selected-foreground: var(--primitive-grey-900);
   --surface-inverse: var(--primitive-grey-800);
@@ -172,6 +173,7 @@
   --border-default: var(--primitive-grey-200);
   --border-subtle: var(--primitive-grey-100);
   --border-strong: var(--primitive-grey-400);
+  --border-complete: var(--primitive-primary-500);
   --action-primary: var(--primitive-primary-500);
   --action-primary-hover: var(--primitive-primary-600);
   --action-primary-active: var(--primitive-primary-700);
@@ -290,6 +292,7 @@
   --color-card-foreground: var(--card-foreground);
   --color-surface-secondary: var(--surface-secondary);
   --color-surface-disabled: var(--surface-disabled);
+  --color-surface-complete: var(--surface-complete);
   --color-surface-selected: var(--surface-selected);
   --color-surface-selected-foreground: var(--surface-selected-foreground);
   --color-surface-inverse: var(--surface-inverse);
@@ -305,6 +308,7 @@
   --color-media-foreground: var(--media-foreground);
   --color-border: var(--border);
   --color-border-subtle: var(--border-subtle);
+  --color-border-complete: var(--border-complete);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-popover: var(--popover);
@@ -370,8 +374,10 @@
   --breakpoint-desktop: 64rem;
 }
 
-* {
-  border-color: var(--border);
+@layer base {
+  * {
+    border-color: var(--border);
+  }
 }
 
 button:not(:disabled),
@@ -389,6 +395,11 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Pretendard', sans-serif;
+}
+
+.pantry-field-complete:-webkit-autofill {
+  background-color: var(--surface-complete) !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--surface-complete) inset !important;
 }
 
 .skeleton {

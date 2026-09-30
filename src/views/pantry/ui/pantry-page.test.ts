@@ -5,6 +5,7 @@ import { getPantryCardVariant } from '@/entities/pantry/model/types';
 import { pantryItems } from '@/entities/pantry/model/mock';
 
 import {
+  getRecipeResultsHref,
   getDeleteConfirmationTitle,
   getPantryMenuPosition,
   getPantryViewState,
@@ -12,6 +13,7 @@ import {
   PantryDeleteDialog,
   PantryEmptyState,
   PantryErrorState,
+  PantryAddOptions,
   PantryPage,
 } from './pantry-page';
 
@@ -35,6 +37,13 @@ describe('getPantryViewState', () => {
 
   it('returns content when pantry items are available', () => {
     expect(getPantryViewState({ items: pantryItems })).toBe('content');
+  });
+});
+
+describe('getRecipeResultsHref', () => {
+  it('returns to the filtered recipe list with each selected ingredient ID once', () => {
+    expect(getRecipeResultsHref([21, 8, 21])).toBe('/recipe?ingredientIds=21&ingredientIds=8');
+    expect(getRecipeResultsHref([])).toBe('/recipe');
   });
 });
 
@@ -126,6 +135,12 @@ describe('getDeleteConfirmationTitle', () => {
     expect(getDeleteConfirmationTitle('양상추')).toBe('양상추를 삭제할까요?');
     expect(getDeleteConfirmationTitle('계란')).toBe('계란을 삭제할까요?');
   });
+
+  it('truncates ingredient names at 13 characters, including spaces', () => {
+    expect(getDeleteConfirmationTitle('12345 678901')).toBe('12345 678901를 삭제할까요?');
+    expect(getDeleteConfirmationTitle('12345 6789012')).toBe('12345 678901...를 삭제할까요?');
+    expect(getDeleteConfirmationTitle('상추1234567890감')).toBe('상추1234567890...을 삭제할까요?');
+  });
 });
 
 describe('getPantryMenuPosition', () => {
@@ -138,6 +153,29 @@ describe('getPantryMenuPosition', () => {
       left: 224,
       top: 255,
     });
+  });
+});
+
+describe('PantryAddOptions', () => {
+  it('opens the image picker for receipt upload and keeps manual registration on the register route', () => {
+    const onReceiptUpload = vi.fn();
+    const options = PantryAddOptions({ onReceiptUpload });
+    const [receiptUploadButton, manualRegistrationLink] = Children.toArray(options.props.children);
+
+    expect(isValidElement<{ onClick?: () => void }>(receiptUploadButton)).toBe(true);
+    expect(isValidElement<{ href?: string }>(manualRegistrationLink)).toBe(true);
+
+    if (
+      !isValidElement<{ onClick?: () => void }>(receiptUploadButton) ||
+      !isValidElement<{ href?: string }>(manualRegistrationLink)
+    ) {
+      throw new Error('팬트리 추가 메뉴 항목을 찾을 수 없습니다.');
+    }
+
+    receiptUploadButton.props.onClick?.();
+
+    expect(onReceiptUpload).toHaveBeenCalledOnce();
+    expect(manualRegistrationLink.props.href).toBe('/pantry?state=register');
   });
 });
 

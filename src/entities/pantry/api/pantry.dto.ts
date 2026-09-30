@@ -8,6 +8,7 @@ export type PantryExpiryStatus = 'NORMAL' | 'IMMINENT' | 'EXPIRED';
 export interface PantryItemDto {
   /** 팬트리 식재료 항목의 고유 식별자입니다. */
   pantryItemId: number;
+  ingredientId?: number | null;
   /** 사용자가 직접 등록했거나 OCR로 인식한 식재료명입니다. */
   ingredientName: string;
   /** 소비기한 날짜입니다. 소비기한을 등록하지 않은 경우 null입니다. */
@@ -25,8 +26,13 @@ export interface PantryItemDto {
   imageUrl: string | null;
 }
 
+export interface PantryImageUploadResponseDto {
+  imageUrl: string;
+}
+
 export interface CreatePantryItemRequest {
   ingredientName: string;
+  purchaseDate?: string;
   sellByDate?: string;
   expiryDate?: string;
   storageType: PantryStorageType;

@@ -24,6 +24,12 @@ export function getCancellationReasonBorderColor(checked: boolean) {
   return checked ? 'var(--primitive-primary-500)' : 'var(--border-default)';
 }
 
+export function getCancellationReasonRadioClasses(checked: boolean) {
+  return checked
+    ? { outer: 'bg-primary', inner: 'bg-background' }
+    : { outer: 'border border-border', inner: '' };
+}
+
 export function getAgreementCheckClassName(agreed: boolean) {
   return agreed
     ? 'bg-[var(--primitive-primary-500)] text-[var(--primitive-grey-800)]'
@@ -76,6 +82,7 @@ export function OrderCancelPage({ orderId }: { orderId: string }) {
           <div className="mt-4 space-y-2">
             {cancellationReasons.map((reason) => {
               const checked = selectedReason === reason;
+              const radioClasses = getCancellationReasonRadioClasses(checked);
 
               return (
                 <label
@@ -93,11 +100,11 @@ export function OrderCancelPage({ orderId }: { orderId: string }) {
                   />
                   <span
                     aria-hidden="true"
-                    className={`grid size-5 place-items-center rounded-full border ${
-                      checked ? 'border-primary' : 'border-border'
-                    }`}
+                    className={`grid size-5 place-items-center rounded-full ${radioClasses.outer}`}
                   >
-                    {checked ? <span className="bg-primary size-2 rounded-full" /> : null}
+                    {checked ? (
+                      <span className={`size-2 rounded-full ${radioClasses.inner}`} />
+                    ) : null}
                   </span>
                   <span className="text-text-secondary text-sm leading-5 font-medium">
                     {reason}
@@ -109,10 +116,9 @@ export function OrderCancelPage({ orderId }: { orderId: string }) {
         </fieldset>
       </section>
 
-      <section
-        className="border-border border-t-8 px-4 py-6"
-        aria-labelledby="refund-information-heading"
-      >
+      <div aria-hidden="true" className="h-2 w-full bg-[var(--primitive-grey-100)]" />
+
+      <section className="px-4 py-6" aria-labelledby="refund-information-heading">
         <h2 className="text-lg leading-7 font-semibold" id="refund-information-heading">
           환불 정보
         </h2>

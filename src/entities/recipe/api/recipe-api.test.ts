@@ -32,4 +32,17 @@ describe('recipe API', () => {
     const [, options] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
     expect(new Headers(options.headers).get('Authorization')).toBe('Bearer access-token');
   });
+
+  it('스크랩 목록을 명세된 경로에서 가져온다', async () => {
+    const { setAccessToken } = await import('@/shared/model/access-token-store');
+    const { getScrappedRecipes } = await import('./get-scrapped-recipes');
+    setAccessToken('access-token');
+
+    await expect(getScrappedRecipes()).resolves.toEqual([]);
+
+    const [url, options] = vi.mocked(fetch).mock.calls.at(-1) as [string, RequestInit];
+    expect(url).toBe('http://localhost:3000/api/recipes/scraps');
+    expect(options.method ?? 'GET').toBe('GET');
+    expect(new Headers(options.headers).get('Authorization')).toBe('Bearer access-token');
+  });
 });
