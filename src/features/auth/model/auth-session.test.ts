@@ -1,11 +1,25 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  applyAuthSessionState,
   createSingleFlight,
   getApplicableRestoreState,
   getPostAuthenticationRoute,
   getStateFreeHref,
 } from './auth-session';
+
+describe('applyAuthSessionState', () => {
+  it('인증 상태를 변경하기 전에 이전 사용자의 쿼리 캐시를 비운다', () => {
+    const events: string[] = [];
+    const queryClient = { clear: vi.fn(() => events.push('clear')) };
+    const setState = vi.fn(() => events.push('state'));
+
+    applyAuthSessionState(queryClient, setState, 'complete');
+
+    expect(events).toEqual(['clear', 'state']);
+    expect(setState).toHaveBeenCalledWith('complete');
+  });
+});
 
 describe('getPostAuthenticationRoute', () => {
   it('온보딩 완료 사용자는 상태 쿼리 없이 홈 루트로 이동한다', () => {

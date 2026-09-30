@@ -2,6 +2,20 @@ import type { AuthHomeState } from './restore-auth-session';
 
 export type AuthSessionState = 'loading' | 'guest' | AuthHomeState;
 
+interface ClearableQueryClient {
+  clear: () => void;
+}
+
+/** 계정별 서버 상태가 다음 인증 사용자에게 노출되지 않도록 전환 전에 캐시를 비웁니다. */
+export function applyAuthSessionState(
+  queryClient: ClearableQueryClient,
+  setState: (state: Exclude<AuthSessionState, 'loading'>) => void,
+  nextState: Exclude<AuthSessionState, 'loading'>,
+) {
+  queryClient.clear();
+  setState(nextState);
+}
+
 /** 동시에 시작된 인증 복구 호출이 하나의 네트워크 요청을 공유하도록 합니다. */
 export function createSingleFlight<T>(action: () => Promise<T>) {
   let inFlight: Promise<T> | null = null;

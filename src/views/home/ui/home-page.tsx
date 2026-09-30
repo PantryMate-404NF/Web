@@ -59,14 +59,14 @@ export function HomeCategoryNavigation() {
   );
 }
 
-function RecommendationTooltip() {
+function RecommendationTooltip({ message }: { message: string }) {
   return (
     <p className="bg-surface-inverse text-text-inverse shadow-card pointer-events-none absolute top-[239px] left-1/2 z-10 flex w-[269px] max-w-[calc(100%-2rem)] -translate-x-1/2 items-center justify-center rounded-full px-5 py-2 text-base leading-6 font-medium whitespace-nowrap min-[390px]:left-[98px] min-[390px]:translate-x-0">
       <span
         aria-hidden="true"
         className="bg-surface-inverse absolute top-[26px] left-[14px] size-4 rotate-45 rounded-[3px]"
       />
-      <span className="relative">맛 선호도를 반영해 AI가 추천했어요.</span>
+      <span className="relative">{message}</span>
     </p>
   );
 }
@@ -106,6 +106,7 @@ function HomeContent({
   homeState,
   recipeError,
   recipeIsPending,
+  recommendationMessage,
   recipes,
   retryRecipes,
 }: {
@@ -113,6 +114,7 @@ function HomeContent({
   homeState: HomeMockState;
   recipeError: Error | null;
   recipeIsPending: boolean;
+  recommendationMessage: string | null;
   recipes: HomeRecipeCardItem[];
   retryRecipes: () => void;
 }) {
@@ -124,7 +126,9 @@ function HomeContent({
       <HomeCategoryNavigation />
       <div className="relative">
         <HomePromotionCarousel />
-        {hasCompletedOnboarding ? <RecommendationTooltip /> : null}
+        {hasCompletedOnboarding && recommendationMessage ? (
+          <RecommendationTooltip message={recommendationMessage} />
+        ) : null}
       </div>
       {hasCompletedOnboarding ? (
         <div className="mt-4">
@@ -170,6 +174,12 @@ export function HomePage({
     false,
   );
   const recipes = recommendationQuery.data ? toHomeRecipeCards(recommendationQuery.data) : [];
+  const recommendationMessage =
+    recommendationQuery.isSuccess && recommendationQuery.data
+      ? recommendationQuery.data.source === 'AI'
+        ? '맛 선호도를 반영해 AI가 추천했어요.'
+        : '지금 인기 있는 레시피를 추천해요.'
+      : null;
 
   return (
     <HomeContent
@@ -177,6 +187,7 @@ export function HomePage({
       homeState={homeState}
       recipeError={recommendationQuery.error}
       recipeIsPending={hasCompletedOnboarding && recommendationQuery.isPending}
+      recommendationMessage={recommendationMessage}
       recipes={recipes}
       retryRecipes={() => void recommendationQuery.refetch()}
     />
