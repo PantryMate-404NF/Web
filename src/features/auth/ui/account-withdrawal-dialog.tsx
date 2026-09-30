@@ -17,6 +17,19 @@ function getFocusableElements(dialog: HTMLElement) {
   );
 }
 
+export function focusAccountWithdrawalDialog(
+  dialog: HTMLDivElement | null,
+  cancelButton: HTMLButtonElement | null,
+  isPending: boolean,
+) {
+  if (isPending) {
+    dialog?.focus();
+    return;
+  }
+
+  cancelButton?.focus();
+}
+
 export function AccountWithdrawalDialog({
   errorMessage,
   isPending,
@@ -29,10 +42,13 @@ export function AccountWithdrawalDialog({
   useEffect(() => {
     const previousFocus =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    cancelButtonRef.current?.focus();
 
     return () => previousFocus?.focus();
   }, []);
+
+  useEffect(() => {
+    focusAccountWithdrawalDialog(dialogRef.current, cancelButtonRef.current, isPending);
+  }, [isPending]);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Escape' && !isPending) {
@@ -75,6 +91,7 @@ export function AccountWithdrawalDialog({
       onKeyDown={handleKeyDown}
       ref={dialogRef}
       role="dialog"
+      tabIndex={-1}
     >
       <section className="bg-background mx-auto flex w-full max-w-[var(--layout-mobile-design-frame)] flex-col items-center overflow-hidden rounded-t-[20px] pt-4 pb-10">
         <div aria-hidden="true" className="flex h-8 w-full justify-center pt-2">

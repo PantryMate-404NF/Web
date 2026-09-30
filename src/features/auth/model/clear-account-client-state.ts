@@ -29,6 +29,14 @@ function removeStoredValue(storage: StorageRemover | undefined, key: string) {
   }
 }
 
+function getStorage(storage: () => StorageRemover | undefined) {
+  try {
+    return storage();
+  } catch {
+    return undefined;
+  }
+}
+
 /** 다른 계정에 노출되면 안 되는 현재 사용자의 브라우저 상태를 제거합니다. */
 export function clearAccountClientState(options: ClearAccountClientStateOptions = {}) {
   useCartStore.setState({ items: [] });
@@ -40,10 +48,13 @@ export function clearAccountClientState(options: ClearAccountClientStateOptions 
     selectedIngredientIdsByPantryItemId: {},
   });
 
-  const localStorage =
-    options.localStorage ?? (typeof window === 'undefined' ? undefined : window.localStorage);
-  const sessionStorage =
-    options.sessionStorage ?? (typeof window === 'undefined' ? undefined : window.sessionStorage);
+  const localStorage = getStorage(
+    () => options.localStorage ?? (typeof window === 'undefined' ? undefined : window.localStorage),
+  );
+  const sessionStorage = getStorage(
+    () =>
+      options.sessionStorage ?? (typeof window === 'undefined' ? undefined : window.sessionStorage),
+  );
 
   removeStoredValue(localStorage, cartStorageKey);
   removeStoredValue(localStorage, favoriteProductStorageKey);

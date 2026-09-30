@@ -75,4 +75,19 @@ describe('clearAccountClientState', () => {
     expect(sessionStorage.removeItem).toHaveBeenCalledWith(PAYMENT_ATTEMPT_STORAGE_KEY);
     expect(sessionStorage.removeItem).toHaveBeenCalledWith(RECIPE_PANTRY_SELECTION_INTENT_KEY);
   });
+
+  it('한 저장소 객체 접근이 차단되어도 다른 저장소 정리를 계속한다', () => {
+    const sessionStorage = { removeItem: vi.fn() };
+    const options = { sessionStorage } as Parameters<typeof clearAccountClientState>[0];
+    Object.defineProperty(options, 'localStorage', {
+      get() {
+        throw new DOMException('Blocked', 'SecurityError');
+      },
+    });
+
+    expect(() => clearAccountClientState(options)).not.toThrow();
+
+    expect(sessionStorage.removeItem).toHaveBeenCalledWith(PAYMENT_ATTEMPT_STORAGE_KEY);
+    expect(sessionStorage.removeItem).toHaveBeenCalledWith(RECIPE_PANTRY_SELECTION_INTENT_KEY);
+  });
 });
