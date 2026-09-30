@@ -10,6 +10,38 @@ const orderResponse = {
   totalAmount: 42500,
 };
 
+const deliveryAddress = {
+  recipientName: '김지웅',
+  recipientPhone: '01012345678',
+  zipCode: '13485',
+  address: '경기도 성남시 분당구 불정로 90',
+  addressDetail: '101동 1001호',
+};
+
+const completionDetails = {
+  deliveryAddress: {
+    addressLine1: '서울시 강남구 테헤란로 1',
+    addressLine2: '101호',
+    id: 'address-1',
+    isDefault: true,
+    phoneNumber: '01012345678',
+    postalCode: '06123',
+    recipientName: '김지웅',
+  },
+  deliveryRequest: { detail: '없음', location: '문 앞에 놓아주세요' },
+  items: [
+    {
+      id: 'cart-item-10',
+      ingredient: '양파',
+      name: '국산 양파',
+      price: 5900,
+      quantity: 2,
+      thumbnailUrl: 'https://cdn.example/onion.png',
+    },
+  ],
+  orderer: { nickname: '집밥사랑', phoneNumber: '01098765432' },
+};
+
 describe('createPaymentExecutor', () => {
   it('주문 생성, 결제 준비, 토스 결제 요청을 순서대로 실행한다', async () => {
     const calls: string[] = [];
@@ -26,10 +58,44 @@ describe('createPaymentExecutor', () => {
     });
     const execute = createPaymentExecutor({ createOrder, preparePayment, requestPayment });
 
-    await execute({ cartId: 3, idempotencyKey: 'uuid', selectedCartItemIds: [10, 12] });
+    await execute({
+      cartId: 3,
+      completionDetails,
+      deliveryAddress,
+      idempotencyKey: 'uuid',
+      selectedCartItemIds: [10, 12],
+    });
 
     expect(calls).toEqual(['order', 'prepare', 'toss']);
+    expect(createOrder).toHaveBeenCalledWith(
+      { cartId: 3, deliveryAddress, selectedCartItemIds: [10, 12] },
+      'uuid',
+    );
     expect(requestPayment).toHaveBeenCalledWith({
+      completionSnapshot: {
+        selectedCartItemIds: [10, 12],
+        deliveryAddress: {
+          addressLine1: '서울시 강남구 테헤란로 1',
+          addressLine2: '101호',
+          phoneNumber: '01012345678',
+          postalCode: '06123',
+          recipientName: '김지웅',
+        },
+        deliveryRequest: { detail: '없음', location: '문 앞에 놓아주세요' },
+        items: [
+          {
+            id: 'cart-item-10',
+            imageUrl: 'https://cdn.example/onion.png',
+            name: '국산 양파',
+            price: 5900,
+            quantity: 2,
+          },
+        ],
+        orderNumber: 'ORDER_1',
+        orderedAt: '2026-09-17T00:00:00',
+        orderer: { name: '집밥사랑', phoneNumber: '01098765432' },
+        paymentAmount: 42500,
+      },
       name: '국산 양파 외 1건',
       orderId: 'ORDER_1',
       totalAmount: 42500,
@@ -47,7 +113,13 @@ describe('createPaymentExecutor', () => {
     const preparePayment = vi.fn().mockResolvedValue({});
     const requestPayment = vi.fn().mockResolvedValue(undefined);
     const execute = createPaymentExecutor({ createOrder, preparePayment, requestPayment });
-    const input = { cartId: 3, idempotencyKey: 'uuid', selectedCartItemIds: [10] };
+    const input = {
+      cartId: 3,
+      completionDetails,
+      deliveryAddress,
+      idempotencyKey: 'uuid',
+      selectedCartItemIds: [10],
+    };
 
     const first = execute(input);
     const second = execute(input);
@@ -73,7 +145,13 @@ describe('createPaymentExecutor', () => {
       .mockRejectedValueOnce(new Error('결제창을 열지 못했습니다.'))
       .mockResolvedValueOnce(undefined);
     const execute = createPaymentExecutor({ createOrder, preparePayment, requestPayment });
-    const input = { cartId: 3, idempotencyKey: 'uuid', selectedCartItemIds: [10] };
+    const input = {
+      cartId: 3,
+      completionDetails,
+      deliveryAddress,
+      idempotencyKey: 'uuid',
+      selectedCartItemIds: [10],
+    };
 
     await expect(execute(input)).rejects.toThrow('결제창을 열지 못했습니다.');
     await expect(execute(input)).resolves.toBeUndefined();

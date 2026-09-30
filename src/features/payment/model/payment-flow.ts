@@ -1,13 +1,20 @@
 import type { OrderCreateRequestDto, OrderCreateResponseDto } from '@/entities/order/api/order.dto';
 import type { PaymentPrepareResponseDto } from '@/features/payment/api/payment.dto';
+import {
+  buildPaymentCompletionSnapshot,
+  type PaymentCompletionDetails,
+  type PaymentCompletionSnapshot,
+} from './payment-completion';
 
 export interface TossPaymentOrder {
+  completionSnapshot?: PaymentCompletionSnapshot;
   name: string;
   orderId: string;
   totalAmount: number;
 }
 
 interface PaymentExecutionInput extends OrderCreateRequestDto {
+  completionDetails: PaymentCompletionDetails;
   idempotencyKey: string;
 }
 
@@ -25,7 +32,11 @@ export function createPaymentExecutor(dependencies: PaymentExecutorDependencies)
   let order: OrderCreateResponseDto | null = null;
   let isPrepared = false;
 
-  return function executePayment({ idempotencyKey, ...orderInput }: PaymentExecutionInput) {
+  return function executePayment({
+    completionDetails,
+    idempotencyKey,
+    ...orderInput
+  }: PaymentExecutionInput) {
     if (inFlight) return inFlight;
 
     inFlight = (async () => {
@@ -37,6 +48,11 @@ export function createPaymentExecutor(dependencies: PaymentExecutorDependencies)
       }
 
       await dependencies.requestPayment({
+        completionSnapshot: buildPaymentCompletionSnapshot({
+          ...completionDetails,
+          order,
+          selectedCartItemIds: orderInput.selectedCartItemIds,
+        }),
         name: order.name,
         orderId: order.orderId,
         totalAmount: order.totalAmount,

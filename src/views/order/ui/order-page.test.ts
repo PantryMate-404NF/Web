@@ -85,6 +85,44 @@ describe('OrderSheet', () => {
     );
   });
 
+  it('로그인 프로필의 이름과 연락처를 주문자 정보에 표시한다', () => {
+    const markup = renderToStaticMarkup(
+      createElement(OrderSheet, {
+        items: orderItems,
+        orderer: {
+          email: 'anseongjin@example.com',
+          nickname: '안성진',
+          phoneNumber: '01012345678',
+        },
+      }),
+    );
+
+    expect(markup).toContain('안성진');
+    expect(markup).toContain('010-1234-5678');
+    expect(markup).not.toContain('집밥사랑');
+  });
+
+  it('프로필 전화번호가 null이어도 주문서가 오류 없이 표시된다', () => {
+    const markup = renderToStaticMarkup(
+      createElement(OrderSheet, {
+        items: orderItems,
+        orderer: { email: null, nickname: '안성진', phoneNumber: null },
+      }),
+    );
+
+    expect(markup).toContain('안성진');
+    expect(markup).toContain('연락처 미등록');
+  });
+
+  it('프로필 조회 중에는 목업 주문자 정보를 보여주지 않는다', () => {
+    const markup = renderToStaticMarkup(
+      createElement(OrderSheet, { items: orderItems, ordererLoading: true }),
+    );
+
+    expect(markup).toContain('주문자 정보를 불러오는 중이에요.');
+    expect(markup).not.toContain('집밥사랑');
+  });
+
   it('로컬 미리보기에서는 결제 버튼과 안내를 제공한다', () => {
     const markup = renderToStaticMarkup(
       createElement(OrderSheet, {

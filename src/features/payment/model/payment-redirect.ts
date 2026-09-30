@@ -1,9 +1,34 @@
 import type { PaymentConfirmRequestDto } from '@/features/payment/api/payment.dto';
+import { isPaymentCompletionSnapshot, type PaymentCompletionSnapshot } from './payment-completion';
 
 export interface PaymentAttempt {
   amount: number;
+  completionSnapshot?: PaymentCompletionSnapshot;
   name: string;
   orderId: string;
+}
+
+export async function confirmPaymentThenCleanupCart<T, R>(
+  confirm: () => Promise<T>,
+  isConfirmed: (confirmation: T) => boolean,
+  cleanupCart: () => Promise<R>,
+) {
+  const confirmation = await confirm();
+  const cleanupResult = isConfirmed(confirmation) ? await cleanupCart() : null;
+  return { confirmation, cleanupResult };
+}
+
+export async function confirmAfterSessionRestore<T>(
+  restoreSession: () => Promise<'complete' | 'onboarding' | 'guest'>,
+  confirm: () => Promise<T>,
+) {
+  const sessionState = await restoreSession();
+
+  if (sessionState === 'guest') {
+    return { status: 'unauthenticated' } as const;
+  }
+
+  return { status: 'confirmed', value: await confirm() } as const;
 }
 
 interface PaymentSuccessParams {
@@ -44,7 +69,14 @@ export function readPaymentAttempt(storage: Pick<Storage, 'getItem'>): PaymentAt
       attempt.name.length > 0 &&
       typeof attempt.orderId === 'string' &&
       attempt.orderId.length > 0
-      ? { amount: Number(attempt.amount), name: attempt.name, orderId: attempt.orderId }
+      ? {
+          amount: Number(attempt.amount),
+          ...(isPaymentCompletionSnapshot(attempt.completionSnapshot)
+            ? { completionSnapshot: attempt.completionSnapshot }
+            : {}),
+          name: attempt.name,
+          orderId: attempt.orderId,
+        }
       : null;
   } catch {
     return null;

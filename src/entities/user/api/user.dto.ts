@@ -13,6 +13,13 @@ export type UserProfile = {
   onboardingCompleted: boolean;
   createdAt: string;
   updatedAt: string;
-  birthDate: string;
-  phoneNumber: string;
+  birthDate: string | null;
+  phoneNumber: string | null;
+};
+
+export type UserProfileUpdateRequest = {
+  nickname?: string;
+  profileImageUrl?: string;
+  phoneNumber?: string;
+  birthDate?: string;
 };

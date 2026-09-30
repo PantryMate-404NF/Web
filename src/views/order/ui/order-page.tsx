@@ -10,7 +10,8 @@ import type { DeliveryAddress } from '@/entities/address/model/address';
 import { useCartStore } from '@/entities/cart/model/cart-store';
 import type { CartItem } from '@/entities/cart/model/cart-store';
 import { createOrder } from '@/entities/order/api/create-order';
-import { DELIVERY_MOCK, ORDERER_MOCK } from '@/entities/order/model/mock';
+import type { UserProfile } from '@/entities/user/api/user.dto';
+import { DELIVERY_MOCK } from '@/entities/order/model/mock';
 import {
   areAllRequiredAgreementsSelected,
   buildPaymentExecutionInput,
@@ -44,6 +45,22 @@ function formatDeliveryAddress(address: DeliveryAddress) {
     : address.addressLine1;
 
   return `${addressText} (${address.postalCode})`;
+}
+
+function formatPhoneNumber(phoneNumber: string | null) {
+  if (!phoneNumber?.trim()) return '연락처 미등록';
+
+  const digits = phoneNumber.replace(/\D/g, '');
+
+  if (digits.length === 11) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+  }
+
+  if (digits.length === 10) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+
+  return phoneNumber;
 }
 
 function MiniAction({ children, disabled = false }: { children: string; disabled?: boolean }) {
@@ -95,6 +112,9 @@ export function OrderSheet({
   cartId,
   defaultAddress,
   items,
+  orderer,
+  ordererErrorMessage,
+  ordererLoading = false,
   orderReturnTo = '/order',
   paymentDisabled = false,
   selectedCartItemIds = [],
@@ -102,6 +122,9 @@ export function OrderSheet({
   cartId?: number;
   defaultAddress?: DeliveryAddress;
   items: CartItem[];
+  orderer?: Pick<UserProfile, 'email' | 'nickname' | 'phoneNumber'>;
+  ordererErrorMessage?: string;
+  ordererLoading?: boolean;
   orderReturnTo?: string;
   paymentDisabled?: boolean;
   selectedCartItemIds?: number[];
@@ -156,9 +179,22 @@ export function OrderSheet({
         cartId,
         selectedCartItemIds,
         idempotencyKeyRef.current,
+        defaultAddress,
       );
 
-      await executePayment(input);
+      if (!defaultAddress) throw new Error('배송지를 등록해 주세요.');
+
+      await executePayment({
+        ...input,
+        completionDetails: {
+          deliveryAddress: defaultAddress,
+          deliveryRequest: { detail: DELIVERY_MOCK.detail, location: DELIVERY_MOCK.location },
+          items,
+          orderer: orderer
+            ? { nickname: orderer.nickname, phoneNumber: orderer.phoneNumber }
+            : undefined,
+        },
+      });
     } catch (error) {
       setPaymentNotice(error instanceof Error ? error.message : '결제를 시작하지 못했습니다.');
     } finally {
@@ -186,10 +222,28 @@ export function OrderSheet({
             type="button"
           >
             <span className="text-right">
-              <span className="block">
-                {ORDERER_MOCK.name} <span className="text-disabled">l</span> {ORDERER_MOCK.phone}
-              </span>
-              {isOrdererExpanded ? <span className="block">{ORDERER_MOCK.email}</span> : null}
+              {orderer ? (
+                <>
+                  <span className="block">
+                    {orderer.nickname} <span className="text-disabled">l</span>{' '}
+                    {formatPhoneNumber(orderer.phoneNumber)}
+                  </span>
+                  {isOrdererExpanded && orderer.email ? (
+                    <span className="block">{orderer.email}</span>
+                  ) : null}
+                </>
+              ) : (
+                <span
+                  className="text-text-tertiary block"
+                  role={ordererLoading ? 'status' : 'alert'}
+                >
+                  {ordererLoading
+                    ? '주문자 정보를 불러오는 중이에요.'
+                    : ordererErrorMessage
+                      ? '주문자 정보를 불러오지 못했어요.'
+                      : '주문자 정보를 확인할 수 없어요.'}
+                </span>
+              )}
             </span>
             <Image
               alt=""
@@ -374,6 +428,9 @@ export function OrderPage({
   errorMessage,
   isLoading = false,
   items,
+  orderer,
+  ordererErrorMessage,
+  ordererLoading,
   onRetry,
   orderReturnTo = '/order',
   paymentDisabled = false,
@@ -384,6 +441,9 @@ export function OrderPage({
   errorMessage?: string;
   isLoading?: boolean;
   items?: CartItem[];
+  orderer?: Pick<UserProfile, 'email' | 'nickname' | 'phoneNumber'>;
+  ordererErrorMessage?: string;
+  ordererLoading?: boolean;
   onRetry?: () => void;
   orderReturnTo?: string;
   paymentDisabled?: boolean;
@@ -421,6 +481,9 @@ export function OrderPage({
       cartId={cartId}
       defaultAddress={defaultAddress}
       items={orderItems}
+      orderer={orderer}
+      ordererErrorMessage={ordererErrorMessage}
+      ordererLoading={ordererLoading}
       orderReturnTo={orderReturnTo}
       paymentDisabled={paymentDisabled}
       selectedCartItemIds={getSelectedCartItemIds(orderItems)}

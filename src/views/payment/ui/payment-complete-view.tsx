@@ -1,38 +1,66 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import {
-  DELIVERY_MOCK,
-  ORDERER_MOCK,
-  ORDER_HISTORY_MOCK,
-  type OrderHistoryMock,
-} from '@/entities/order/model/mock';
+import type { PaymentCompletionSnapshot } from '@/features/payment/model/payment-completion';
 
-const paymentSuccessImages: Record<string, string> = {
-  eggs: '/images/payment/payment-success-eggs.png',
-  ketchup: '/images/mypage/order-detail-tomato-ketchup.png',
-  tomatoes: '/images/payment/payment-success-tomatoes.png',
-};
+function formatOrderDate(value: string) {
+  const timestamp = new Date(value);
+
+  if (Number.isNaN(timestamp.getTime())) return value;
+
+  const dateParts = new Intl.DateTimeFormat('en-CA', {
+    day: '2-digit',
+    month: '2-digit',
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+  }).formatToParts(timestamp);
+  const date = Object.fromEntries(dateParts.map(({ type, value: part }) => [type, part]));
+
+  return `${date.year}.${date.month}.${date.day}`;
+}
+
+function formatPhoneNumber(value: string | null) {
+  if (!value) return '연락처 미등록';
+
+  const digits = value.replace(/\D/g, '');
+
+  if (digits.length === 11) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+  }
+
+  if (digits.length === 10) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+
+  return value;
+}
 
 function OrderProduct({
   item,
   orderedAt,
 }: {
-  item: OrderHistoryMock['items'][number];
+  item: PaymentCompletionSnapshot['items'][number];
   orderedAt: string;
 }) {
   return (
-    <li className="flex h-[76px] w-full items-start gap-2">
-      <Image
-        alt=""
-        aria-hidden="true"
-        className="size-[76px] shrink-0 rounded-lg object-cover"
-        height={76}
-        src={paymentSuccessImages[item.id] ?? item.imageSrc}
-        width={76}
-      />
+    <li className="flex min-h-[76px] w-full items-start gap-2">
+      {item.imageUrl ? (
+        <Image
+          alt=""
+          aria-hidden="true"
+          className="size-[76px] shrink-0 rounded-lg object-cover"
+          height={76}
+          src={item.imageUrl}
+          unoptimized
+          width={76}
+        />
+      ) : (
+        <div aria-hidden="true" className="bg-surface-secondary size-[76px] shrink-0 rounded-lg" />
+      )}
       <div className="flex min-w-0 flex-1 flex-col gap-1 self-stretch">
-        <p className="text-text-tertiary text-xs leading-[18px] font-medium">{orderedAt}</p>
+        <p className="text-text-tertiary text-xs leading-[18px] font-medium">
+          {formatOrderDate(orderedAt)}
+        </p>
         <div className="min-w-0">
           <p className="truncate text-sm leading-[21px] font-medium">{item.name}</p>
           <p className="text-lg leading-[27px] font-bold">
@@ -66,7 +94,16 @@ function InformationSection({ children, heading }: { children: React.ReactNode; 
   );
 }
 
-export function PaymentCompleteView({ order = ORDER_HISTORY_MOCK }: { order?: OrderHistoryMock }) {
+export function PaymentCompleteView({ order }: { order: PaymentCompletionSnapshot }) {
+  const recipientPhone = formatPhoneNumber(order.deliveryAddress.phoneNumber);
+  const deliveryAddress = [
+    order.deliveryAddress.addressLine1,
+    order.deliveryAddress.addressLine2,
+    order.deliveryAddress.postalCode ? `(${order.deliveryAddress.postalCode})` : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <main className="mobile-page bg-background min-h-dvh pb-4">
       <section
@@ -119,32 +156,33 @@ export function PaymentCompleteView({ order = ORDER_HISTORY_MOCK }: { order?: Or
       <div className="bg-surface-secondary flex flex-col gap-2 pt-2">
         <InformationSection heading="주문자 정보">
           <p className="text-text-secondary text-sm leading-[21px]">
-            {ORDERER_MOCK.name} / {ORDERER_MOCK.phone}
+            {order.orderer.name || '이름 미등록'} / {formatPhoneNumber(order.orderer.phoneNumber)}
           </p>
         </InformationSection>
 
         <InformationSection heading="배송지">
           <p className="text-text-secondary text-sm leading-[21px]">
-            {order.deliveryAddress} ({order.deliveryDetail})
+            {order.deliveryAddress.recipientName} / {recipientPhone}
           </p>
+          <p className="text-text-secondary text-sm leading-[21px]">{deliveryAddress}</p>
         </InformationSection>
 
         <InformationSection heading="배송 요청사항">
-          <dl className="flex h-[49px] flex-col justify-center gap-1.5 text-sm leading-[21px]">
+          <dl className="flex flex-col gap-1.5 text-sm leading-[21px]">
             <div className="text-text-secondary flex gap-[76px]">
               <dt className="font-medium">수령위치</dt>
-              <dd>{DELIVERY_MOCK.location}</dd>
+              <dd>{order.deliveryRequest.location}</dd>
             </div>
             <div className="flex gap-[76px]">
               <dt className="text-text-secondary font-medium">요청사항</dt>
-              <dd className="text-disabled">{DELIVERY_MOCK.detail}</dd>
+              <dd className="text-disabled">{order.deliveryRequest.detail}</dd>
             </div>
           </dl>
         </InformationSection>
 
         <InformationSection heading="결제 금액">
           <dl className="text-text-secondary flex items-start justify-between text-sm leading-[21px]">
-            <dt className="font-medium">토스페이먼츠 (토스페이 / 일시불)</dt>
+            <dt className="font-medium">최종 결제 금액</dt>
             <dd className="font-semibold">{order.paymentAmount.toLocaleString()}원</dd>
           </dl>
         </InformationSection>
@@ -153,7 +191,7 @@ export function PaymentCompleteView({ order = ORDER_HISTORY_MOCK }: { order?: Or
       <div className="mt-[117px] px-4">
         <Link
           className="bg-primary text-primary-foreground focus-visible:ring-ring flex h-[60px] w-full items-center justify-center rounded-xl text-lg leading-[27px] font-semibold focus-visible:ring-2"
-          href={`/mypage/orders/${order.id}`}
+          href="/mypage/orders"
         >
           주문 내역보기
         </Link>
