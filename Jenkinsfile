@@ -10,6 +10,15 @@ pipeline {
     GITOPS_REPO     = 'https://github.com/PantryMate-404NF/pantry-mate-gitops.git'
     GITOPS_APP_PATH           = 'environments/dev/cloud-test-front'
     NEXT_PUBLIC_API_BASE_URL  = 'https://api.unzipp.cloud'
+    // Firebase 웹 설정값 (브라우저에 공개되는 값). 빌드 시 --build-arg 로 이미지에 포함됨
+    NEXT_PUBLIC_FIREBASE_API_KEY             = 'AIzaSyASuGz-p106XMMnRLlOdZ22LVd8T1Raptg'
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN         = 'pantry--mate.firebaseapp.com'
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID          = 'pantry--mate'
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET      = 'pantry--mate.firebasestorage.app'
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID = '309150824223'
+    NEXT_PUBLIC_FIREBASE_APP_ID              = '1:309150824223:web:d77bde3adc16bd7783622a'
+    NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID      = 'G-WV1QMZNSPV'
+    NEXT_PUBLIC_FIREBASE_VAPID_KEY           = 'BOS__IMHVCkIVZw8tjkSFZOaAu9gXcDsrXDGBfZS5EgMA3tYa3-Z9VLHBCV4Q9zyNN5aXDrGpkOUrBkPNtIzXNE'
   }
 
   options {
