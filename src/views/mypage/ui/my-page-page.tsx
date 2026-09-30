@@ -7,7 +7,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { getMyProfile } from '@/entities/user/api/get-my-profile';
+import { deleteMyAccount } from '@/features/auth/api/delete-my-account';
 import { logout } from '@/features/auth/api/logout';
+import { clearAccountClientState } from '@/features/auth/model/clear-account-client-state';
+import { AccountWithdrawalDialog } from '@/features/auth/ui/account-withdrawal-dialog';
 import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 import { isPushSupported as checkPushSupport } from '@/features/notification/model/push-client';
 import {
@@ -51,12 +54,14 @@ function SettingsRow({
   destructive = false,
   onClick,
   disabled = false,
+  opensDialog = false,
 }: {
   href?: string;
   label: string;
   destructive?: boolean;
   onClick?: () => void;
   disabled?: boolean;
+  opensDialog?: boolean;
 }) {
   const content = (
     <>
@@ -73,6 +78,7 @@ function SettingsRow({
     </Link>
   ) : (
     <button
+      aria-haspopup={opensDialog ? 'dialog' : undefined}
       className={`${className} w-full text-left disabled:opacity-60`}
       disabled={disabled}
       onClick={onClick}
@@ -97,8 +103,11 @@ export function MyPagePage() {
   const [nickname, setNickname] = useState<string | null>(null);
   const [isLogoutSheetOpen, setIsLogoutSheetOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const redirectPath = isLoggingOut ? null : getMyPageAccessRoute(state);
+  const [isWithdrawalDialogOpen, setIsWithdrawalDialogOpen] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const redirectPath = isLoggingOut || isWithdrawing ? null : getMyPageAccessRoute(state);
   const [logoutError, setLogoutError] = useState(false);
+  const [withdrawalError, setWithdrawalError] = useState<string | null>(null);
   const [notificationMessage, setNotificationMessage] = useState<string | null>(null);
   const [isSettingUpNotifications, setIsSettingUpNotifications] = useState(false);
   const [isPushSupported, setIsPushSupported] = useState<boolean | null>(null);
@@ -130,6 +139,37 @@ export function MyPagePage() {
       setLogoutError(true);
       setIsLoggingOut(false);
     }
+  };
+
+  const closeWithdrawalDialog = () => {
+    if (isWithdrawing) return;
+    setIsWithdrawalDialogOpen(false);
+    setWithdrawalError(null);
+  };
+
+  const handleAccountWithdrawal = async () => {
+    if (isWithdrawing) return;
+
+    setIsWithdrawing(true);
+    setWithdrawalError(null);
+
+    try {
+      await deleteMyAccount();
+    } catch {
+      setWithdrawalError('회원 탈퇴에 실패했어요. 다시 시도해 주세요.');
+      setIsWithdrawing(false);
+      return;
+    }
+
+    clearAccountClientState();
+    setIsWithdrawalDialogOpen(false);
+    setGuestState();
+    try {
+      window.sessionStorage.setItem(appEntryStorageKey, 'true');
+    } catch {
+      // 탭 저장소를 사용할 수 없어도 완료된 탈퇴와 홈 이동은 유지합니다.
+    }
+    router.replace('/');
   };
 
   useEffect(() => {
@@ -301,7 +341,12 @@ export function MyPagePage() {
         <section className="px-4 py-2" aria-label="계정">
           <div className="space-y-2">
             <SettingsRow label="로그아웃" onClick={() => setIsLogoutSheetOpen(true)} />
-            <SettingsRow destructive label="회원 탈퇴" />
+            <SettingsRow
+              destructive
+              label="회원 탈퇴"
+              onClick={() => setIsWithdrawalDialogOpen(true)}
+              opensDialog
+            />
           </div>
         </section>
       </div>
@@ -352,6 +397,14 @@ export function MyPagePage() {
             </div>
           </section>
         </div>
+      ) : null}
+      {isWithdrawalDialogOpen ? (
+        <AccountWithdrawalDialog
+          errorMessage={withdrawalError}
+          isPending={isWithdrawing}
+          onClose={closeWithdrawalDialog}
+          onConfirm={() => void handleAccountWithdrawal()}
+        />
       ) : null}
     </main>
   );

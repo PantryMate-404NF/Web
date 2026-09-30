@@ -30,6 +30,7 @@ describe('HomeRecipeRail', () => {
   it('renders API recommendations and preserves recommendation context links', () => {
     const markup = renderToStaticMarkup(createElement(HomeRecipeRail, { recipes }));
 
+    expect(markup).toContain('맛 선호도를 반영해 AI가 추천했어요.');
     expect(markup).toContain('토마토 달걀 볶음');
     expect(markup).toContain('중식 · 25분');
     expect(markup).toContain('/recipe/42?requestId=rec-request-1&amp;position=1');

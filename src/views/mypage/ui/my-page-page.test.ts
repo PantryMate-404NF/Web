@@ -26,4 +26,11 @@ describe('MyPagePage', () => {
     expect(myPageSource).toContain("{ href: '/mypage/addresses', label: '배송지 관리' }");
     expect(myPageSource).not.toContain("{ href: '/mypage/delivery', label: '배송지 관리' }");
   });
+
+  it('opens an explicit confirmation dialog before deleting the account', () => {
+    expect(myPageSource).toContain('onClick={() => setIsWithdrawalDialogOpen(true)}');
+    expect(myPageSource).toContain('<AccountWithdrawalDialog');
+    expect(myPageSource).toContain('await deleteMyAccount()');
+    expect(myPageSource).toContain('clearAccountClientState()');
+  });
 });
