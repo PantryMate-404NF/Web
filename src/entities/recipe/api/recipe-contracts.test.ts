@@ -11,6 +11,7 @@ import { searchRecipes } from './search-recipes';
 import { completeCooking } from './recipe-mutations';
 import { getRecipeRecommendations } from './get-recipe-recommendations';
 import { getRecipeDetail } from './get-recipe-detail';
+import { getRecipeProductMatch } from './get-recipe-product-match';
 import { scrapRecipe, unscrapRecipe } from './recipe-mutations';
 
 describe('new pantry and recipe API contracts', () => {
@@ -75,6 +76,12 @@ describe('new pantry and recipe API contracts', () => {
     await getRecipePantryMatch('42');
 
     expect(requestMock).toHaveBeenCalledWith('/api/recipes/42/pantry-match');
+  });
+
+  it('loads recipe ingredient product matches from the documented endpoint', async () => {
+    await getRecipeProductMatch('42');
+
+    expect(requestMock).toHaveBeenCalledWith('/api/recipes/42/product-match');
   });
 
   it('sends selected pantry item IDs with cooking completion', async () => {

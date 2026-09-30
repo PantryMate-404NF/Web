@@ -6,6 +6,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('@/features/product-cart/model/use-add-product-to-cart', () => ({
   useAddProductToCart: () => ({ addProduct: vi.fn(), isPending: false, reset: vi.fn() }),
 }));
+vi.mock('@/entities/cart/model/use-cart-item-count', () => ({ useCartItemCount: () => 0 }));
 
 import {
   getHomeMockState,

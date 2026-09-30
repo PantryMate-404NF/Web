@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 
 export type CartProduct = {
   cartItemId?: number;
@@ -58,11 +59,28 @@ type CartState = {
   updateQuantity: (productId: string, quantity: number) => void;
 };
 
-export const useCartStore = create<CartState>((set) => ({
-  items: [],
-  addProducts: (products) => set((state) => ({ items: mergeCartProducts(state.items, products) })),
-  removeProduct: (productId) =>
-    set((state) => ({ items: removeCartProduct(state.items, productId) })),
-  updateQuantity: (productId, quantity) =>
-    set((state) => ({ items: updateCartItemQuantity(state.items, productId, quantity) })),
-}));
+export const cartStorageKey = 'ai-pantry:cart';
+
+export function createCartStore(storage?: StateStorage) {
+  return create<CartState>()(
+    persist(
+      (set) => ({
+        items: [],
+        addProducts: (products) =>
+          set((state) => ({ items: mergeCartProducts(state.items, products) })),
+        removeProduct: (productId) =>
+          set((state) => ({ items: removeCartProduct(state.items, productId) })),
+        updateQuantity: (productId, quantity) =>
+          set((state) => ({ items: updateCartItemQuantity(state.items, productId, quantity) })),
+      }),
+      {
+        name: cartStorageKey,
+        partialize: ({ items }) => ({ items }),
+        skipHydration: true,
+        storage: createJSONStorage(() => storage ?? localStorage),
+      },
+    ),
+  );
+}
+
+export const useCartStore = createCartStore();

@@ -37,6 +37,14 @@ import type {
 import { PantryItemCard } from '@/entities/pantry/ui/pantry-item-card';
 import type { DataViewState } from '@/shared/model/ui-state';
 import { PantryLoadingSkeleton } from '@/widgets/pantry-list/ui/pantry-loading-skeleton';
+import {
+  recognizeReceipt,
+  ReceiptOcrError,
+  type ReceiptOcrResult,
+} from '@/entities/pantry/api/recognize-receipt';
+import { getReceiptImageValidationError } from '@/entities/pantry/model/receipt-image';
+
+import { ReceiptOcrFlow } from './receipt-ocr-flow';
 
 type PantryViewState = Extract<DataViewState, 'content' | 'empty' | 'error' | 'loading'>;
 type StorageFilter = PantryStorageType | 'ALL';
@@ -61,6 +69,11 @@ interface PantryMenuTriggerRect {
   right: number;
   top: number;
 }
+
+type ReceiptOcrFlowState =
+  | { file: File; kind: 'loading'; previewUrl: string }
+  | { error: ReceiptOcrError; file: File; kind: 'error'; previewUrl: string }
+  | { file: File; kind: 'result'; previewUrl: string; result: ReceiptOcrResult };
 
 export function getPantryMenuPosition(trigger: PantryMenuTriggerRect, viewportWidth: number) {
   const rightSidePosition = trigger.right - 7;
@@ -292,6 +305,9 @@ export function PantryPage({
   const addItemButtonRef = useRef<HTMLButtonElement>(null);
   const receiptInputRef = useRef<HTMLInputElement>(null);
   const [isAddOptionsOpen, setIsAddOptionsOpen] = useState(false);
+  const [receiptFlow, setReceiptFlow] = useState<ReceiptOcrFlowState | null>(null);
+  const receiptRequestIdRef = useRef(0);
+  const [receiptInputError, setReceiptInputError] = useState<string | null>(null);
   const visibleItems = getVisiblePantryItems(currentItems, query, storage, sort);
   const viewState = getPantryViewState({ items: currentItems, errorMessage, isLoading });
 
@@ -307,6 +323,49 @@ export function PantryPage({
   function openReceiptFilePicker() {
     setIsAddOptionsOpen(false);
     receiptInputRef.current?.click();
+  }
+
+  async function runReceiptOcr(file: File, previewUrl: string) {
+    const requestVersion = ++receiptRequestIdRef.current;
+    setReceiptFlow({ file, kind: 'loading', previewUrl });
+
+    try {
+      const result = await recognizeReceipt(file, crypto.randomUUID(), crypto.randomUUID());
+      if (requestVersion === receiptRequestIdRef.current) {
+        setReceiptFlow({ file, kind: 'result', previewUrl, result });
+      }
+    } catch (error) {
+      if (requestVersion !== receiptRequestIdRef.current) return;
+      setReceiptFlow({
+        error:
+          error instanceof ReceiptOcrError
+            ? error
+            : new ReceiptOcrError('영수증을 인식하지 못했어요. 다시 시도해 주세요.'),
+        file,
+        kind: 'error',
+        previewUrl,
+      });
+    }
+  }
+
+  function closeReceiptFlow() {
+    receiptRequestIdRef.current += 1;
+    setReceiptFlow(null);
+  }
+
+  function selectReceiptImage(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = '';
+    if (!file) return;
+
+    const validationError = getReceiptImageValidationError(file);
+    if (validationError) {
+      setReceiptInputError(validationError);
+      return;
+    }
+
+    setReceiptInputError(null);
+    void runReceiptOcr(file, URL.createObjectURL(file));
   }
 
   useEffect(() => {
@@ -393,6 +452,32 @@ export function PantryPage({
     return () => window.removeEventListener('keydown', closeAddOptions);
   }, [isAddOptionsOpen]);
 
+  useEffect(() => {
+    const previewUrl = receiptFlow?.previewUrl;
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [receiptFlow?.previewUrl]);
+
+  if (receiptFlow) {
+    return (
+      <ReceiptOcrFlow
+        onClose={closeReceiptFlow}
+        onFileSelected={(file, previewUrl) => void runReceiptOcr(file, previewUrl)}
+        onManualEntry={() =>
+          setReceiptFlow({
+            file: receiptFlow.file,
+            kind: 'result',
+            previewUrl: receiptFlow.previewUrl,
+            result: { receiptId: crypto.randomUUID(), purchasedAt: null, items: [] },
+          })
+        }
+        onRetry={() => void runReceiptOcr(receiptFlow.file, receiptFlow.previewUrl)}
+        state={receiptFlow}
+      />
+    );
+  }
+
   if (viewState === 'loading') return <PantryLoadingSkeleton variant={cardVariant} />;
   if (viewState === 'error')
     return (
@@ -445,15 +530,22 @@ export function PantryPage({
             </Button>
             {isAddOptionsOpen ? <PantryAddOptions onReceiptUpload={openReceiptFilePicker} /> : null}
             <input
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp,image/heic,.heic"
               aria-label="영수증 이미지 업로드"
               className="sr-only"
+              onChange={selectReceiptImage}
               ref={receiptInputRef}
               type="file"
             />
           </div>
         </div>
       </header>
+
+      {receiptInputError ? (
+        <p aria-live="polite" className="text-destructive text-body-4 px-4 pt-2" role="alert">
+          {receiptInputError}
+        </p>
+      ) : null}
 
       <div className="relative flex h-12 items-center justify-between pr-1 pl-4">
         <strong className="text-title-3 leading-[27px] font-semibold">

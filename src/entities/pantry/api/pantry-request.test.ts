@@ -20,6 +20,21 @@ describe('pantry item request mapping', () => {
     });
   });
 
+  it('includes the OCR receipt purchase date when provided', () => {
+    expect(
+      toCreatePantryItemRequest({
+        ...formValues,
+        purchaseDate: '2026-09-29',
+      }),
+    ).toEqual({
+      expiryDate: '2026-10-02',
+      ingredientName: '토마토',
+      purchaseDate: '2026-09-29',
+      sellByDate: '2026-09-25',
+      storageType: 'REFRIGERATED',
+    });
+  });
+
   it('retains a server-hosted image URL for edit requests', () => {
     expect(
       toUpdatePantryItemRequest({

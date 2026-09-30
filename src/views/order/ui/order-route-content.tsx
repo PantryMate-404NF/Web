@@ -3,7 +3,7 @@
 import type { CartItem } from '@/entities/cart/model/cart-store';
 import { useDefaultAddressQuery } from '@/entities/address/api/use-default-address-query';
 import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
-import { useCartQuery } from '@/views/cart/model/use-cart-query';
+import { useCartQuery } from '@/entities/cart/api/use-cart-query';
 
 import { OrderPage } from './order-page';
 

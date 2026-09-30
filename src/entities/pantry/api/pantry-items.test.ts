@@ -89,4 +89,70 @@ describe('pantry item API', () => {
     expect(new Headers(options.headers).get('Authorization')).toBe('Bearer access-token');
     expect(new Headers(options.headers).has('Content-Type')).toBe(false);
   });
+
+  it('영수증과 receiptId를 multipart로 전송하고 snake_case OCR 응답을 받는다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            receipt_id: 'receipt-123',
+            purchased_at: '2026-09-29',
+            items: [{ name: '계란', ingredient_id: null }],
+          }),
+        ),
+      ),
+    );
+    const { recognizeReceipt } = await import('./recognize-receipt');
+    const { setAccessToken } = await import('@/shared/model/access-token-store');
+    const file = new File(['receipt'], 'receipt.jpg', { type: 'image/jpeg' });
+    setAccessToken('access-token');
+
+    await expect(recognizeReceipt(file, 'receipt-123', 'trace-123')).resolves.toEqual({
+      receiptId: 'receipt-123',
+      purchasedAt: '2026-09-29',
+      items: [{ name: '계란', ingredientId: null }],
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:8080/api/pantry-items/receipts',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    const [, options] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
+    expect(options.body).toBeInstanceOf(FormData);
+    expect((options.body as FormData).get('file')).toBe(file);
+    expect((options.body as FormData).get('receiptId')).toBe('receipt-123');
+    expect(new Headers(options.headers).get('Authorization')).toBe('Bearer access-token');
+    expect(new Headers(options.headers).get('X-Request-Id')).toBe('trace-123');
+    expect(new Headers(options.headers).has('Content-Type')).toBe(false);
+  });
+
+  it('OCR 실패 응답의 코드를 화면 처리에 사용할 수 있도록 보존한다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            receipt_id: 'receipt-123',
+            purchased_at: null,
+            items: [],
+            error: { code: 'OCR_EMPTY', message: '영수증을 인식하지 못했습니다.' },
+          }),
+          { status: 500 },
+        ),
+      ),
+    );
+    const { recognizeReceipt } = await import('./recognize-receipt');
+
+    await expect(
+      recognizeReceipt(
+        new File(['receipt'], 'receipt.jpg', { type: 'image/jpeg' }),
+        'receipt-123',
+        'trace-123',
+      ),
+    ).rejects.toMatchObject({
+      code: 'OCR_EMPTY',
+      message: '영수증을 인식하지 못했습니다.',
+    });
+  });
 });

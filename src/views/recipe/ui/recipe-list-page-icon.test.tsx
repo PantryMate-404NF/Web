@@ -10,6 +10,7 @@ const {
   useRecipeFilterIngredientsQueryMock,
   useRecipeRecommendationsQueryMock,
   useAuthSessionMock,
+  useCartQueryMock,
 } = vi.hoisted(() => ({
   useScrappedRecipesQueryMock: vi.fn(),
   useRecipeMutationsMock: vi.fn(),
@@ -19,6 +20,7 @@ const {
   useRecipeFilterIngredientsQueryMock: vi.fn(),
   useRecipeRecommendationsQueryMock: vi.fn(),
   useAuthSessionMock: vi.fn(),
+  useCartQueryMock: vi.fn(),
 }));
 
 vi.mock('@/entities/recipe/api/use-scrapped-recipes-query', () => ({
@@ -41,7 +43,12 @@ vi.mock('@/entities/recipe/api/use-recipe-filter-ingredients-query', () => ({
 vi.mock('@/entities/recipe/api/use-recipe-recommendations-query', () => ({
   useRecipeRecommendationsQuery: useRecipeRecommendationsQueryMock,
 }));
+vi.mock('@/shared/config/cart-write-mode', () => ({
+  CART_HREF: '/cart',
+  CART_WRITE_MODE: 'api',
+}));
 vi.mock('@/features/auth/ui/auth-session-provider', () => ({ useAuthSession: useAuthSessionMock }));
+vi.mock('@/entities/cart/api/use-cart-query', () => ({ useCartQuery: useCartQueryMock }));
 vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams() }));
 
 vi.mock('@/entities/pantry/api/use-pantries-query', () => ({
@@ -83,6 +90,7 @@ describe('RecipeActionIcon', () => {
       refetch: vi.fn(),
     });
     useAuthSessionMock.mockReturnValue({ state: 'guest' });
+    useCartQueryMock.mockReturnValue({ data: { items: [] } });
     usePantriesQueryMock.mockReturnValue({ data: [] });
     useRecipeMutationsMock.mockReturnValue({
       scrap: { mutateAsync: vi.fn(), isPending: false },
@@ -99,6 +107,17 @@ describe('RecipeActionIcon', () => {
     expect(markup).toContain('<button');
     expect(markup).toContain('right-2.5');
     expect(markup).toContain('bg-card/80');
+  });
+
+  it('shows the total cart quantity beside the recipe list cart icon', () => {
+    useAuthSessionMock.mockReturnValue({ state: 'complete' });
+    useCartQueryMock.mockReturnValue({ data: { items: [{ quantity: 9 }] } });
+    const markup = renderToStaticMarkup(<RecipeListPage />);
+
+    expect(useCartQueryMock).toHaveBeenCalledWith(true);
+    expect(markup).toContain('aria-label="장바구니 9개 상품"');
+    expect(markup).toContain('>9</span>');
+    expect(markup).toContain('href="/cart"');
   });
 
   it('renders search pagination with the current page and correct boundary buttons', () => {

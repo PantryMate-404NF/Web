@@ -24,6 +24,7 @@ import type { OrderAgreementId } from '@/features/order/model/order-sheet';
 import { preparePayment } from '@/features/payment/api/prepare-payment';
 import { requestTossPayment } from '@/features/payment/lib/request-toss-payment';
 import { createPaymentExecutor } from '@/features/payment/model/payment-flow';
+import { CART_HREF } from '@/shared/config/cart-write-mode';
 import { BackButton } from '@/shared/ui/back-button';
 
 const AGREEMENT_LABELS: Record<OrderAgreementId, string> = {
@@ -124,7 +125,7 @@ export function OrderSheet({
     return (
       <main className="mobile-page bg-background min-h-dvh">
         <header className="relative flex h-16 items-center px-2">
-          <BackButton fallbackHref="/cart" />
+          <BackButton fallbackHref={CART_HREF} />
           <h1 className="text-title-3 absolute left-1/2 -translate-x-1/2 font-semibold">주문서</h1>
         </header>
         <section className="flex min-h-[560px] flex-col items-center justify-center px-4 text-center">
@@ -132,7 +133,7 @@ export function OrderSheet({
           <p className="text-text-secondary mt-2 text-sm">장바구니에서 상품을 선택해 주세요.</p>
           <Link
             className="bg-primary text-primary-foreground focus-visible:ring-ring mt-6 rounded-xl px-5 py-3 font-semibold focus-visible:ring-2"
-            href="/cart"
+            href={CART_HREF}
           >
             장바구니로 이동
           </Link>
@@ -168,7 +169,7 @@ export function OrderSheet({
   return (
     <main className="mobile-page bg-background min-h-dvh pb-24">
       <header className="relative flex h-16 items-center px-2">
-        <BackButton fallbackHref="/cart" />
+        <BackButton fallbackHref={CART_HREF} />
         <h1 className="text-title-3 absolute left-1/2 -translate-x-1/2 font-semibold">주문서</h1>
       </header>
 

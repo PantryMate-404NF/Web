@@ -1,10 +1,19 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 
 import { MockProvider } from '@/mocks/mock-provider';
 import { AuthSessionProvider } from '@/features/auth/ui/auth-session-provider';
+import { useCartStore } from '@/entities/cart/model/cart-store';
+
+function CartStoreHydration() {
+  useEffect(() => {
+    void useCartStore.persist.rehydrate();
+  }, []);
+
+  return null;
+}
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -14,7 +23,10 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <MockProvider>
       <QueryClientProvider client={queryClient}>
-        <AuthSessionProvider>{children}</AuthSessionProvider>
+        <AuthSessionProvider>
+          <CartStoreHydration />
+          {children}
+        </AuthSessionProvider>
       </QueryClientProvider>
     </MockProvider>
   );

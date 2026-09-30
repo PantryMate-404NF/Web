@@ -124,6 +124,30 @@ describe('toRecipe', () => {
     expect(recipe.thumbnailUrl).toBeUndefined();
   });
 
+  it('does not infer commerce product mappings from recipe detail ingredients', () => {
+    const recipe = toRecipeDetail({
+      recipeId: 11,
+      title: '양파 달걀 볶음',
+      description: '',
+      cuisineType: 'KOREAN',
+      cookingTime: 10,
+      servings: 2,
+      difficulty: 'EASY',
+      ingredients: [
+        {
+          ingredientId: 1,
+          name: '양파',
+          requiredAmount: 1,
+          unit: '개',
+          isMain: true,
+        },
+      ],
+      steps: [],
+    });
+
+    expect(recipe.ingredients[0]).not.toHaveProperty('mappedProduct');
+  });
+
   it('조리 완료 요청을 레시피 endpoint로 전송한다', async () => {
     // request는 별도 HTTP 단위 테스트에서 envelope를 검증한다. 이 테스트는 경로만 고정한다.
     expect(completeCooking).toBeTypeOf('function');

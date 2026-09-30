@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { clearAccessToken, setAuthenticatedUserId } from '@/shared/model/access-token-store';
 
 const orderPaymentRequestMock = vi.fn();
 
@@ -9,6 +10,8 @@ vi.mock('@/shared/api/order-payment-client', () => ({
 describe('cart mutations', () => {
   beforeEach(() => {
     orderPaymentRequestMock.mockReset();
+    clearAccessToken();
+    setAuthenticatedUserId('user-42');
   });
 
   it('장바구니 항목 수량을 변경한다', async () => {
@@ -17,8 +20,9 @@ describe('cart mutations', () => {
 
     await updateCartItem(10, 3);
 
-    expect(orderPaymentRequestMock).toHaveBeenCalledWith('/cart/items/10', {
+    expect(orderPaymentRequestMock).toHaveBeenCalledWith('/carts/items/10', {
       body: { quantity: 3 },
+      headers: { 'X-User-Id': 'user-42' },
       method: 'PATCH',
     });
   });
@@ -29,7 +33,8 @@ describe('cart mutations', () => {
 
     await deleteCartItem(10);
 
-    expect(orderPaymentRequestMock).toHaveBeenCalledWith('/cart/items/10', {
+    expect(orderPaymentRequestMock).toHaveBeenCalledWith('/carts/items/10', {
+      headers: { 'X-User-Id': 'user-42' },
       method: 'DELETE',
       responseType: 'none',
     });

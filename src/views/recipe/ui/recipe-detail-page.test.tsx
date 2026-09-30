@@ -2,8 +2,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { useRecipeDetailQueryMock, useScrappedRecipesQueryMock } = vi.hoisted(() => ({
+const {
+  useCartQueryMock,
+  useRecipeDetailQueryMock,
+  useRecipeProductMatchQueryMock,
+  useScrappedRecipesQueryMock,
+} = vi.hoisted(() => ({
+  useCartQueryMock: vi.fn(),
   useRecipeDetailQueryMock: vi.fn(),
+  useRecipeProductMatchQueryMock: vi.fn(),
   useScrappedRecipesQueryMock: vi.fn(),
 }));
 
@@ -13,6 +20,23 @@ vi.mock('@/entities/recipe/api/use-recipe-detail-query', () => ({
 
 vi.mock('@/entities/recipe/api/use-scrapped-recipes-query', () => ({
   useScrappedRecipesQuery: useScrappedRecipesQueryMock,
+}));
+
+vi.mock('@/entities/cart/api/use-cart-query', () => ({ useCartQuery: useCartQueryMock }));
+vi.mock('@/entities/recipe/api/use-recipe-product-match-query', () => ({
+  useRecipeProductMatchQuery: useRecipeProductMatchQueryMock,
+}));
+vi.mock('@/features/auth/ui/auth-session-provider', () => ({
+  useAuthSession: () => ({ state: 'complete' }),
+}));
+
+vi.mock('@/features/recipe-cart/ui/recipe-cart-actions', () => ({
+  RecipeCartActions: () => <div>레시피 재료 장바구니 동작</div>,
+}));
+
+vi.mock('@/shared/config/cart-write-mode', () => ({
+  CART_HREF: '/cart',
+  CART_WRITE_MODE: 'api',
 }));
 
 import {
@@ -26,6 +50,30 @@ import {
 describe('RecipeDetailPage', () => {
   beforeEach(() => {
     useScrappedRecipesQueryMock.mockReturnValue({ data: [], isPending: false });
+    useRecipeProductMatchQueryMock.mockReturnValue({
+      data: { ingredients: [] },
+      isError: false,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+    useCartQueryMock.mockReturnValue({
+      data: {
+        cartId: 10,
+        items: [
+          {
+            id: 'cart-item-5',
+            cartItemId: 5,
+            ingredient: '기본 옵션',
+            name: '양파',
+            price: 3900,
+            productId: 101,
+            quantity: 4,
+            purchasable: true,
+          },
+        ],
+      },
+      isPending: false,
+    });
     useRecipeDetailQueryMock.mockReturnValue({
       data: {
         id: '42',
@@ -64,6 +112,8 @@ describe('RecipeDetailPage', () => {
     );
 
     expect(useRecipeDetailQueryMock).toHaveBeenCalledWith('42', undefined);
+    expect(useRecipeProductMatchQueryMock).toHaveBeenCalledWith('42');
+    expect(useCartQueryMock).toHaveBeenCalledWith(true);
     expect(markup).toContain('API 토마토 볶음');
     expect(markup).toContain('서버 설명');
     expect(markup).toContain('3인분');
@@ -74,6 +124,9 @@ describe('RecipeDetailPage', () => {
     expect(markup).toContain('필요 재료');
     expect(markup).toContain('조리 순서');
     expect(markup).toContain('조리 완료');
+    expect(markup).toContain('href="/cart"');
+    expect(markup).toContain('aria-label="장바구니 4개 상품"');
+    expect(markup).toContain('shopping-cart-icon.svg');
     expect(markup).toContain('https://cdn.example.test/recipe.jpg');
     expect(markup).toContain('https://cdn.example.test/step.jpg');
     expect(markup).not.toContain('토마토 달걀 볶음');

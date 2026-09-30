@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { setAccessToken, getAccessToken } from '@/shared/model/access-token-store';
+import {
+  clearAccessToken,
+  getAccessToken,
+  getAuthenticatedUserId,
+  setAccessToken,
+  setAuthenticatedUserId,
+} from '@/shared/model/access-token-store';
 
 import { logout } from './logout';
 
@@ -15,10 +21,12 @@ vi.mock('@/shared/api/http-client', () => ({
 describe('logout', () => {
   afterEach(() => {
     vi.clearAllMocks();
+    clearAccessToken();
   });
 
   it('로그아웃 API가 성공하면 메모리 Access Token을 제거한다', async () => {
     setAccessToken('access-token');
+    setAuthenticatedUserId('user-42');
     requestMock.mockResolvedValue(undefined);
 
     await logout();
@@ -29,5 +37,6 @@ describe('logout', () => {
       responseType: 'none',
     });
     expect(getAccessToken()).toBeNull();
+    expect(getAuthenticatedUserId()).toBeNull();
   });
 });

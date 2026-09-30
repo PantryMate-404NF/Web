@@ -9,7 +9,7 @@ const { useAuthSessionMock, useCartQueryMock, useDefaultAddressQueryMock } = vi.
 }));
 
 vi.mock('@/features/auth/ui/auth-session-provider', () => ({ useAuthSession: useAuthSessionMock }));
-vi.mock('@/views/cart/model/use-cart-query', () => ({ useCartQuery: useCartQueryMock }));
+vi.mock('@/entities/cart/api/use-cart-query', () => ({ useCartQuery: useCartQueryMock }));
 vi.mock('@/entities/address/api/use-default-address-query', () => ({
   useDefaultAddressQuery: useDefaultAddressQueryMock,
 }));

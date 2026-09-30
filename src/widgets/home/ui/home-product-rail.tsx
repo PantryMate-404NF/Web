@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { useCartStore } from '@/entities/cart/model/cart-store';
 import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 import { useAddProductToCart } from '@/features/product-cart/model/use-add-product-to-cart';
-import { CART_WRITE_MODE } from '@/shared/config/cart-write-mode';
+import { CART_HREF, CART_WRITE_MODE } from '@/shared/config/cart-write-mode';
 
 import type { HomeProductItem } from '../model/home-content';
 import { HomeSectionHeading } from './home-section-heading';
@@ -49,7 +49,7 @@ export function HomeProductRail({
             thumbnailUrl: product.imageSrc,
           },
         ]);
-        router.push('/cart?preview=local');
+        router.push(CART_HREF);
         return;
       }
 
@@ -70,7 +70,7 @@ export function HomeProductRail({
       }
 
       await addProduct({ productId: apiProductId, quantity: 1 });
-      router.push('/cart');
+      router.push(CART_HREF);
     } catch (caughtError) {
       setStatusMessage(
         caughtError instanceof Error ? caughtError.message : '장바구니에 담지 못했어요.',

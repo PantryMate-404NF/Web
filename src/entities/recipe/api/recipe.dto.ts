@@ -69,6 +69,32 @@ export interface RecipePantryMatchDto {
   ingredients: RecipeIngredientPantryMatchDto[];
 }
 
+export type RecipeProductMatchStatus = 'MATCHED' | 'NO_PRODUCT' | 'UNSUPPORTED';
+
+export interface MatchedRecipeProductDto {
+  productId: number;
+  name: string;
+  price: number;
+  thumbnailUrl?: string | null;
+  unit?: string;
+  capacity?: number;
+  packageCount?: number | null;
+  capacitySufficient?: boolean;
+}
+
+export interface RecipeIngredientProductMatchDto {
+  ingredientId: number;
+  name: string;
+  hasIngredient: boolean;
+  matchStatus: RecipeProductMatchStatus;
+  product?: MatchedRecipeProductDto | null;
+}
+
+export interface RecipeProductMatchDto {
+  recipeId: number;
+  ingredients: RecipeIngredientProductMatchDto[];
+}
+
 export interface CookingCompleteRequestDto {
   pantryItemIds?: number[];
   requestId?: string;
