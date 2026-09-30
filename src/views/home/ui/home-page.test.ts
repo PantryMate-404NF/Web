@@ -1,12 +1,49 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+
+const { recommendationQueryMock } = vi.hoisted(() => ({ recommendationQueryMock: vi.fn() }));
+
+function createRecommendationQueryResult(source: 'AI' | 'POPULARITY' = 'AI') {
+  return {
+    data: {
+      requestId: source === 'AI' ? 'home-rec-1' : null,
+      source,
+      items: [
+        {
+          rank: 1,
+          reason: source === 'AI' ? '선호도와 잘 맞아요.' : '지금 인기 있는 레시피예요.',
+          coverage: null,
+          missingCount: null,
+          missingIngredients: [],
+          recipe: {
+            recipeId: 42,
+            title: '토마토 달걀 볶음',
+            description: '간단한 한 끼',
+            cuisineType: 'CHINESE' as const,
+            cookingTime: 25,
+            servings: 1,
+            difficulty: 'EASY' as const,
+            thumbnailUrl: null,
+          },
+        },
+      ],
+    },
+    error: null,
+    isPending: false,
+    isSuccess: true,
+    refetch: vi.fn(),
+  };
+}
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('@/features/product-cart/model/use-add-product-to-cart', () => ({
   useAddProductToCart: () => ({ addProduct: vi.fn(), isPending: false, reset: vi.fn() }),
 }));
 vi.mock('@/entities/cart/model/use-cart-item-count', () => ({ useCartItemCount: () => 0 }));
+vi.mock('@/entities/recipe/api/use-recipe-recommendations-query', () => ({
+  useRecipeRecommendationsQuery: recommendationQueryMock,
+}));
 
 import {
   getHomeMockState,
@@ -15,6 +52,17 @@ import {
   HOME_CATEGORIES,
   HomePage,
 } from './home-page';
+
+beforeEach(() => {
+  recommendationQueryMock.mockReset();
+  recommendationQueryMock.mockReturnValue({
+    data: undefined,
+    error: null,
+    isPending: false,
+    isSuccess: false,
+    refetch: vi.fn(),
+  });
+});
 
 describe('HOME_CATEGORIES', () => {
   it('로그인 완료 홈에서 Figma 순서의 카테고리를 제공한다', () => {
@@ -63,8 +111,44 @@ describe('getOnboardingHref', () => {
   });
 });
 
+describe('home recipe recommendations', () => {
+  it('requests taste-only recommendations and renders the API response after onboarding', () => {
+    recommendationQueryMock.mockReturnValue(createRecommendationQueryResult());
+
+    const markup = renderToStaticMarkup(createElement(HomePage, { state: 'complete' }));
+
+    expect(recommendationQueryMock).toHaveBeenCalledWith(true, 10, false);
+    expect(markup).toContain('토마토 달걀 볶음');
+    expect(markup).toContain('/recipe/42?requestId=home-rec-1&amp;position=1');
+    expect(markup).toContain('맛 선호도를 반영해 AI가 추천했어요.');
+  });
+
+  it('인기 대체 추천에는 AI 대신 인기 레시피 안내를 표시한다', () => {
+    recommendationQueryMock.mockReturnValue(createRecommendationQueryResult('POPULARITY'));
+
+    const markup = renderToStaticMarkup(createElement(HomePage, { state: 'complete' }));
+
+    expect(markup).toContain('지금 인기 있는 레시피를 추천해요.');
+    expect(markup).not.toContain('맛 선호도를 반영해 AI가 추천했어요.');
+  });
+
+  it('추천 조회가 성공하기 전에는 추천 출처 안내를 표시하지 않는다', () => {
+    const markup = renderToStaticMarkup(createElement(HomePage, { state: 'complete' }));
+
+    expect(markup).not.toContain('맛 선호도를 반영해 AI가 추천했어요.');
+    expect(markup).not.toContain('지금 인기 있는 레시피를 추천해요.');
+  });
+
+  it('keeps the recommendation query disabled before onboarding completion', () => {
+    renderToStaticMarkup(createElement(HomePage, { state: 'onboarding' }));
+
+    expect(recommendationQueryMock).toHaveBeenCalledWith(false, 10, false);
+  });
+});
+
 describe('360px 홈 레이아웃', () => {
   it('추천 툴팁의 폭을 화면 안으로 제한한다', () => {
+    recommendationQueryMock.mockReturnValue(createRecommendationQueryResult());
     const markup = renderToStaticMarkup(createElement(HomePage, { state: 'complete' }));
 
     expect(markup).toContain('left-1/2');

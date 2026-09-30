@@ -11,6 +11,7 @@ import {
   useState,
 } from 'react';
 import type { ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { DeviceTokenRegistration } from '@/features/notification/ui/device-token-registration';
@@ -18,6 +19,7 @@ import { DeviceTokenRegistration } from '@/features/notification/ui/device-token
 import type { AuthHomeState } from '../model/restore-auth-session';
 import { restoreAuthSession } from '../model/restore-auth-session';
 import {
+  applyAuthSessionState,
   createSingleFlight,
   getApplicableRestoreState,
   getStateFreeHref,
@@ -53,6 +55,7 @@ function AuthStateQueryCleaner() {
 
 /** refresh 쿠키를 기준으로 앱 전환 중에도 유지되는 로그인·온보딩 상태를 제공합니다. */
 export function AuthSessionProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [state, setState] = useState<AuthSessionState>('loading');
   const sessionRevisionRef = useRef(0);
   const restoreRef = useRef<(() => Promise<Exclude<AuthSessionState, 'loading'>>) | null>(null);
@@ -71,7 +74,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
               restoredState,
             );
 
-            if (applicableState) setState(applicableState);
+            if (applicableState) applyAuthSessionState(queryClient, setState, applicableState);
             return restoredState;
           } catch {
             const applicableState = getApplicableRestoreState(
@@ -80,7 +83,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
               'guest',
             );
 
-            if (applicableState) setState(applicableState);
+            if (applicableState) applyAuthSessionState(queryClient, setState, applicableState);
             return 'guest' as const;
           }
         },
@@ -88,17 +91,20 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     }
 
     return restoreRef.current();
-  }, []);
+  }, [queryClient]);
 
-  const setAuthenticatedState = useCallback((nextState: AuthHomeState) => {
-    sessionRevisionRef.current += 1;
-    setState(nextState);
-  }, []);
+  const setAuthenticatedState = useCallback(
+    (nextState: AuthHomeState) => {
+      sessionRevisionRef.current += 1;
+      applyAuthSessionState(queryClient, setState, nextState);
+    },
+    [queryClient],
+  );
 
   const setGuestState = useCallback(() => {
     sessionRevisionRef.current += 1;
-    setState('guest');
-  }, []);
+    applyAuthSessionState(queryClient, setState, 'guest');
+  }, [queryClient]);
 
   useEffect(() => {
     const restoreTimer = window.setTimeout(() => {
