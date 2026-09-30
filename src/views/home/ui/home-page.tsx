@@ -3,8 +3,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { useRecipeRecommendationsQuery } from '@/entities/recipe/api/use-recipe-recommendations-query';
 import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 import { HOME_PRODUCT_SECTIONS } from '@/widgets/home/model/home-content';
+import { toHomeRecipeCards, type HomeRecipeCardItem } from '@/widgets/home/model/home-recipe';
 import { HomeHeader } from '@/widgets/home/ui/home-header';
 import { HomeProductRail } from '@/widgets/home/ui/home-product-rail';
 import { HomePromotionCarousel } from '@/widgets/home/ui/home-promotion-carousel';
@@ -25,6 +27,8 @@ export const HOME_CATEGORIES = [
 ] as const;
 
 export type HomeMockState = 'guest' | 'onboarding' | 'complete';
+
+const HOME_RECOMMENDATIONS_SIZE = 10;
 
 /** 목업에서 로그인·온보딩 완료 여부에 따라 홈 화면을 구분합니다. */
 export function getHomeMockState(
@@ -100,9 +104,17 @@ function OnboardingPrompt({ href }: { href: string }) {
 function HomeContent({
   forceReminder,
   homeState,
+  recipeError,
+  recipeIsPending,
+  recipes,
+  retryRecipes,
 }: {
   forceReminder: boolean;
   homeState: HomeMockState;
+  recipeError: Error | null;
+  recipeIsPending: boolean;
+  recipes: HomeRecipeCardItem[];
+  retryRecipes: () => void;
 }) {
   const hasCompletedOnboarding = homeState === 'complete';
 
@@ -116,7 +128,12 @@ function HomeContent({
       </div>
       {hasCompletedOnboarding ? (
         <div className="mt-4">
-          <HomeRecipeRail />
+          <HomeRecipeRail
+            error={recipeError}
+            isPending={recipeIsPending}
+            onRetry={retryRecipes}
+            recipes={recipes}
+          />
         </div>
       ) : (
         <OnboardingPrompt href={getOnboardingHref(homeState)} />
@@ -146,6 +163,22 @@ export function HomePage({
     sessionState === 'loading' ? state : undefined,
     restoredSessionState,
   );
+  const hasCompletedOnboarding = homeState === 'complete';
+  const recommendationQuery = useRecipeRecommendationsQuery(
+    hasCompletedOnboarding,
+    HOME_RECOMMENDATIONS_SIZE,
+    false,
+  );
+  const recipes = recommendationQuery.data ? toHomeRecipeCards(recommendationQuery.data) : [];
 
-  return <HomeContent forceReminder={forceReminder} homeState={homeState} />;
+  return (
+    <HomeContent
+      forceReminder={forceReminder}
+      homeState={homeState}
+      recipeError={recommendationQuery.error}
+      recipeIsPending={hasCompletedOnboarding && recommendationQuery.isPending}
+      recipes={recipes}
+      retryRecipes={() => void recommendationQuery.refetch()}
+    />
+  );
 }

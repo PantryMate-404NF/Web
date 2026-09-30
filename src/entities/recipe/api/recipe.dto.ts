@@ -121,6 +121,7 @@ export interface RecipeRecommendationsDto {
 export interface RecipeRecommendationParams {
   size?: number;
   maxMinutes?: number;
+  includePantry?: boolean;
 }
 
 export interface RecipeRecommendationContext {

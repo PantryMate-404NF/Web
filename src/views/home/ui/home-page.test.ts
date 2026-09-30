@@ -1,12 +1,17 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+
+const { recommendationQueryMock } = vi.hoisted(() => ({ recommendationQueryMock: vi.fn() }));
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('@/features/product-cart/model/use-add-product-to-cart', () => ({
   useAddProductToCart: () => ({ addProduct: vi.fn(), isPending: false, reset: vi.fn() }),
 }));
 vi.mock('@/entities/cart/model/use-cart-item-count', () => ({ useCartItemCount: () => 0 }));
+vi.mock('@/entities/recipe/api/use-recipe-recommendations-query', () => ({
+  useRecipeRecommendationsQuery: recommendationQueryMock,
+}));
 
 import {
   getHomeMockState,
@@ -15,6 +20,16 @@ import {
   HOME_CATEGORIES,
   HomePage,
 } from './home-page';
+
+beforeEach(() => {
+  recommendationQueryMock.mockReset();
+  recommendationQueryMock.mockReturnValue({
+    data: undefined,
+    error: null,
+    isPending: false,
+    refetch: vi.fn(),
+  });
+});
 
 describe('HOME_CATEGORIES', () => {
   it('로그인 완료 홈에서 Figma 순서의 카테고리를 제공한다', () => {
@@ -60,6 +75,51 @@ describe('getOnboardingHref', () => {
   it('비회원은 로그인으로, 로그인한 미완료 사용자는 온보딩으로 이동시킨다', () => {
     expect(getOnboardingHref('guest')).toBe('/login');
     expect(getOnboardingHref('onboarding')).toBe('/onboarding');
+  });
+});
+
+describe('home recipe recommendations', () => {
+  it('requests taste-only recommendations and renders the API response after onboarding', () => {
+    recommendationQueryMock.mockReturnValue({
+      data: {
+        requestId: 'home-rec-1',
+        source: 'AI',
+        items: [
+          {
+            rank: 1,
+            reason: '선호도와 잘 맞아요.',
+            coverage: null,
+            missingCount: null,
+            missingIngredients: [],
+            recipe: {
+              recipeId: 42,
+              title: '토마토 달걀 볶음',
+              description: '간단한 한 끼',
+              cuisineType: 'CHINESE',
+              cookingTime: 25,
+              servings: 1,
+              difficulty: 'EASY',
+              thumbnailUrl: null,
+            },
+          },
+        ],
+      },
+      error: null,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+
+    const markup = renderToStaticMarkup(createElement(HomePage, { state: 'complete' }));
+
+    expect(recommendationQueryMock).toHaveBeenCalledWith(true, 10, false);
+    expect(markup).toContain('토마토 달걀 볶음');
+    expect(markup).toContain('/recipe/42?requestId=home-rec-1&amp;position=1');
+  });
+
+  it('keeps the recommendation query disabled before onboarding completion', () => {
+    renderToStaticMarkup(createElement(HomePage, { state: 'onboarding' }));
+
+    expect(recommendationQueryMock).toHaveBeenCalledWith(false, 10, false);
   });
 });
 

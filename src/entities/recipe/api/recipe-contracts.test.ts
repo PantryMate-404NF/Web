@@ -31,6 +31,14 @@ describe('new pantry and recipe API contracts', () => {
     expect(requestMock).toHaveBeenCalledWith('/api/recipes/recommendations?size=20&maxMinutes=30');
   });
 
+  it('requests taste-only recommendations for the home screen', async () => {
+    await getRecipeRecommendations({ size: 10, maxMinutes: 30, includePantry: false });
+
+    expect(requestMock).toHaveBeenCalledWith(
+      '/api/recipes/recommendations?size=10&maxMinutes=30&includePantry=false',
+    );
+  });
+
   it('sends recommendation context when opening a recommended recipe', async () => {
     await getRecipeDetail('8821', { requestId: 'rec-123', position: 2 });
 

@@ -8,10 +8,12 @@ import { authHandlers } from './auth';
 import { addressHandlers } from './address';
 import { cartHandlers } from './cart';
 import { pantryHandlers } from './pantry';
+import { recipeHandlers } from './recipe';
 
 export const handlers: RequestHandler[] = [
   ...authHandlers,
   ...addressHandlers,
   ...cartHandlers,
   ...pantryHandlers,
+  ...recipeHandlers,
 ];

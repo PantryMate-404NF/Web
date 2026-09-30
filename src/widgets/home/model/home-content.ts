@@ -117,27 +117,3 @@ export const HOME_PRODUCT_SECTIONS: HomeProductSection[] = [
     ],
   },
 ];
-
-export const HOME_RECIPES = [
-  {
-    id: 'soft-boiled-egg-jang',
-    imageSrc: '/images/home/recipe-egg.png',
-    saveIconSrc: '/icons/home/recipe-save-1.svg',
-    name: '반숙 계란장',
-    meta: '한식 · 25분',
-  },
-  {
-    id: 'beef-bulgogi',
-    imageSrc: '/images/home/recipe-bulgogi.png',
-    saveIconSrc: '/icons/home/recipe-save-2.svg',
-    name: '소불고기',
-    meta: '한식 · 30분',
-  },
-  {
-    id: 'braised-tofu',
-    imageSrc: '/images/home/recipe-tofu.png',
-    saveIconSrc: '/icons/home/recipe-save-3.svg',
-    name: '두부조림',
-    meta: '한식 · 20분',
-  },
-] as const;
