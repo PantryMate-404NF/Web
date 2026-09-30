@@ -11,3 +11,11 @@ export const reissueAccessTokenResponse = {
   error: null,
   timestamp: '2026-09-07T00:00:00Z',
 };
+
+export const deleteMyAccountResponse = {
+  status: 'SUCCESS' as const,
+  message: '회원 탈퇴가 완료되었습니다.',
+  data: null,
+  error: null,
+  timestamp: '2026-09-30T00:00:00Z',
+};
