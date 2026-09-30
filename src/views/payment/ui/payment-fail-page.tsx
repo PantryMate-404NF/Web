@@ -37,6 +37,7 @@ export function PaymentFailPage({
 
     try {
       await requestTossPayment({
+        completionSnapshot: attempt.completionSnapshot,
         name: attempt.name,
         orderId: attempt.orderId,
         totalAmount: attempt.amount,

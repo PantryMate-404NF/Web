@@ -2,21 +2,74 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { OrderRouteContent } from './order-route-content';
 
-const { useAuthSessionMock, useCartQueryMock, useDefaultAddressQueryMock } = vi.hoisted(() => ({
-  useAuthSessionMock: vi.fn(),
-  useCartQueryMock: vi.fn(),
-  useDefaultAddressQueryMock: vi.fn(),
-}));
+const { useAuthSessionMock, useCartQueryMock, useDefaultAddressQueryMock, useMyProfileQueryMock } =
+  vi.hoisted(() => ({
+    useAuthSessionMock: vi.fn(),
+    useCartQueryMock: vi.fn(),
+    useDefaultAddressQueryMock: vi.fn(),
+    useMyProfileQueryMock: vi.fn(),
+  }));
 
 vi.mock('@/features/auth/ui/auth-session-provider', () => ({ useAuthSession: useAuthSessionMock }));
 vi.mock('@/entities/cart/api/use-cart-query', () => ({ useCartQuery: useCartQueryMock }));
 vi.mock('@/entities/address/api/use-default-address-query', () => ({
   useDefaultAddressQuery: useDefaultAddressQueryMock,
 }));
+vi.mock('@/entities/user/api/use-my-profile-query', () => ({
+  useMyProfileQuery: useMyProfileQueryMock,
+}));
+
+const profile = {
+  birthDate: '1998-06-12',
+  createdAt: '2026-01-01T00:00:00Z',
+  email: 'anseongjin@example.com',
+  nickname: '안성진',
+  onboardingCompleted: true,
+  phoneNumber: '01012345678',
+  profileImageUrl: null,
+  provider: 'KAKAO' as const,
+  role: 'ROLE_USER' as const,
+  updatedAt: '2026-01-01T00:00:00Z',
+  userId: 'user-1',
+};
 
 describe('OrderRouteContent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useMyProfileQueryMock.mockReturnValue({
+      data: profile,
+      error: null,
+      isPending: false,
+    });
+  });
+
+  it('현재 로그인한 사용자의 프로필을 조회해 주문서에 전달한다', () => {
+    useAuthSessionMock.mockReturnValue({ state: 'complete' });
+    useCartQueryMock.mockReturnValue({
+      data: { cartId: 3, items: [{ id: '10', name: '양파', price: 3900, quantity: 1 }] },
+      error: null,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+    useDefaultAddressQueryMock.mockReturnValue({
+      data: null,
+      error: null,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+    useMyProfileQueryMock.mockReturnValue({
+      data: profile,
+      error: null,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+
+    const page = OrderRouteContent({ selectedItemIds: ['10'] });
+
+    expect(useMyProfileQueryMock).toHaveBeenCalledWith(true);
+    expect(page.props).toMatchObject({
+      orderer: { email: 'anseongjin@example.com', nickname: '안성진', phoneNumber: '01012345678' },
+    });
   });
 
   it('주문서에 서버 장바구니와 선택 항목을 전달한다', () => {
@@ -72,6 +125,7 @@ describe('OrderRouteContent', () => {
     const page = OrderRouteContent({ selectedItemIds: ['10'] });
 
     expect(useCartQueryMock).toHaveBeenCalledWith(false);
+    expect(useMyProfileQueryMock).toHaveBeenCalledWith(false);
     expect(page.props).toMatchObject({ isLoading: true });
   });
 

@@ -4,6 +4,7 @@ import type { CartItem } from '@/entities/cart/model/cart-store';
 import { useDefaultAddressQuery } from '@/entities/address/api/use-default-address-query';
 import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 import { useCartQuery } from '@/entities/cart/api/use-cart-query';
+import { useMyProfileQuery } from '@/entities/user/api/use-my-profile-query';
 
 import { OrderPage } from './order-page';
 
@@ -30,6 +31,11 @@ export function OrderRouteContent({
   const shouldQueryAddress = shouldUseApi;
   const { data, error, isPending, refetch } = useCartQuery(shouldQueryCart);
   const {
+    data: profile,
+    error: profileError,
+    isPending: isProfilePending,
+  } = useMyProfileQuery(shouldUseApi);
+  const {
     data: defaultAddress,
     error: addressError,
     isPending: isAddressPending,
@@ -43,6 +49,9 @@ export function OrderRouteContent({
         defaultAddress={defaultAddress ?? undefined}
         errorMessage={addressError instanceof Error ? addressError.message : undefined}
         isLoading={isAuthLoading || isAddressLoading}
+        orderer={profile}
+        ordererErrorMessage={profileError instanceof Error ? profileError.message : undefined}
+        ordererLoading={shouldUseApi && isProfilePending}
         onRetry={() => {
           void refetchAddress();
         }}
@@ -60,6 +69,9 @@ export function OrderRouteContent({
         errorMessage={addressError instanceof Error ? addressError.message : undefined}
         isLoading={isAuthLoading || isAddressLoading}
         items={previewItems}
+        orderer={profile}
+        ordererErrorMessage={profileError instanceof Error ? profileError.message : undefined}
+        ordererLoading={shouldUseApi && isProfilePending}
         onRetry={() => {
           void refetchAddress();
         }}
@@ -95,6 +107,9 @@ export function OrderRouteContent({
       }
       isLoading={isPending || isAddressLoading}
       items={data?.items ?? []}
+      orderer={profile}
+      ordererErrorMessage={profileError instanceof Error ? profileError.message : undefined}
+      ordererLoading={isProfilePending}
       orderReturnTo={orderReturnTo}
       onRetry={() => {
         void Promise.all([refetch(), refetchAddress()]);

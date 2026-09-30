@@ -169,6 +169,13 @@ export interface RecipeProductMatchDto {
 export interface CreateOrderRequestDto {
   cartId: number;
   selectedCartItemIds: number[];
+  deliveryAddress: {
+    recipientName: string;
+    recipientPhone: string;
+    zipCode: string;
+    address: string;
+    addressDetail: string;
+  };
 }
 
 export interface PreparePaymentDto {

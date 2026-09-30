@@ -1,5 +1,6 @@
 import { getCartTotal } from '@/entities/cart/model/cart-store';
 import type { CartItem } from '@/entities/cart/model/cart-store';
+import type { DeliveryAddress } from '@/entities/address/model/address';
 
 export const ORDER_AGREEMENT_IDS = ['service', 'personal-info', 'third-party'] as const;
 
@@ -17,11 +18,24 @@ export function buildPaymentExecutionInput(
   cartId: number | undefined,
   selectedCartItemIds: number[],
   idempotencyKey: string,
+  defaultAddress?: DeliveryAddress,
 ) {
   if (cartId === undefined) throw new Error('장바구니 API 정보가 필요합니다.');
   if (selectedCartItemIds.length === 0) throw new Error('주문할 장바구니 상품이 필요합니다.');
+  if (!defaultAddress) throw new Error('배송지를 등록해 주세요.');
 
-  return { cartId, idempotencyKey, selectedCartItemIds };
+  return {
+    cartId,
+    deliveryAddress: {
+      recipientName: defaultAddress.recipientName,
+      recipientPhone: defaultAddress.phoneNumber,
+      zipCode: defaultAddress.postalCode,
+      address: defaultAddress.addressLine1,
+      addressDetail: defaultAddress.addressLine2,
+    },
+    idempotencyKey,
+    selectedCartItemIds,
+  };
 }
 
 export function selectOrderItems(items: CartItem[], selectedItemIds: string[]) {
