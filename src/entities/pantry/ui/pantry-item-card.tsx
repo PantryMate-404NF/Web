@@ -100,6 +100,12 @@ function PantryImageCard({
       : item.storageType === 'ROOM_TEMP'
         ? '/images/pantry/sun.svg'
         : '/images/pantry/refrigerator.svg';
+  const isExpirationImminent =
+    item.expirationStatus === 'IMMINENT' ||
+    (item.expirationStatus === 'NORMAL' &&
+      item.daysUntilExpiration !== null &&
+      item.daysUntilExpiration >= 0 &&
+      item.daysUntilExpiration <= 3);
 
   return (
     <article
@@ -132,7 +138,7 @@ function PantryImageCard({
           />
         </div>
         <span
-          className={`flex h-5 items-center rounded-full px-2 text-xs leading-[18px] font-semibold ${item.expirationStatus === 'EXPIRED' ? 'bg-destructive/10 text-destructive' : item.expirationStatus === 'IMMINENT' ? 'bg-primary/20 text-status-warning' : 'bg-muted text-muted-foreground'}`}
+          className={`flex h-5 items-center rounded-full px-2 text-xs leading-[18px] font-semibold ${item.expirationStatus === 'EXPIRED' ? 'bg-destructive/10 text-destructive' : isExpirationImminent ? 'bg-primary/20 text-status-warning' : 'bg-muted text-muted-foreground'}`}
         >
           {getExpirationBadgeLabel(item.expirationLabel, item.expirationStatus)}
         </span>

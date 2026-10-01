@@ -26,6 +26,22 @@ describe('getExpirationBadgeLabel', () => {
 });
 
 describe('PantryItemCard image-card icons', () => {
+  it('highlights a D-3 badge even when the API status is NORMAL', () => {
+    const markup = renderToStaticMarkup(
+      createElement(PantryItemCard, {
+        item: {
+          ...pantryItems[0],
+          daysUntilExpiration: 3,
+          expirationLabel: '소비기한 3일 남음',
+          expirationStatus: 'NORMAL',
+        },
+        variant: 'image',
+      }),
+    );
+
+    expect(markup).toContain('bg-primary/20 text-status-warning');
+  });
+
   it('uses the pantry basic thumbnail when a manually registered item has no photo', () => {
     const itemWithoutImage = { ...pantryItems[0], imageUrl: undefined };
     const markup = renderToStaticMarkup(
