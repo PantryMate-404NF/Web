@@ -1,4 +1,5 @@
 import { Children, isValidElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
 import { getPantryCardVariant } from '@/entities/pantry/model/types';
@@ -8,12 +9,17 @@ import {
   getRecipeResultsHref,
   getDeleteConfirmationTitle,
   getPantryMenuPosition,
+  getPantryBackHref,
+  getPantryPagination,
+  PANTRY_PAGE_SIZE,
   getPantryViewState,
   getVisiblePantryItems,
   PantryDeleteDialog,
   PantryEmptyState,
   PantryErrorState,
   PantryAddOptions,
+  PantryHeaderAction,
+  PantryPagination,
   PantryPage,
 } from './pantry-page';
 
@@ -44,6 +50,54 @@ describe('getRecipeResultsHref', () => {
   it('returns to the filtered recipe list with each selected ingredient ID once', () => {
     expect(getRecipeResultsHref([21, 8, 21])).toBe('/recipe?ingredientIds=21&ingredientIds=8');
     expect(getRecipeResultsHref([])).toBe('/recipe');
+  });
+
+  it('includes selected pantry item IDs so recipes can resolve ingredients without IDs', () => {
+    expect(getRecipeResultsHref([21, 8], ['egg', 'tomato'])).toBe(
+      '/recipe?ingredientIds=21&ingredientIds=8&pantryItemIds=egg&pantryItemIds=tomato',
+    );
+  });
+});
+
+describe('recipe-selection pantry navigation', () => {
+  it('returns to recipes without query parameters when selection is cancelled', () => {
+    expect(getPantryBackHref(true)).toBe('/recipe');
+    expect(getPantryBackHref(false)).toBe('/');
+  });
+
+  it('shows a check action with the selected ingredients only in recipe-selection mode', () => {
+    const markup = renderToStaticMarkup(
+      PantryHeaderAction({
+        addOptionsOpen: false,
+        isRecipeSelectionMode: true,
+        onCompleteSelection: vi.fn(),
+        onOpenAddOptions: vi.fn(),
+        selectedIngredientIds: [21],
+        selectedPantryItemIds: ['egg'],
+      }),
+    );
+
+    expect(markup).toContain('href="/recipe?ingredientIds=21&amp;pantryItemIds=egg"');
+    expect(markup).toContain('aria-label="선택 완료"');
+    expect(markup).toContain('lucide-check');
+    expect(markup).not.toContain('lucide-plus');
+  });
+
+  it('keeps the add button in the regular pantry mode', () => {
+    const markup = renderToStaticMarkup(
+      PantryHeaderAction({
+        addOptionsOpen: false,
+        isRecipeSelectionMode: false,
+        onCompleteSelection: vi.fn(),
+        onOpenAddOptions: vi.fn(),
+        selectedIngredientIds: [],
+        selectedPantryItemIds: [],
+      }),
+    );
+
+    expect(markup).toContain('aria-label="재료 추가"');
+    expect(markup).toContain('lucide-plus');
+    expect(markup).not.toContain('lucide-check');
   });
 });
 
@@ -126,6 +180,77 @@ describe('getVisiblePantryItems', () => {
     expect(getVisiblePantryItems(items, '대', 'REFRIGERATED', 'OLDEST')).toEqual([
       expect.objectContaining({ name: '대파' }),
     ]);
+  });
+});
+
+describe('getPantryPagination', () => {
+  it('shows pantry items in pages of twenty and reports navigation availability', () => {
+    const items = Array.from({ length: 21 }, (_, index) => ({
+      ...pantryItems[index % pantryItems.length]!,
+      id: `pantry-${index}`,
+    }));
+
+    expect(PANTRY_PAGE_SIZE).toBe(20);
+    expect(getPantryPagination(items, 0)).toMatchObject({
+      items: items.slice(0, 20),
+      currentPage: 0,
+      totalPages: 2,
+      pageNumbers: [0, 1],
+      canGoPrevious: false,
+      canGoNext: true,
+    });
+    expect(getPantryPagination(items, 1)).toMatchObject({
+      items: [items[20]],
+      currentPage: 1,
+      totalPages: 2,
+      pageNumbers: [0, 1],
+      canGoPrevious: true,
+      canGoNext: false,
+    });
+  });
+
+  it('clamps the current page when filtering leaves fewer pantry pages', () => {
+    const items = Array.from({ length: 8 }, (_, index) => ({
+      ...pantryItems[index % pantryItems.length]!,
+      id: `pantry-${index}`,
+    }));
+
+    expect(getPantryPagination(items, 3)).toMatchObject({
+      items,
+      currentPage: 0,
+      totalPages: 1,
+      pageNumbers: [0],
+      canGoPrevious: false,
+      canGoNext: false,
+    });
+  });
+
+  it('shows five numbered pages at a time', () => {
+    const items = Array.from({ length: 201 }, (_, index) => ({
+      ...pantryItems[index % pantryItems.length]!,
+      id: `pantry-${index}`,
+    }));
+
+    expect(getPantryPagination(items, 5).pageNumbers).toEqual([5, 6, 7, 8, 9]);
+    expect(getPantryPagination(items, 10).pageNumbers).toEqual([10]);
+  });
+});
+
+describe('PantryPagination', () => {
+  it('renders the current pantry page and disables navigation at the ends', () => {
+    const markup = renderToStaticMarkup(
+      PantryPagination({ page: 0, totalPages: 2, onPageChange: vi.fn() }),
+    );
+
+    expect(markup).toContain('aria-label="팬트리 페이지"');
+    expect(markup).toContain('aria-label="1페이지"');
+    expect(markup).toContain('aria-current="page"');
+    expect(markup).toMatch(/aria-label="이전 페이지"[^>]*disabled=""/);
+    expect(markup).not.toMatch(/aria-label="다음 페이지"[^>]*disabled=""/);
+  });
+
+  it('does not render when the pantry fits on one page', () => {
+    expect(PantryPagination({ page: 0, totalPages: 1, onPageChange: vi.fn() })).toBeNull();
   });
 });
 
