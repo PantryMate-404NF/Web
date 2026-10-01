@@ -15,6 +15,7 @@ import {
   getRecipeMoreRoute,
   getRecipeSectionById,
   getRecipeViewState,
+  getPantryRecipeMatchError,
   getRecipeSearchResultDisplay,
   getRecipeSearchPagination,
   getRecipeSearchPageNumbers,
@@ -77,6 +78,13 @@ describe('recipe list helpers', () => {
   it('prioritizes an API failure over recipe content', () => {
     expect(getRecipeViewState(new Error('레시피 조회 실패'))).toBe('error');
     expect(getRecipeViewState(null)).toBe('content');
+  });
+
+  it('preserves ingredient lookup failures instead of treating them as empty recipe results', () => {
+    const lookupError = new Error('재료 ID 조회 실패');
+
+    expect(getPantryRecipeMatchError(null, lookupError)).toBe(lookupError);
+    expect(getPantryRecipeMatchError(null, null)).toBeNull();
   });
 
   it('filters real API recipes by a trimmed, case-insensitive name query', () => {

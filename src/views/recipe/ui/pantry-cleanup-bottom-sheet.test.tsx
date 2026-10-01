@@ -36,6 +36,7 @@ describe('PantryCleanupBottomSheet', () => {
     );
 
     expect(markup).toContain('role="dialog"');
+    expect(markup).toContain('data-state="open"');
     expect(markup).toContain('aria-modal="true"');
     expect(markup).toContain('bg-[var(--primitive-black)]/70');
     expect(markup).toContain('요리 완성! 🎉');

@@ -99,6 +99,13 @@ export function getRecipeViewState(error: unknown): 'content' | 'error' {
   return error ? 'error' : 'content';
 }
 
+export function getPantryRecipeMatchError(
+  selectedRecipesError: unknown,
+  ingredientLookupError: unknown,
+) {
+  return selectedRecipesError ?? ingredientLookupError ?? null;
+}
+
 export function getRecipeSearchResultDisplay(recipes: Recipe[]): 'results' | 'empty' {
   return recipes.length === 0 ? 'empty' : 'results';
 }
@@ -848,8 +855,11 @@ export function RecipeListPage({
         ? imminentPantryItemIds
         : [];
   const showRecipeMatches = ingredientIds.length > 0 || recipePantryItemIds.length > 0;
-  const { data: recipeFilterIngredients = [], isPending: isRecipeFilterIngredientsPending } =
-    useRecipeFilterIngredientsQuery(ingredientIds.length > 0 || recipePantryItemIds.length > 0);
+  const {
+    data: recipeFilterIngredients = [],
+    error: recipeFilterIngredientsError,
+    isPending: isRecipeFilterIngredientsPending,
+  } = useRecipeFilterIngredientsQuery(ingredientIds.length > 0 || recipePantryItemIds.length > 0);
   const resolvedIngredientIds = getSelectedRecipeIngredientIds(
     pantryItems,
     recipePantryItemIds,
@@ -959,7 +969,10 @@ export function RecipeListPage({
                 (isResolvingRecipePantryItems ||
                   (shouldFetchRecipeMatches && isSelectedRecipesPending))
               }
-              selectedRecipesError={selectedRecipesError}
+              selectedRecipesError={getPantryRecipeMatchError(
+                selectedRecipesError,
+                recipePantryItemIds.length > 0 ? recipeFilterIngredientsError : null,
+              )}
               recipeFilterIngredients={recipeFilterIngredients}
             />
           ) : null}

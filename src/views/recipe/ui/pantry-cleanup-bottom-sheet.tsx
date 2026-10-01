@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { Dialog } from 'radix-ui';
 
 const MAX_VISIBLE_PANTRY_ITEMS = 6;
 
@@ -43,12 +44,18 @@ export function PantryCleanupBottomSheet({
   const visibleItems = getPantryCleanupVisibleItems(items, isExpanded);
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-[var(--primitive-black)]/70">
-      <section
+    <Dialog.Root
+      open
+      onOpenChange={(open) => {
+        if (!open && !isSubmitting) onDefer();
+      }}
+    >
+      <Dialog.Overlay className="fixed inset-0 z-[80] bg-[var(--primitive-black)]/70" />
+      <Dialog.Content
         aria-labelledby="pantry-cleanup-title"
         aria-modal="true"
-        className={`bg-background flex shrink-0 ${isExpanded ? 'h-[calc(100dvh-24px)]' : 'h-[482px]'} max-h-[100dvh] w-full max-w-[var(--layout-mobile-design-frame)] flex-col items-center overflow-clip rounded-t-[20px] pt-4 ${hasMoreItems ? 'gap-1 pb-[max(12px,env(safe-area-inset-bottom))]' : 'gap-2 pb-[max(16px,env(safe-area-inset-bottom))]'}`}
-        role="dialog"
+        className={`bg-background fixed bottom-0 left-1/2 z-[81] flex w-full max-w-[var(--layout-mobile-design-frame)] shrink-0 -translate-x-1/2 ${isExpanded ? 'h-[calc(100dvh-24px)]' : 'h-[482px]'} max-h-[100dvh] flex-col items-center overflow-clip rounded-t-[20px] pt-4 ${hasMoreItems ? 'gap-1 pb-[max(12px,env(safe-area-inset-bottom))]' : 'gap-2 pb-[max(16px,env(safe-area-inset-bottom))]'}`}
+        onPointerDownOutside={(event) => event.preventDefault()}
       >
         <div className="flex h-[34px] w-full items-center justify-center" aria-hidden="true">
           <span className="bg-surface-inverse mt-2 h-[5px] w-20 rounded-full" />
@@ -57,10 +64,13 @@ export function PantryCleanupBottomSheet({
         <div
           className={`flex min-h-0 w-full flex-col px-4 ${hasMoreItems ? 'pb-0' : 'pb-4'} ${isExpanded ? 'flex-1' : ''}`}
         >
-          <h2 className="text-title-4 font-semibold" id="pantry-cleanup-title">
+          <Dialog.Title className="text-title-4 font-semibold" id="pantry-cleanup-title">
             <span className="block">요리 완성! 🎉</span>
             <span className="block">사용한 식재료를 정리할까요?</span>
-          </h2>
+          </Dialog.Title>
+          <Dialog.Description className="sr-only">
+            사용할 식재료를 선택하고 정리하거나 나중에 선택할 수 있어요.
+          </Dialog.Description>
 
           {items.length > 0 ? (
             <div
@@ -169,7 +179,7 @@ export function PantryCleanupBottomSheet({
             {isSubmitting ? '정리 중' : '정리하기'}
           </button>
         </div>
-      </section>
-    </div>
+      </Dialog.Content>
+    </Dialog.Root>
   );
 }
