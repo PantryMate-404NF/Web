@@ -21,6 +21,7 @@ export interface OrderDetailDto {
   totalAmount: number;
   createdAt: string;
   items: Array<{
+    productId?: number;
     productName: string;
     price: number;
     quantity: number;

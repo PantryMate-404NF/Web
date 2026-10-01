@@ -1,89 +1,186 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const useOrderHistoryQueryMock = vi.hoisted(() => vi.fn());
+
+vi.mock('@/entities/order/api/use-order-history-query', () => ({
+  useOrderHistoryQuery: useOrderHistoryQueryMock,
+}));
 
 import { DeliveryTrackingPage } from './delivery-tracking-page';
 
-describe('DeliveryTrackingPage', () => {
-  it('배송 완료 상태의 구매 상품과 배송 상세 정보를 표시한다', () => {
-    const markup = renderToStaticMarkup(<DeliveryTrackingPage />);
+const orders = [
+  {
+    id: 'ORDER_1',
+    orderedAt: '2026.09.30',
+    orderNumber: 'ORDER_1',
+    paymentAmount: 12000,
+    status: 'CONFIRMED',
+    statusLabel: '결제 완료',
+    items: [
+      {
+        id: 'ORDER_1-0',
+        productId: 150,
+        name: '자연 프리미엄 야생화꿀',
+        price: 18000,
+        quantity: 1,
+        thumbnailUrl: 'https://cdn.example.com/honey.jpg',
+      },
+    ],
+  },
+  {
+    id: 'ORDER_2',
+    orderedAt: '2026.09.29',
+    orderNumber: 'ORDER_2',
+    paymentAmount: 6000,
+    status: 'CONFIRMED',
+    statusLabel: '결제 완료',
+    items: [
+      {
+        id: 'ORDER_2-0',
+        productId: 151,
+        name: '국내산 대파',
+        price: 6000,
+        quantity: 2,
+        thumbnailUrl: null,
+      },
+    ],
+  },
+];
 
-    expect(markup).toContain('배송 준비');
-    expect(markup).toContain('배송 중');
+describe('DeliveryTrackingPage', () => {
+  beforeEach(() => {
+    useOrderHistoryQueryMock.mockReturnValue({
+      data: orders,
+      isError: false,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+  });
+
+  it('배송 준비·완료와 배송 중 아이콘을 각각 지정 크기로 표시한다', () => {
+    const markup = renderToStaticMarkup(<DeliveryTrackingPage orderId="ORDER_1" />);
+    const progress = markup.match(
+      /<section[^>]*aria-label="배송 진행 상태">([\s\S]*?)<\/section>/,
+    )?.[1];
+    const icons = progress?.match(
+      /<img[^>]*src="\/icons\/delivery\/status-(?:ready|shipping|complete)\.svg"[^>]*>/g,
+    );
+
+    expect(icons).toHaveLength(3);
+    icons
+      ?.filter((icon) => !icon.includes('status-shipping.svg'))
+      .forEach((icon) => {
+        expect(icon).toContain('h-[17.9px]');
+        expect(icon).toContain('w-4');
+        expect(icon).toContain('width="16"');
+        expect(icon).toContain('height="18"');
+      });
+    const shippingIcon = icons?.find((icon) => icon.includes('status-shipping.svg'));
+
+    expect(shippingIcon).toContain('h-[14.5px]');
+    expect(shippingIcon).toContain('w-[21.5px]');
+    expect(shippingIcon).toContain('width="22"');
+    expect(shippingIcon).toContain('height="15"');
+  });
+
+  it('기존 결제 완료 주문 조회 결과에서 선택한 주문의 실제 상품을 배송 완료로 표시한다', () => {
+    const markup = renderToStaticMarkup(<DeliveryTrackingPage orderId="ORDER_1" />);
+
+    expect(useOrderHistoryQueryMock).toHaveBeenCalledWith('CONFIRMED');
     expect(markup).toContain('배송 완료');
     expect(markup).toContain('구매 상품');
-    expect(markup).toContain('하인즈 토마토 케찹(342g)');
-    expect(markup).toContain('GAP 알찬 완숙토마토 450g(3입)');
-    expect(markup).toContain('완전방사 무항생제 유정란(10구)');
-    expect(markup).toContain('배송 상세');
-    expect(markup).toContain('배송 현황');
+    expect(markup).toContain('자연 프리미엄 야생화꿀');
+    expect(markup).toContain('https://cdn.example.com/honey.jpg');
+    expect(markup).not.toContain('국내산 대파');
+    expect(markup).not.toContain('하인즈 토마토 케찹');
   });
 
-  it('이전 화면으로 돌아갈 수 있는 버튼을 제공한다', () => {
+  it('orderId가 없으면 기존 결제 완료 목록의 첫 주문을 표시한다', () => {
     const markup = renderToStaticMarkup(<DeliveryTrackingPage />);
 
-    expect(markup).toContain('aria-label="이전 화면"');
-    expect(markup).toContain('href="/mypage/orders"');
+    expect(markup).toContain('자연 프리미엄 야생화꿀');
   });
 
-  it('구매 상품과 배송 상세 사이에 Grey-100 배경색의 8px 구분선을 표시한다', () => {
-    const markup = renderToStaticMarkup(<DeliveryTrackingPage />);
-    const purchaseProducts = markup.match(
-      /<section[^>]*aria-labelledby="purchase-product-title">([\s\S]*?)<\/section>/,
+  it('preparing 주문은 기존 조회 결과를 사용하고 배송 준비 단계만 강조한다', () => {
+    useOrderHistoryQueryMock.mockReturnValue({
+      data: [{ ...orders[0], status: 'PENDING', statusLabel: '결제 대기' }],
+      isError: false,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+
+    const markup = renderToStaticMarkup(<DeliveryTrackingPage preparingOrderId="ORDER_1" />);
+    const progress = markup.match(
+      /<section[^>]*aria-label="배송 진행 상태">([\s\S]*?)<\/section>/,
+    )?.[1];
+    const activeSteps = progress?.match(/class="grid size-12[^\"]*border-primary/g);
+    const readyIcon = progress?.match(
+      /<img[^>]*src="\/icons\/delivery\/status-ready\.svg"[^>]*>/,
+    )?.[0];
+    const completeIcon = progress?.match(
+      /<img[^>]*src="\/icons\/delivery\/status-complete\.svg"[^>]*>/,
     )?.[0];
 
-    expect(purchaseProducts).not.toContain('border-b-8');
-    expect(markup).toContain(
-      '<div aria-hidden="true" class="h-2 w-full bg-[var(--primitive-grey-100)]"></div>',
-    );
+    expect(useOrderHistoryQueryMock).toHaveBeenCalledWith(undefined);
+    expect(markup).toContain('배송 조회');
+    expect(markup).toContain('자연 프리미엄 야생화꿀');
+    expect(activeSteps).toHaveLength(1);
+    expect(progress?.indexOf('border-primary')).toBeLessThan(progress?.indexOf('배송 준비') ?? 0);
+    expect(readyIcon).toContain('drop-shadow-[0_0_0.75px_currentColor]');
+    expect(readyIcon).toContain('brightness-0');
+    expect(completeIcon).toContain('opacity-50');
+    expect(markup).toContain('상품 배송 준비 중');
+    expect(markup).not.toContain('배송 완료 정보');
   });
 
-  it('배송 상세 라벨과 값에 지정한 색상과 타이포그래피를 적용한다', () => {
-    const markup = renderToStaticMarkup(<DeliveryTrackingPage />);
+  it('실제 배송 정보가 없는 운송장·택배사 목업은 표시하지 않는다', () => {
+    const markup = renderToStaticMarkup(<DeliveryTrackingPage orderId="ORDER_1" />);
 
-    expect(markup).toContain(
-      'class="text-text-tertiary font-[&#x27;Pretendard&#x27;] text-base leading-6"',
-    );
-    expect(markup).toContain(
-      'class="text-text-secondary relative font-[&#x27;Pretendard&#x27;] text-base leading-6"',
-    );
-    expect(markup).not.toContain('font-black');
-    expect(markup).toContain('배송일자');
-    expect(markup).toContain('2026.09.30');
-    expect(markup).toContain('CJ대한통운');
-    expect(markup).toContain('441481641546');
-    expect(markup).toContain('한바쁨');
-  });
-
-  it('운송장 번호와 복사 아이콘을 같은 중심선에 일정한 간격으로 배치한다', () => {
-    const markup = renderToStaticMarkup(<DeliveryTrackingPage />);
-
-    expect(markup).toContain('aria-label="운송장번호 복사"');
-    expect(markup).toContain('class="h-auto w-4 shrink-0"');
-    expect(markup).toContain('font-[&#x27;Pretendard&#x27;] text-base leading-6');
-    expect(markup).toContain('left-full');
-    expect(markup).toContain('ml-1');
-    expect(markup).not.toContain('left-[103px]');
-  });
-
-  it('배송 상세 영역은 제목과 세부 정보 사이에만 얇은 구분선을 표시한다', () => {
-    const markup = renderToStaticMarkup(<DeliveryTrackingPage />);
-    const deliveryDetails = markup.match(
-      /<section[^>]*aria-labelledby="delivery-detail-title">([\s\S]*?)<\/section>/,
+    expect(markup).not.toContain('CJ대한통운');
+    expect(markup).not.toContain('441481641546');
+    expect(markup).not.toContain('한바쁨');
+    expect(markup).toContain('ORDER_1');
+    const progress = markup.match(
+      /<section[^>]*aria-label="배송 진행 상태">([\s\S]*?)<\/section>/,
+    )?.[1];
+    const readyIcon = progress?.match(
+      /<img[^>]*src="\/icons\/delivery\/status-ready\.svg"[^>]*>/,
+    )?.[0];
+    const completeIcon = progress?.match(
+      /<img[^>]*src="\/icons\/delivery\/status-complete\.svg"[^>]*>/,
     )?.[0];
 
-    expect(deliveryDetails).toContain('border-b px-3');
-    expect(deliveryDetails).not.toContain('border-b-8');
+    expect(readyIcon).toContain('opacity-50');
+    expect(completeIcon).toContain('drop-shadow-[0_0_0.75px_currentColor]');
+    expect(completeIcon).toContain('brightness-0');
   });
 
-  it('배송 상세와 배송 현황 사이에 Figma 기준 8px 간격을 둔다', () => {
+  it('주문 조회 중에는 목업 상품 대신 로딩 상태를 표시한다', () => {
+    useOrderHistoryQueryMock.mockReturnValue({
+      data: undefined,
+      isError: false,
+      isPending: true,
+      refetch: vi.fn(),
+    });
+
     const markup = renderToStaticMarkup(<DeliveryTrackingPage />);
 
-    expect(markup).toContain('<section class="pt-2" aria-labelledby="delivery-history-title">');
+    expect(markup).toContain('주문 내역을 불러오는 중');
+    expect(markup).not.toContain('하인즈 토마토 케찹');
   });
 
-  it('배송 이력 아래에는 하단 네비게이션을 표시하지 않는다', () => {
+  it('주문 내역 조회 오류를 안내하고 다시 시도할 수 있다', () => {
+    useOrderHistoryQueryMock.mockReturnValue({
+      data: undefined,
+      isError: true,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+
     const markup = renderToStaticMarkup(<DeliveryTrackingPage />);
 
-    expect(markup).not.toContain('aria-label="주요 메뉴"');
+    expect(markup).toContain('주문 내역을 불러오지 못했어요');
+    expect(markup).toContain('다시 시도');
   });
 });

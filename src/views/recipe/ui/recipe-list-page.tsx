@@ -145,16 +145,18 @@ export function RecipeSearchPagination({
   page,
   totalPages,
   onPageChange,
+  ariaLabel = '레시피 검색 페이지',
 }: {
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  ariaLabel?: string;
 }) {
   const pagination = getRecipeSearchPagination(page, totalPages);
   const pageNumbers = getRecipeSearchPageNumbers(page, totalPages);
 
   return (
-    <nav aria-label="레시피 검색 페이지" className="flex items-center justify-center gap-1 py-4">
+    <nav aria-label={ariaLabel} className="flex items-center justify-center gap-1 py-4">
       <button
         aria-label="이전 페이지"
         className="grid size-8 place-items-center rounded-lg p-1.5 text-[var(--primitive-grey-600)] disabled:text-[var(--primitive-grey-400)]"
@@ -225,6 +227,16 @@ export function getImminentPantryItemIds(items: PantryItem[]): string[] {
         item.daysUntilExpiration !== null,
     )
     .sort((left, right) => left.daysUntilExpiration! - right.daysUntilExpiration!)
+    .slice(0, 3)
+    .map((item) => item.id);
+}
+
+export function getRecipePantryItemIds(items: PantryItem[]): string[] {
+  const imminentItemIds = getImminentPantryItemIds(items);
+  if (imminentItemIds.length > 0) return imminentItemIds;
+
+  return items
+    .filter((item) => item.availability === 'AVAILABLE' && item.expirationStatus !== 'EXPIRED')
     .slice(0, 3)
     .map((item) => item.id);
 }
@@ -880,23 +892,22 @@ export function RecipeListPage({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchPageIndex, setSearchPageIndex] = useState(0);
   const contentMode = getRecipeContentMode(searchQuery);
+  const { data: pantryItems = [], isPending: isPantryPending } = usePantriesQuery();
   const personalizedRecommendationQuery = useRecipeRecommendationsQuery(
     shouldEnableRecipeRecommendations(authState, contentMode, 'personalized'),
     10,
     false,
   );
   const recommendationQuery = useRecipeRecommendationsQuery(
-    shouldEnableRecipeRecommendations(authState, contentMode, 'pantry'),
+    shouldEnableRecipeRecommendations(authState, contentMode, 'pantry') && pantryItems.length > 0,
     20,
     true,
   );
-  const { data: pantryItems = [], isPending: isPantryPending } = usePantriesQuery();
-  const imminentPantryItemIds = getImminentPantryItemIds(pantryItems);
   const recipePantryItemIds =
     selectedPantryItemIds.length > 0
       ? selectedPantryItemIds
       : ingredientIds.length === 0
-        ? imminentPantryItemIds
+        ? getRecipePantryItemIds(pantryItems)
         : [];
   const showRecipeMatches = ingredientIds.length > 0 || recipePantryItemIds.length > 0;
   const {
@@ -1031,14 +1042,16 @@ export function RecipeListPage({
                 variant="personalized"
               />
             ) : null}
-            <RecipeRecommendationsSection
-              authState={authState}
-              data={recommendationQuery.data}
-              error={recommendationQuery.error}
-              isError={recommendationQuery.isError}
-              isPending={recommendationQuery.isPending}
-              onRetry={() => void recommendationQuery.refetch()}
-            />
+            {pantryItems.length > 0 ? (
+              <RecipeRecommendationsSection
+                authState={authState}
+                data={recommendationQuery.data}
+                error={recommendationQuery.error}
+                isError={recommendationQuery.isError}
+                isPending={recommendationQuery.isPending}
+                onRetry={() => void recommendationQuery.refetch()}
+              />
+            ) : null}
             {sections.map((section) => (
               <RecipeRail ingredientIds={ingredientIds} key={section.title} section={section} />
             ))}

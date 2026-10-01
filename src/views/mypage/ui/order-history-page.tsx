@@ -11,17 +11,21 @@ import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
 
 type OrderListStatus = 'paid' | 'preparing';
 
-const orderStatuses = (status: OrderListStatus) =>
-  [
-    { label: '결제완료', count: status === 'paid' ? 1 : 0 },
-    { label: '배송준비', count: status === 'preparing' ? 1 : 0 },
-    { label: '배송 중', count: 0 },
-    { label: '배송완료', count: 3 },
-  ] as const;
-
-function OrderStatusSummary({ status }: { status: OrderListStatus }) {
+function OrderStatusSummary({
+  status,
+  orders,
+}: {
+  status: OrderListStatus;
+  orders: OrderHistoryRecord[];
+}) {
   const activeIndex = status === 'paid' ? 0 : 1;
-  const statuses = orderStatuses(status);
+  const completedOrders = orders.filter((order) => order.status === 'CONFIRMED');
+  const statuses = [
+    { label: '결제완료', count: completedOrders.length },
+    { label: '배송준비', count: orders.filter((order) => order.status === 'PENDING').length },
+    { label: '배송 중', count: 0 },
+    { label: '배송완료', count: completedOrders.length },
+  ];
 
   return (
     <>
@@ -36,30 +40,57 @@ function OrderStatusSummary({ status }: { status: OrderListStatus }) {
         <ol className="mt-6 flex items-start justify-center px-1.5">
           {statuses.map((item, index) => (
             <li className="flex items-start" key={item.label}>
-              <div className="inline-flex w-10 flex-col items-center gap-[5px]">
-                <strong
-                  className={`text-2xl leading-9 font-semibold ${
-                    index === activeIndex
-                      ? 'text-[var(--primitive-primary-700)]'
-                      : 'text-foreground'
-                  }`}
+              {item.label === '배송완료' && completedOrders[0] ? (
+                <Link
+                  aria-label={`${item.count}건 배송완료 보기`}
+                  className="inline-flex w-10 flex-col items-center gap-[5px]"
+                  href={`/mypage/delivery?orderId=${encodeURIComponent(completedOrders[0].id)}`}
                 >
-                  {item.count}
-                </strong>
-                <span
-                  className={`text-xs leading-4 whitespace-nowrap ${
-                    index === activeIndex
-                      ? 'font-semibold text-[var(--primitive-primary-700)]'
-                      : 'text-foreground font-medium'
-                  }`}
-                >
-                  {status === 'paid' && item.label === '배송준비' ? (
-                    <Link href="/mypage/orders/preparing">{item.label}</Link>
-                  ) : (
-                    item.label
-                  )}
-                </span>
-              </div>
+                  <strong
+                    className={`text-2xl leading-9 font-semibold ${
+                      index === activeIndex
+                        ? 'text-[var(--primitive-primary-700)]'
+                        : 'text-foreground'
+                    }`}
+                  >
+                    {item.count}
+                  </strong>
+                  <span
+                    className={`text-xs leading-4 whitespace-nowrap ${
+                      index === activeIndex
+                        ? 'font-semibold text-[var(--primitive-primary-700)]'
+                        : 'text-foreground font-medium'
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                </Link>
+              ) : (
+                <div className="inline-flex w-10 flex-col items-center gap-[5px]">
+                  <strong
+                    className={`text-2xl leading-9 font-semibold ${
+                      index === activeIndex
+                        ? 'text-[var(--primitive-primary-700)]'
+                        : 'text-foreground'
+                    }`}
+                  >
+                    {item.count}
+                  </strong>
+                  <span
+                    className={`text-xs leading-4 whitespace-nowrap ${
+                      index === activeIndex
+                        ? 'font-semibold text-[var(--primitive-primary-700)]'
+                        : 'text-foreground font-medium'
+                    }`}
+                  >
+                    {status === 'paid' && item.label === '배송준비' ? (
+                      <Link href="/mypage/orders/preparing">{item.label}</Link>
+                    ) : (
+                      item.label
+                    )}
+                  </span>
+                </div>
+              )}
               {index < statuses.length - 1 ? (
                 <span
                   className="flex size-8 shrink-0 items-center justify-center pt-1"
@@ -150,7 +181,7 @@ function OrderHistoryItem({
       {isPreparing ? (
         <Link
           className="mt-4 flex h-10 w-full items-center justify-center rounded-xl bg-[var(--primitive-primary-200)] text-sm leading-5 font-semibold"
-          href="/mypage/delivery"
+          href={`/mypage/delivery?preparing=${encodeURIComponent(order.id)}`}
         >
           배송조회
         </Link>
@@ -187,7 +218,7 @@ export function OrderHistoryPage({ status = 'paid' }: { status?: OrderListStatus
         <h1 className="text-heading-4 font-semibold">주문 / 배송 목록</h1>
       </header>
 
-      <OrderStatusSummary status={status} />
+      <OrderStatusSummary status={status} orders={orders ?? []} />
 
       <section
         className="flex-1"

@@ -19,35 +19,40 @@ vi.mock('@/features/auth/ui/auth-session-provider', () => ({ useAuthSession: use
 vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams() }));
 vi.mock('@/shared/ui/back-button', () => ({ BackButton: () => null }));
 vi.mock('@/widgets/navigation/ui/bottom-navigation', () => ({ BottomNavigation: () => null }));
-vi.mock('./recipe-list-page', () => ({
-  RecipeCard: ({
-    recipe,
-    recommendationContext,
-  }: {
-    recipe: { name: string };
-    recommendationContext?: { requestId?: string | null; position?: number };
-  }) => (
-    <div
-      data-position={recommendationContext?.position}
-      data-request-id={recommendationContext?.requestId}
-    >
-      {recipe.name}
-    </div>
-  ),
-  getRecipeRecommendationTitle: (source: 'AI' | 'POPULARITY') =>
-    source === 'AI' ? '팬트리 기반 추천' : '인기 레시피',
-  getRecipeRecommendationSectionCopy: (
-    variant: 'pantry' | 'personalized',
-    source: 'AI' | 'POPULARITY',
-  ) => ({
-    description:
-      variant === 'personalized'
-        ? source === 'AI'
-          ? '맛 선호도를 반영해 AI가 추천했어요.'
-          : '지금 인기 있는 레시피를 추천해요.'
-        : '팬트리 기반 추천',
-  }),
-}));
+vi.mock('./recipe-list-page', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./recipe-list-page')>();
+
+  return {
+    ...actual,
+    RecipeCard: ({
+      recipe,
+      recommendationContext,
+    }: {
+      recipe: { name: string };
+      recommendationContext?: { requestId?: string | null; position?: number };
+    }) => (
+      <div
+        data-position={recommendationContext?.position}
+        data-request-id={recommendationContext?.requestId}
+      >
+        {recipe.name}
+      </div>
+    ),
+    getRecipeRecommendationTitle: (source: 'AI' | 'POPULARITY') =>
+      source === 'AI' ? '팬트리 기반 추천' : '인기 레시피',
+    getRecipeRecommendationSectionCopy: (
+      variant: 'pantry' | 'personalized',
+      source: 'AI' | 'POPULARITY',
+    ) => ({
+      description:
+        variant === 'personalized'
+          ? source === 'AI'
+            ? '맛 선호도를 반영해 AI가 추천했어요.'
+            : '지금 인기 있는 레시피를 추천해요.'
+          : '팬트리 기반 추천',
+    }),
+  };
+});
 
 import { recipeMocks } from '@/entities/recipe/model/mock';
 
@@ -136,7 +141,9 @@ describe('RecipeMorePage', () => {
       false,
     );
     expect(markup).toContain('팬트리 기반 추천');
-    expect(markup).toContain('1 / 2');
+    expect(markup).toContain('aria-label="레시피 페이지"');
+    expect(markup).toContain('aria-label="1페이지"');
+    expect(markup).not.toContain('1 / 2');
     expect(markup).toContain('추천 10');
     expect(markup).not.toContain('추천 11');
   });

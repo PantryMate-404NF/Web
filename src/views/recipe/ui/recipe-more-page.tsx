@@ -16,6 +16,7 @@ import {
   getRecipeRecommendationSectionCopy,
   getRecipeRecommendationTitle,
   RecipeCard,
+  RecipeSearchPagination,
 } from './recipe-list-page';
 
 const RECOMMENDATIONS_PAGE_SIZE = 10;
@@ -205,28 +206,14 @@ export function RecipeMorePage({
                 <RecipeCard key={recipe.id} recipe={recipe} variant="search" />
               ))}
           {totalPages > 1 ? (
-            <nav
-              aria-label="레시피 페이지"
-              className="col-span-2 flex items-center justify-center gap-6 py-4"
-            >
-              <button
-                disabled={page === 0}
-                onClick={() => setPage((value) => value - 1)}
-                type="button"
-              >
-                이전
-              </button>
-              <span aria-live="polite">
-                {page + 1} / {totalPages}
-              </span>
-              <button
-                disabled={page + 1 >= totalPages}
-                onClick={() => setPage((value) => value + 1)}
-                type="button"
-              >
-                다음
-              </button>
-            </nav>
+            <div className="col-span-2">
+              <RecipeSearchPagination
+                ariaLabel="레시피 페이지"
+                onPageChange={setPage}
+                page={page}
+                totalPages={totalPages}
+              />
+            </div>
           ) : null}
         </section>
       ) : (

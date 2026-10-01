@@ -77,9 +77,12 @@ describe('OrderHistoryPage', () => {
     expect(markup).toContain('상세현황');
     expect(markup).toContain('주문취소/환불');
     expect(orderStatusMarkup?.replaceAll(/<[^>]+>/g, '')).toBe(
-      '1결제완료0배송준비0배송 중3배송완료',
+      '1결제완료0배송준비0배송 중1배송완료',
     );
     expect(markup).toMatch(/<a[^>]*href="\/mypage\/orders\/preparing"[^>]*>배송준비<\/a>/);
+    expect(markup).toMatch(
+      /<a[^>]*href="\/mypage\/delivery\?orderId=ORDER_1"[^>]*>[\s\S]*?<strong[^>]*>1<\/strong>[\s\S]*?배송완료[\s\S]*?<\/a>/,
+    );
   });
 
   it('주문 조회 중에는 목업 주문 대신 로딩 상태를 표시한다', () => {
@@ -143,7 +146,7 @@ describe('OrderHistoryPage', () => {
 
     expect(markup).toContain('배송 준비');
     expect(markup).toContain('href="/mypage/orders"');
-    expect(markup).toContain('href="/mypage/delivery"');
+    expect(markup).toContain('href="/mypage/delivery?preparing=ORDER_1"');
     expect(markup).toContain('배송조회');
   });
 });

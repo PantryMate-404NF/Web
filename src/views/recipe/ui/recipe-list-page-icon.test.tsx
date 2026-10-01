@@ -155,6 +155,41 @@ describe('RecipeActionIcon', () => {
     expect(useRecipesQueryMock).toHaveBeenCalledWith({ ingredientIds: [42] }, true);
   });
 
+  it('shows recipes from regular available pantry ingredients when none are imminent', () => {
+    useAuthSessionMock.mockReturnValue({ state: 'complete' });
+    usePantriesQueryMock.mockReturnValue({
+      data: [
+        {
+          id: 'sesame-item',
+          ingredientId: 17,
+          name: '통깨',
+          daysUntilExpiration: 544,
+          expirationLabel: 'D-544',
+          expirationStatus: 'NORMAL',
+          availability: 'AVAILABLE',
+          imageAlt: '통깨',
+        },
+        {
+          id: 'squid-item',
+          ingredientId: 18,
+          name: '오징어',
+          daysUntilExpiration: 119,
+          expirationLabel: 'D-119',
+          expirationStatus: 'NORMAL',
+          availability: 'AVAILABLE',
+          imageAlt: '오징어',
+        },
+      ],
+      isPending: false,
+    });
+
+    const markup = renderToStaticMarkup(<RecipeListPage />);
+
+    expect(useRecipeFilterIngredientsQueryMock).toHaveBeenCalledWith(true);
+    expect(useRecipesQueryMock).toHaveBeenCalledWith({ ingredientIds: [17, 18] }, true);
+    expect(markup).toContain(recipeMocks[0].name);
+  });
+
   it('renders Figma pagination with numbered pages and an accessible selected page', () => {
     const markup = renderToStaticMarkup(
       <RecipeSearchPagination page={0} totalPages={35} onPageChange={vi.fn()} />,
@@ -347,7 +382,7 @@ describe('RecipeActionIcon', () => {
     expect(getRecipeRecommendationTitle('POPULARITY')).toBe('인기 레시피');
   });
 
-  it('shows the popularity fallback for an authenticated user with an empty pantry', () => {
+  it('hides pantry-based recommendations for an authenticated user with an empty pantry', () => {
     useAuthSessionMock.mockReturnValue({ state: 'complete' });
     usePantriesQueryMock.mockReturnValue({ data: [] });
     useRecipeRecommendationsQueryMock.mockReturnValue({
@@ -381,12 +416,47 @@ describe('RecipeActionIcon', () => {
 
     const markup = renderToStaticMarkup(<RecipeListPage />);
 
-    expect(markup).toContain('인기 레시피');
-    expect(markup).toContain('빈 팬트리 인기 레시피');
+    expect(markup).not.toContain('팬트리 기반 추천');
+    expect(markup).not.toContain('aria-label="인기 레시피"');
+  });
+
+  it('shows a recipe matched to the only available pantry item', () => {
+    useAuthSessionMock.mockReturnValue({ state: 'complete' });
+    usePantriesQueryMock.mockReturnValue({
+      data: [
+        {
+          id: 'single-pantry-item',
+          name: '통깨',
+          ingredientId: 17,
+          daysUntilExpiration: null,
+          availability: 'AVAILABLE',
+          expirationStatus: 'UNREGISTERED',
+          expirationLabel: '미등록',
+          imageAlt: '통깨',
+        },
+      ],
+    });
+    const matchedRecipe = { ...recipeMocks[0], id: 'sesame-recipe', name: '통깨 비빔밥' };
+    useRecipesQueryMock
+      .mockReturnValueOnce({
+        data: { content: [matchedRecipe], totalElements: 1 },
+        isPending: false,
+      })
+      .mockReturnValueOnce({
+        data: { content: [recipeMocks[0]], totalElements: 1 },
+        isPending: false,
+      });
+
+    const markup = renderToStaticMarkup(<RecipeListPage />);
+
+    expect(markup).toContain('내 재료로 만드는 레시피');
+    expect(markup).toContain('통깨 비빔밥');
+    expect(useRecipesQueryMock).toHaveBeenCalledWith({ ingredientIds: [17] }, true);
   });
 
   it('레시피 탭 상단에 맛 선호도 기반 나를 위한 레시피를 표시한다', () => {
     useAuthSessionMock.mockReturnValue({ state: 'complete' });
+    usePantriesQueryMock.mockReturnValue({ data: [{ id: 'pantry-item' }] });
     useRecipeRecommendationsQueryMock.mockReset();
     useRecipeRecommendationsQueryMock
       .mockReturnValueOnce({
