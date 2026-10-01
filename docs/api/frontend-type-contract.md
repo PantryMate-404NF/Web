@@ -163,6 +163,34 @@ export interface RecipeProductMatchDto {
 
 상품 매칭은 레시피 상세 응답에 포함되지 않는다. 상세 조회와 별도로 `GET /api/recipes/{recipeId}/product-match`를 호출한다.
 
+## Product
+
+```ts
+export interface ProductDetailDto {
+  productId: number;
+  sku: string;
+  name: string;
+  categoryId: number;
+  categoryName: string | null;
+  price: number;
+  unit: string;
+  capacity: number | null;
+  packageCount: number | null;
+  origin: string | null;
+  description: string | null;
+  thumbnailUrl: string | null;
+  images: string[];
+  stockQuantity: number;
+  status: string;
+  ingredientId: number | null;
+}
+```
+
+- `GET /api/products/{productId}`의 2026-09-30 Gateway 실응답을 기준으로 한다.
+- 장바구니에는 응답의 `productId`를 전달하며, 디자인 목업 ID를 실제 API에 사용하지 않는다.
+- 상품 옵션 식별자 계약은 응답에 없으므로 실제 API 상품은 단일 상품으로 처리한다.
+- 판매 가능 여부는 `status === 'ON_SALE'`이고 `stockQuantity > 0`인 경우로 판단한다.
+
 ## Order and Payment
 
 ```ts

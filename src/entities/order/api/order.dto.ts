@@ -25,6 +25,7 @@ export interface OrderDetailDto {
     price: number;
     quantity: number;
     subtotal: number;
+    thumbnailUrl?: string | null;
   }>;
   payment: {
     method: string;

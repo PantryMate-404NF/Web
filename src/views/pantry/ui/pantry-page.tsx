@@ -1,8 +1,10 @@
 'use client';
 
 import {
+  Check,
   ChevronDown,
   ChevronLeft,
+  ChevronRight,
   Paperclip,
   Pencil,
   Plus,
@@ -48,6 +50,7 @@ import { ReceiptOcrFlow } from './receipt-ocr-flow';
 
 type PantryViewState = Extract<DataViewState, 'content' | 'empty' | 'error' | 'loading'>;
 type StorageFilter = PantryStorageType | 'ALL';
+export const PANTRY_PAGE_SIZE = 20;
 
 const filters: { label: string; value: StorageFilter }[] = [
   { label: '전체', value: 'ALL' },
@@ -118,6 +121,27 @@ export function getVisiblePantryItems(
   );
 }
 
+export function getPantryPageNumbers(page: number, totalPages: number) {
+  const firstPageInGroup = Math.floor(page / 5) * 5;
+  const visiblePageCount = Math.max(0, Math.min(5, totalPages - firstPageInGroup));
+
+  return Array.from({ length: visiblePageCount }, (_, index) => firstPageInGroup + index);
+}
+
+export function getPantryPagination(items: PantryItem[], page: number) {
+  const totalPages = Math.ceil(items.length / PANTRY_PAGE_SIZE);
+  const currentPage = Math.min(Math.max(page, 0), Math.max(totalPages - 1, 0));
+
+  return {
+    items: items.slice(currentPage * PANTRY_PAGE_SIZE, (currentPage + 1) * PANTRY_PAGE_SIZE),
+    currentPage,
+    totalPages,
+    pageNumbers: getPantryPageNumbers(currentPage, totalPages),
+    canGoPrevious: currentPage > 0,
+    canGoNext: currentPage + 1 < totalPages,
+  };
+}
+
 export function getDeleteConfirmationTitle(itemName: string) {
   const itemNameCharacters = Array.from(itemName);
   const displayName =
@@ -139,6 +163,134 @@ export function getRecipeResultsHref(ingredientIds: number[], pantryItemIds: str
   );
   const query = search.toString();
   return query ? `/recipe?${query}` : '/recipe';
+}
+
+export function getPantryBackHref(isRecipeSelectionMode: boolean) {
+  return isRecipeSelectionMode ? '/recipe' : '/';
+}
+
+export function PantryHeaderAction({
+  isRecipeSelectionMode,
+  addOptionsOpen,
+  selectedIngredientIds,
+  selectedPantryItemIds,
+  onCompleteSelection,
+  onOpenAddOptions,
+  addItemButtonRef,
+}: {
+  isRecipeSelectionMode: boolean;
+  addOptionsOpen: boolean;
+  selectedIngredientIds: number[];
+  selectedPantryItemIds: string[];
+  onCompleteSelection: () => void;
+  onOpenAddOptions: () => void;
+  addItemButtonRef?: RefObject<HTMLButtonElement | null>;
+}) {
+  if (isRecipeSelectionMode) {
+    const hasSelection = selectedIngredientIds.length > 0 || selectedPantryItemIds.length > 0;
+
+    if (!hasSelection) {
+      return (
+        <Button
+          aria-label="선택 완료"
+          className="size-10 rounded-full p-0 has-[>svg]:p-0"
+          disabled
+          size="icon"
+          type="button"
+        >
+          <Check aria-hidden="true" className="size-6" />
+        </Button>
+      );
+    }
+
+    return (
+      <Button asChild className="size-10 rounded-full p-0 has-[>svg]:p-0" size="icon">
+        <Link
+          aria-label="선택 완료"
+          href={getRecipeResultsHref(selectedIngredientIds, selectedPantryItemIds)}
+          onClick={onCompleteSelection}
+        >
+          <Check aria-hidden="true" className="size-6" />
+        </Link>
+      </Button>
+    );
+  }
+
+  return (
+    <Button
+      aria-expanded={addOptionsOpen}
+      aria-haspopup="menu"
+      aria-label="재료 추가"
+      className="size-10 rounded-full p-0 has-[>svg]:p-0"
+      onClick={onOpenAddOptions}
+      ref={addItemButtonRef}
+      size="icon"
+      type="button"
+    >
+      <Plus aria-hidden="true" className="size-6" />
+    </Button>
+  );
+}
+
+export function PantryPagination({
+  page,
+  totalPages,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+  const currentPage = Math.min(Math.max(page, 0), totalPages - 1);
+  const pageNumbers = getPantryPageNumbers(currentPage, totalPages);
+  const canGoPrevious = currentPage > 0;
+  const canGoNext = currentPage + 1 < totalPages;
+
+  return (
+    <nav aria-label="팬트리 페이지" className="flex items-center justify-center gap-1 py-4">
+      <button
+        aria-label="이전 페이지"
+        className="grid size-8 place-items-center rounded-lg p-1.5 text-[var(--primitive-grey-600)] disabled:text-[var(--primitive-grey-400)]"
+        disabled={!canGoPrevious}
+        onClick={() => onPageChange(currentPage - 1)}
+        type="button"
+      >
+        <ChevronLeft aria-hidden="true" className="size-5" strokeWidth={1.5} />
+      </button>
+      <div aria-live="polite" className="flex items-center gap-0.5">
+        {pageNumbers.map((pageNumber) => {
+          const isCurrentPage = pageNumber === currentPage;
+
+          return (
+            <button
+              aria-current={isCurrentPage ? 'page' : undefined}
+              aria-label={`${pageNumber + 1}페이지`}
+              className={`grid size-8 place-items-center rounded-lg text-base leading-6 font-medium ${
+                isCurrentPage
+                  ? 'bg-[var(--primitive-primary-300)] text-[var(--primitive-primary-800)]'
+                  : 'text-[var(--primitive-grey-600)]'
+              }`}
+              key={pageNumber}
+              onClick={() => onPageChange(pageNumber)}
+              type="button"
+            >
+              {pageNumber + 1}
+            </button>
+          );
+        })}
+      </div>
+      <button
+        aria-label="다음 페이지"
+        className="grid size-8 place-items-center rounded-lg p-1.5 text-[var(--primitive-grey-600)] disabled:text-[var(--primitive-grey-400)]"
+        disabled={!canGoNext}
+        onClick={() => onPageChange(currentPage + 1)}
+        type="button"
+      >
+        <ChevronRight aria-hidden="true" className="size-5" strokeWidth={1.5} />
+      </button>
+    </nav>
+  );
 }
 
 export function PantryErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
@@ -295,6 +447,7 @@ export function PantryPage({
   const [query, setQuery] = useState('');
   const [storage, setStorage] = useState<StorageFilter>('ALL');
   const [sort, setSort] = useState<PantrySortOption>('RECENT');
+  const [page, setPage] = useState(0);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [menuItem, setMenuItem] = useState<PantryItem | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ left: number; top: number } | null>(null);
@@ -309,6 +462,7 @@ export function PantryPage({
   const receiptRequestIdRef = useRef(0);
   const [receiptInputError, setReceiptInputError] = useState<string | null>(null);
   const visibleItems = getVisiblePantryItems(currentItems, query, storage, sort);
+  const pagination = getPantryPagination(visibleItems, page);
   const viewState = getPantryViewState({ items: currentItems, errorMessage, isLoading });
 
   useEffect(() => {
@@ -491,14 +645,7 @@ export function PantryPage({
           <Link
             aria-label="이전 페이지"
             className="grid size-10 shrink-0 place-items-center"
-            href={
-              isRecipeSelectionMode
-                ? getRecipeResultsHref(
-                    Object.values(selectedIngredientIdsByPantryItemId),
-                    selectedPantryItemIds,
-                  )
-                : '/'
-            }
+            href={getPantryBackHref(isRecipeSelectionMode)}
             onClick={isRecipeSelectionMode ? clearRecipeSelection : undefined}
           >
             <ChevronLeft className="size-6" />
@@ -510,25 +657,27 @@ export function PantryPage({
             <span className="sr-only">식재료 검색</span>
             <input
               className="text-title-4 min-w-0 flex-1 bg-transparent font-medium outline-none"
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setPage(0);
+              }}
               placeholder="검색"
               value={query}
             />
           </label>
           <div className="relative ml-[18px] shrink-0">
-            <Button
-              aria-expanded={isAddOptionsOpen}
-              aria-haspopup="menu"
-              className="size-10 rounded-full p-0 has-[>svg]:p-0"
-              onClick={() => setIsAddOptionsOpen((isOpen) => !isOpen)}
-              ref={addItemButtonRef}
-              size="icon"
-              type="button"
-            >
-              <Plus className="size-6" />
-              <span className="sr-only">재료 추가</span>
-            </Button>
-            {isAddOptionsOpen ? <PantryAddOptions onReceiptUpload={openReceiptFilePicker} /> : null}
+            <PantryHeaderAction
+              addOptionsOpen={isAddOptionsOpen}
+              addItemButtonRef={addItemButtonRef}
+              isRecipeSelectionMode={isRecipeSelectionMode}
+              onCompleteSelection={clearRecipeSelection}
+              onOpenAddOptions={() => setIsAddOptionsOpen((isOpen) => !isOpen)}
+              selectedIngredientIds={Object.values(selectedIngredientIdsByPantryItemId)}
+              selectedPantryItemIds={selectedPantryItemIds}
+            />
+            {isAddOptionsOpen && !isRecipeSelectionMode ? (
+              <PantryAddOptions onReceiptUpload={openReceiptFilePicker} />
+            ) : null}
             <input
               accept="image/jpeg,image/png,image/webp,image/heic,.heic"
               aria-label="영수증 이미지 업로드"
@@ -569,6 +718,7 @@ export function PantryPage({
                 key={option}
                 onClick={() => {
                   setSort(option);
+                  setPage(0);
                   setIsSortOpen(false);
                 }}
                 type="button"
@@ -590,7 +740,10 @@ export function PantryPage({
             aria-pressed={storage === filter.value}
             className={`h-7 rounded-full border-1 px-3 text-xs leading-[18px] font-medium ${storage === filter.value ? 'bg-foreground text-background border-foreground' : 'text-muted-foreground border-muted-foreground'}`}
             key={filter.value}
-            onClick={() => setStorage(filter.value)}
+            onClick={() => {
+              setStorage(filter.value);
+              setPage(0);
+            }}
             type="button"
           >
             {filter.label}
@@ -607,7 +760,7 @@ export function PantryPage({
           aria-label="팬트리 식재료 목록"
           className="mx-4 grid w-[calc(100%_-_32px)] grid-cols-2 gap-3 pb-8"
         >
-          {visibleItems.map((item) => (
+          {pagination.items.map((item) => (
             <PantryItemCard
               item={item}
               key={item.id}
@@ -638,6 +791,14 @@ export function PantryPage({
           ))}
         </section>
       )}
+
+      {viewState === 'content' && visibleItems.length > 0 ? (
+        <PantryPagination
+          onPageChange={setPage}
+          page={pagination.currentPage}
+          totalPages={pagination.totalPages}
+        />
+      ) : null}
 
       {menuItem && menuPosition ? (
         <div

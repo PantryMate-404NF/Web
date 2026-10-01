@@ -1,6 +1,6 @@
 'use client';
 
-import { Bookmark, ChevronRight } from 'lucide-react';
+import { Bookmark, ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -99,6 +99,13 @@ export function getRecipeViewState(error: unknown): 'content' | 'error' {
   return error ? 'error' : 'content';
 }
 
+export function getPantryRecipeMatchError(
+  selectedRecipesError: unknown,
+  ingredientLookupError: unknown,
+) {
+  return selectedRecipesError ?? ingredientLookupError ?? null;
+}
+
 export function getRecipeSearchResultDisplay(recipes: Recipe[]): 'results' | 'empty' {
   return recipes.length === 0 ? 'empty' : 'results';
 }
@@ -112,6 +119,13 @@ export function getRecipeSearchPagination(page: number, totalPages: number) {
   };
 }
 
+export function getRecipeSearchPageNumbers(page: number, totalPages: number) {
+  const firstPage = Math.floor(page / 5) * 5;
+  const visiblePageCount = Math.max(0, Math.min(5, totalPages - firstPage));
+
+  return Array.from({ length: visiblePageCount }, (_, index) => firstPage + index + 1);
+}
+
 export function RecipeSearchPagination({
   page,
   totalPages,
@@ -122,27 +136,49 @@ export function RecipeSearchPagination({
   onPageChange: (page: number) => void;
 }) {
   const pagination = getRecipeSearchPagination(page, totalPages);
+  const pageNumbers = getRecipeSearchPageNumbers(page, totalPages);
 
   return (
-    <nav aria-label="레시피 검색 페이지" className="flex items-center justify-center gap-6 py-4">
+    <nav aria-label="레시피 검색 페이지" className="flex items-center justify-center gap-1 py-4">
       <button
         aria-label="이전 페이지"
+        className="grid size-8 place-items-center rounded-lg p-1.5 text-[var(--primitive-grey-600)] disabled:text-[var(--primitive-grey-400)]"
         disabled={!pagination.canGoPrevious}
         onClick={() => onPageChange(page - 1)}
         type="button"
       >
-        이전
+        <ChevronLeft aria-hidden="true" className="size-5" strokeWidth={1.5} />
       </button>
-      <span aria-live="polite">
-        {pagination.currentPage} / {pagination.totalPages}
-      </span>
+      <div className="flex items-center gap-0.5" aria-live="polite">
+        {pageNumbers.map((pageNumber) => {
+          const isCurrentPage = pageNumber === pagination.currentPage;
+
+          return (
+            <button
+              aria-current={isCurrentPage ? 'page' : undefined}
+              aria-label={`${pageNumber}페이지`}
+              className={`grid size-8 place-items-center rounded-lg text-base leading-6 font-medium ${
+                isCurrentPage
+                  ? 'bg-[var(--primitive-primary-300)] text-[var(--primitive-primary-800)]'
+                  : 'text-[var(--primitive-grey-600)]'
+              }`}
+              key={pageNumber}
+              onClick={() => onPageChange(pageNumber - 1)}
+              type="button"
+            >
+              {pageNumber}
+            </button>
+          );
+        })}
+      </div>
       <button
         aria-label="다음 페이지"
+        className="grid size-8 place-items-center rounded-lg p-1.5 text-[var(--primitive-grey-600)] disabled:text-[var(--primitive-grey-400)]"
         disabled={!pagination.canGoNext}
         onClick={() => onPageChange(page + 1)}
         type="button"
       >
-        다음
+        <ChevronRight aria-hidden="true" className="size-5" strokeWidth={1.5} />
       </button>
     </nav>
   );
@@ -163,6 +199,19 @@ export function getImminentIngredients(items: PantryItem[]): ImminentIngredient[
     .sort((left, right) => left.daysUntilExpiration! - right.daysUntilExpiration!)
     .slice(0, 3)
     .map((item) => ({ name: item.name, daysLeft: item.daysUntilExpiration! }));
+}
+
+export function getImminentPantryItemIds(items: PantryItem[]): string[] {
+  return items
+    .filter(
+      (item) =>
+        item.availability === 'AVAILABLE' &&
+        item.expirationStatus === 'IMMINENT' &&
+        item.daysUntilExpiration !== null,
+    )
+    .sort((left, right) => left.daysUntilExpiration! - right.daysUntilExpiration!)
+    .slice(0, 3)
+    .map((item) => item.id);
 }
 
 export function getAvailablePantryIngredients(
@@ -683,6 +732,7 @@ function PantryRecipeIntro({
   selectedPantryItemIds,
   recipeFilterIngredients,
   selectedRecipes,
+  showRecipeMatches,
   isSelectedRecipesPending,
   selectedRecipesError,
 }: {
@@ -694,6 +744,7 @@ function PantryRecipeIntro({
   selectedPantryItemIds: string[];
   recipeFilterIngredients: RecipeFilterIngredientDto[];
   selectedRecipes: Recipe[];
+  showRecipeMatches: boolean;
   isSelectedRecipesPending: boolean;
   selectedRecipesError: unknown;
 }) {
@@ -752,15 +803,15 @@ function PantryRecipeIntro({
             />
           </div>
         ) : null}
-        {selectedPantryItemIds.length > 0 ? (
+        {showRecipeMatches ? (
           <div className="mt-4">
             {isSelectedRecipesPending ? (
               <p className="px-4 text-sm text-[var(--primitive-grey-500)]" role="status">
-                선택한 재료로 만들 수 있는 레시피를 찾고 있어요.
+                재료로 만들 수 있는 레시피를 찾고 있어요.
               </p>
             ) : selectedRecipesError ? (
               <p className="px-4 text-sm text-[var(--primitive-grey-500)]" role="alert">
-                선택한 재료의 레시피를 불러오지 못했어요.
+                재료의 레시피를 불러오지 못했어요.
               </p>
             ) : selectedRecipes.length > 0 ? (
               <div className="flex [scrollbar-width:none] gap-2 overflow-x-auto px-4 pb-1">
@@ -770,7 +821,7 @@ function PantryRecipeIntro({
               </div>
             ) : (
               <p className="px-4 text-sm text-[var(--primitive-grey-500)]">
-                선택한 재료로 만들 수 있는 레시피가 없어요.
+                재료로 만들 수 있는 레시피가 없어요.
               </p>
             )}
           </div>
@@ -796,30 +847,41 @@ export function RecipeListPage({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchPageIndex, setSearchPageIndex] = useState(0);
   const { data: pantryItems = [], isPending: isPantryPending } = usePantriesQuery();
-  const { data: recipeFilterIngredients = [], isPending: isRecipeFilterIngredientsPending } =
-    useRecipeFilterIngredientsQuery(ingredientIds.length > 0 || selectedPantryItemIds.length > 0);
+  const imminentPantryItemIds = getImminentPantryItemIds(pantryItems);
+  const recipePantryItemIds =
+    selectedPantryItemIds.length > 0
+      ? selectedPantryItemIds
+      : ingredientIds.length === 0
+        ? imminentPantryItemIds
+        : [];
+  const showRecipeMatches = ingredientIds.length > 0 || recipePantryItemIds.length > 0;
+  const {
+    data: recipeFilterIngredients = [],
+    error: recipeFilterIngredientsError,
+    isPending: isRecipeFilterIngredientsPending,
+  } = useRecipeFilterIngredientsQuery(ingredientIds.length > 0 || recipePantryItemIds.length > 0);
   const resolvedIngredientIds = getSelectedRecipeIngredientIds(
     pantryItems,
-    selectedPantryItemIds,
+    recipePantryItemIds,
     recipeFilterIngredients,
     ingredientIds,
   );
-  const isResolvingSelectedPantryItems =
-    selectedPantryItemIds.length > 0 && (isPantryPending || isRecipeFilterIngredientsPending);
-  const cannotResolveSelectedPantryItems =
-    selectedPantryItemIds.length > 0 &&
-    !isResolvingSelectedPantryItems &&
+  const isResolvingRecipePantryItems =
+    recipePantryItemIds.length > 0 && (isPantryPending || isRecipeFilterIngredientsPending);
+  const cannotResolveRecipePantryItems =
+    recipePantryItemIds.length > 0 &&
+    !isResolvingRecipePantryItems &&
     resolvedIngredientIds.length === 0;
+  const shouldFetchRecipeMatches =
+    showRecipeMatches &&
+    !isResolvingRecipePantryItems &&
+    !cannotResolveRecipePantryItems &&
+    resolvedIngredientIds.length > 0;
   const {
     data: selectedRecipePage,
     error: selectedRecipesError,
     isPending: isSelectedRecipesPending,
-  } = useRecipesQuery(
-    { ingredientIds: resolvedIngredientIds },
-    selectedPantryItemIds.length > 0 &&
-      !isResolvingSelectedPantryItems &&
-      !cannotResolveSelectedPantryItems,
-  );
+  } = useRecipesQuery({ ingredientIds: resolvedIngredientIds }, shouldFetchRecipeMatches);
   const { data: recipePage, error, isPending, refetch } = useRecipesQuery();
   const {
     data: searchResultsPage,
@@ -856,7 +918,7 @@ export function RecipeListPage({
     );
   }
 
-  if (isPending && !cannotResolveSelectedPantryItems) {
+  if (isPending && !(selectedPantryItemIds.length > 0 && cannotResolveRecipePantryItems)) {
     return (
       <main className="mobile-page bg-background text-foreground flex min-h-dvh flex-col">
         <RecipeHeader onQueryChange={handleSearchQueryChange} query={searchQuery} />
@@ -901,11 +963,16 @@ export function RecipeListPage({
               selectedIngredientIds={ingredientIds}
               selectedPantryItemIds={selectedPantryItemIds}
               selectedRecipes={selectedRecipePage?.content ?? []}
+              showRecipeMatches={showRecipeMatches}
               isSelectedRecipesPending={
-                selectedPantryItemIds.length > 0 &&
-                (isResolvingSelectedPantryItems || isSelectedRecipesPending)
+                showRecipeMatches &&
+                (isResolvingRecipePantryItems ||
+                  (shouldFetchRecipeMatches && isSelectedRecipesPending))
               }
-              selectedRecipesError={selectedRecipesError}
+              selectedRecipesError={getPantryRecipeMatchError(
+                selectedRecipesError,
+                recipePantryItemIds.length > 0 ? recipeFilterIngredientsError : null,
+              )}
               recipeFilterIngredients={recipeFilterIngredients}
             />
           ) : null}

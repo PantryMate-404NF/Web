@@ -5,12 +5,15 @@
  */
 import { http, HttpResponse } from 'msw';
 
-import { reissueAccessTokenResponse } from '../data/auth';
+import { deleteMyAccountResponse, reissueAccessTokenResponse } from '../data/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8080';
 
 export const authHandlers = [
   http.post(`${API_BASE_URL}/api/auth/reissue`, () => {
     return HttpResponse.json(reissueAccessTokenResponse);
+  }),
+  http.delete('*/api/users/me', () => {
+    return HttpResponse.json(deleteMyAccountResponse);
   }),
 ];

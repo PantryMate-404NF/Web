@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
         hostname: 'images.unsplash.com',
         protocol: 'https',
       },
+      {
+        hostname: 'oasisprodproduct.edge.naverncp.com',
+        protocol: 'https',
+      },
     ],
   },
   reactStrictMode: true,

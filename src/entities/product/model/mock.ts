@@ -1,4 +1,5 @@
 import type { ProductDetail, ProductId, RelatedProduct } from './types';
+import { PRODUCT_COMMERCE_IDS } from './commerce-product-ids';
 
 export const PRODUCT_COMMERCE_MOCK_IDS: Record<ProductId, number> = {
   'organic-broccoli': 101,
@@ -45,6 +46,7 @@ const HOME_PRODUCT_DETAILS: ProductDetail[] = HOME_PRODUCT_DETAIL_INPUTS.map(
     if (id === 'free-range-eggs') {
       return {
         id,
+        commerceProductId: PRODUCT_COMMERCE_IDS[id],
         mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS[id],
         category: '계란 · 알류',
         name: '완전방사 무항생제 유정란(10구)',
@@ -93,6 +95,7 @@ const HOME_PRODUCT_DETAILS: ProductDetail[] = HOME_PRODUCT_DETAIL_INPUTS.map(
 
     return {
       id,
+      commerceProductId: PRODUCT_COMMERCE_IDS[id],
       mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS[id],
       category,
       name,
@@ -116,6 +119,7 @@ const HOME_PRODUCT_DETAILS: ProductDetail[] = HOME_PRODUCT_DETAIL_INPUTS.map(
 export const productMocks: ProductDetail[] = [
   {
     id: 'organic-broccoli',
+    commerceProductId: PRODUCT_COMMERCE_IDS['organic-broccoli'],
     mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS['organic-broccoli'],
     category: '채소·샐러드',
     name: '국산 유기농 브로콜리 1kg',
@@ -134,6 +138,7 @@ export const productMocks: ProductDetail[] = [
   },
   {
     id: 'sweet-banana',
+    commerceProductId: PRODUCT_COMMERCE_IDS['sweet-banana'],
     mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS['sweet-banana'],
     category: '과일',
     name: '에콰도르산 달콤 바나나',
@@ -152,6 +157,7 @@ export const productMocks: ProductDetail[] = [
   },
   {
     id: 'fresh-milk',
+    commerceProductId: PRODUCT_COMMERCE_IDS['fresh-milk'],
     mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS['fresh-milk'],
     category: '유제품',
     name: '신선한 우유',
@@ -170,6 +176,7 @@ export const productMocks: ProductDetail[] = [
   },
   {
     id: 'soft-tofu',
+    commerceProductId: PRODUCT_COMMERCE_IDS['soft-tofu'],
     mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS['soft-tofu'],
     category: '두부·콩나물',
     name: '부드러운 두부',

@@ -1,9 +1,12 @@
+'use client';
+
 /** 마이페이지의 주문·배송 현황과 결제 완료 주문 목록을 표시합니다. */
 import { ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { ORDER_HISTORY_MOCK, type OrderHistoryMock } from '@/entities/order/model/mock';
+import { useOrderHistoryQuery } from '@/entities/order/api/use-order-history-query';
+import type { OrderHistoryRecord } from '@/entities/order/model/order-history';
 import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
 
 type OrderListStatus = 'paid' | 'preparing';
@@ -74,7 +77,13 @@ function OrderStatusSummary({ status }: { status: OrderListStatus }) {
   );
 }
 
-function OrderHistoryItem({ order, status }: { order: OrderHistoryMock; status: OrderListStatus }) {
+function OrderHistoryItem({
+  order,
+  status,
+}: {
+  order: OrderHistoryRecord;
+  status: OrderListStatus;
+}) {
   const isPreparing = status === 'preparing';
 
   return (
@@ -94,7 +103,7 @@ function OrderHistoryItem({ order, status }: { order: OrderHistoryMock; status: 
 
       <div className="flex items-center justify-between">
         <h2 className="text-base leading-6 font-semibold">
-          {isPreparing ? '배송 준비' : order.status}
+          {isPreparing ? '배송 준비' : order.statusLabel}
         </h2>
         <span className="text-disabled flex items-center gap-0 text-xs leading-4 font-medium">
           {order.orderNumber}
@@ -116,7 +125,8 @@ function OrderHistoryItem({ order, status }: { order: OrderHistoryMock; status: 
               alt=""
               className="size-[76px] shrink-0 rounded-xl object-cover"
               height={76}
-              src={item.imageSrc}
+              src={item.thumbnailUrl || '/images/pantry/ingredient-image-placeholder.png'}
+              unoptimized={Boolean(item.thumbnailUrl)}
               width={76}
             />
             <div className="min-w-0">
@@ -151,6 +161,12 @@ function OrderHistoryItem({ order, status }: { order: OrderHistoryMock; status: 
 
 export function OrderHistoryPage({ status = 'paid' }: { status?: OrderListStatus }) {
   const isPreparing = status === 'preparing';
+  const {
+    data: orders,
+    isError,
+    isPending,
+    refetch,
+  } = useOrderHistoryQuery(isPreparing ? undefined : 'CONFIRMED');
 
   return (
     <main className="mobile-page bg-background flex min-h-dvh flex-col">
@@ -177,9 +193,28 @@ export function OrderHistoryPage({ status = 'paid' }: { status?: OrderListStatus
         className="flex-1"
         aria-label={isPreparing ? '배송 준비 주문 목록' : '결제 완료 주문 목록'}
       >
-        <ul>
-          <OrderHistoryItem order={ORDER_HISTORY_MOCK} status={status} />
-        </ul>
+        {isError ? (
+          <div className="px-4 py-8 text-center">
+            <p className="text-text-secondary" role="alert">
+              주문 내역을 불러오지 못했어요.
+            </p>
+            <button className="text-primary mt-4 font-semibold" onClick={() => void refetch()}>
+              다시 시도
+            </button>
+          </div>
+        ) : isPending ? (
+          <p className="text-text-secondary px-4 py-8 text-center" role="status">
+            주문 내역을 불러오는 중이에요.
+          </p>
+        ) : orders?.length ? (
+          <ul>
+            {orders.map((order) => (
+              <OrderHistoryItem key={order.id} order={order} status={status} />
+            ))}
+          </ul>
+        ) : (
+          <p className="text-text-secondary px-4 py-8 text-center">주문 내역이 없어요.</p>
+        )}
       </section>
 
       <BottomNavigation />

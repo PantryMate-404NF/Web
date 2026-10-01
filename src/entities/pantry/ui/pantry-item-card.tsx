@@ -56,7 +56,11 @@ function ItemOptionsLink({
     <button
       aria-label={`${itemName} 옵션`}
       className="flex size-10 shrink-0 items-center justify-center rounded-md p-2 focus-visible:ring-2 focus-visible:outline-none"
-      onClick={(event) => onOptions?.(event.currentTarget)}
+      onClick={(event) => {
+        event.stopPropagation();
+        onOptions?.(event.currentTarget);
+      }}
+      onKeyDown={(event) => event.stopPropagation()}
       type="button"
     >
       <Image alt="" aria-hidden="true" height={24} src="/images/pantry/dots.svg" width={24} />
@@ -96,6 +100,12 @@ function PantryImageCard({
       : item.storageType === 'ROOM_TEMP'
         ? '/images/pantry/sun.svg'
         : '/images/pantry/refrigerator.svg';
+  const isExpirationImminent =
+    item.expirationStatus === 'IMMINENT' ||
+    (item.expirationStatus === 'NORMAL' &&
+      item.daysUntilExpiration !== null &&
+      item.daysUntilExpiration >= 0 &&
+      item.daysUntilExpiration <= 3);
 
   return (
     <article
@@ -108,6 +118,7 @@ function PantryImageCard({
           : undefined
       }
       onKeyDown={(event) => {
+        if (event.target !== event.currentTarget) return;
         if (!selectionMode || (event.key !== 'Enter' && event.key !== ' ')) return;
         event.preventDefault();
         if (!selectionDisabled) onSelect?.(item, selectionIngredientId ?? undefined);
@@ -127,7 +138,7 @@ function PantryImageCard({
           />
         </div>
         <span
-          className={`flex h-5 items-center rounded-full px-2 text-xs leading-[18px] font-semibold ${item.expirationStatus === 'EXPIRED' ? 'bg-destructive/10 text-destructive' : item.expirationStatus === 'IMMINENT' ? 'bg-primary/20 text-status-warning' : 'bg-muted text-muted-foreground'}`}
+          className={`flex h-5 items-center rounded-full px-2 text-xs leading-[18px] font-semibold ${item.expirationStatus === 'EXPIRED' ? 'bg-destructive/10 text-destructive' : isExpirationImminent ? 'bg-primary/20 text-status-warning' : 'bg-muted text-muted-foreground'}`}
         >
           {getExpirationBadgeLabel(item.expirationLabel, item.expirationStatus)}
         </span>
@@ -150,11 +161,9 @@ function PantryImageCard({
           <span>{sourceLabel}</span>
         </p>
       </div>
-      {!selectionMode ? (
-        <div className="absolute right-[-6px] bottom-[5px]">
-          <ItemOptionsLink itemName={item.name} onOptions={onOptions} />
-        </div>
-      ) : null}
+      <div className="absolute right-[-6px] bottom-[5px]">
+        <ItemOptionsLink itemName={item.name} onOptions={onOptions} />
+      </div>
     </article>
   );
 }
@@ -189,6 +198,7 @@ function PantryIconCard({
           : undefined
       }
       onKeyDown={(event) => {
+        if (event.target !== event.currentTarget) return;
         if (!selectionMode || (event.key !== 'Enter' && event.key !== ' ')) return;
         event.preventDefault();
         if (!selectionDisabled) onSelect?.(item, selectionIngredientId ?? undefined);
@@ -216,7 +226,7 @@ function PantryIconCard({
           <h2 className="text-body-4 truncate font-semibold">{item.name}</h2>
           <p className="text-label-4 text-muted-foreground mt-1 truncate">{item.expirationLabel}</p>
         </div>
-        {!selectionMode ? <ItemOptionsLink itemName={item.name} onOptions={onOptions} /> : null}
+        <ItemOptionsLink itemName={item.name} onOptions={onOptions} />
       </div>
 
       <p className="sr-only">{availabilityLabel}</p>

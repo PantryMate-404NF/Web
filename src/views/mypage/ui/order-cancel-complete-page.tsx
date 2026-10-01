@@ -3,22 +3,14 @@ import { Check } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
-import { getOrderHistoryMock } from '@/entities/order/model/mock';
-
 export function OrderCancelCompletePage({ orderId }: { orderId: string }) {
-  const order = getOrderHistoryMock(orderId);
-
-  if (!order) {
-    return null;
-  }
-
   return (
     <main className="mobile-page bg-background flex min-h-dvh flex-col px-4">
       <header className="border-border relative flex h-16 items-center justify-center px-4">
         <Link
           aria-label="주문 상세로 돌아가기"
           className="absolute -left-1 grid size-8 place-items-center"
-          href={`/mypage/orders/${order.id}`}
+          href={`/mypage/orders/${encodeURIComponent(orderId)}`}
         >
           <Image
             alt=""

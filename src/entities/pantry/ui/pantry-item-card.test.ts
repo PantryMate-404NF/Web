@@ -26,6 +26,22 @@ describe('getExpirationBadgeLabel', () => {
 });
 
 describe('PantryItemCard image-card icons', () => {
+  it('highlights a D-3 badge even when the API status is NORMAL', () => {
+    const markup = renderToStaticMarkup(
+      createElement(PantryItemCard, {
+        item: {
+          ...pantryItems[0],
+          daysUntilExpiration: 3,
+          expirationLabel: '소비기한 3일 남음',
+          expirationStatus: 'NORMAL',
+        },
+        variant: 'image',
+      }),
+    );
+
+    expect(markup).toContain('bg-primary/20 text-status-warning');
+  });
+
   it('uses the pantry basic thumbnail when a manually registered item has no photo', () => {
     const itemWithoutImage = { ...pantryItems[0], imageUrl: undefined };
     const markup = renderToStaticMarkup(
@@ -48,6 +64,20 @@ describe('PantryItemCard image-card icons', () => {
     expect(markup).toContain('border-[#FFCD55]');
     expect(markup).toContain('bg-[#FAE9C2]');
     expect(markup).toContain('aria-pressed="true"');
+  });
+
+  it('keeps the edit/delete options available in recipe selection mode', () => {
+    const markup = renderToStaticMarkup(
+      createElement(PantryItemCard, {
+        item: pantryItems[0],
+        variant: 'image',
+        selectionMode: true,
+        selected: true,
+      }),
+    );
+
+    expect(markup).toContain(`aria-label="${pantryItems[0].name} 옵션"`);
+    expect(markup).toContain('/images/pantry/dots.svg');
   });
 
   it('keeps an unavailable but recipe-mapped pantry card selectable', () => {

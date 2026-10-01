@@ -133,6 +133,7 @@ function HomeContent({
       {hasCompletedOnboarding ? (
         <div className="mt-4">
           <HomeRecipeRail
+            description={recommendationMessage ?? '추천 결과를 준비하고 있어요.'}
             error={recipeError}
             isPending={recipeIsPending}
             onRetry={retryRecipes}

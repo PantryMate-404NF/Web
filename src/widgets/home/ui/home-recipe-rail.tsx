@@ -7,6 +7,7 @@ import type { HomeRecipeCardItem } from '../model/home-recipe';
 import { HomeSectionHeading } from './home-section-heading';
 
 interface HomeRecipeRailProps {
+  description?: string;
   error?: Error | null;
   isPending?: boolean;
   onRetry?: () => void;
@@ -32,6 +33,7 @@ function RecipeRailState({
 }
 
 export function HomeRecipeRail({
+  description = '맛 선호도를 반영해 AI가 추천했어요.',
   error = null,
   isPending = false,
   onRetry,
@@ -41,11 +43,7 @@ export function HomeRecipeRail({
 
   return (
     <section className="pt-2.5 pb-4 pl-4 [background:var(--home-recipe-background)]">
-      <HomeSectionHeading
-        description="내 취향과 식생활에 맞는 레시피를 만나보세요."
-        href="/recipe"
-        title="나를 위한 레시피"
-      />
+      <HomeSectionHeading description={description} href="/recipe" title="나를 위한 레시피" />
       {isPending ? (
         <RecipeRailState>추천 레시피를 불러오는 중이에요.</RecipeRailState>
       ) : error ? (
