@@ -50,6 +50,20 @@ describe('PantryItemCard image-card icons', () => {
     expect(markup).toContain('aria-pressed="true"');
   });
 
+  it('keeps the edit/delete options available in recipe selection mode', () => {
+    const markup = renderToStaticMarkup(
+      createElement(PantryItemCard, {
+        item: pantryItems[0],
+        variant: 'image',
+        selectionMode: true,
+        selected: true,
+      }),
+    );
+
+    expect(markup).toContain(`aria-label="${pantryItems[0].name} 옵션"`);
+    expect(markup).toContain('/images/pantry/dots.svg');
+  });
+
   it('keeps an unavailable but recipe-mapped pantry card selectable', () => {
     const markup = renderToStaticMarkup(
       createElement(PantryItemCard, {

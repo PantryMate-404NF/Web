@@ -56,7 +56,11 @@ function ItemOptionsLink({
     <button
       aria-label={`${itemName} 옵션`}
       className="flex size-10 shrink-0 items-center justify-center rounded-md p-2 focus-visible:ring-2 focus-visible:outline-none"
-      onClick={(event) => onOptions?.(event.currentTarget)}
+      onClick={(event) => {
+        event.stopPropagation();
+        onOptions?.(event.currentTarget);
+      }}
+      onKeyDown={(event) => event.stopPropagation()}
       type="button"
     >
       <Image alt="" aria-hidden="true" height={24} src="/images/pantry/dots.svg" width={24} />
@@ -108,6 +112,7 @@ function PantryImageCard({
           : undefined
       }
       onKeyDown={(event) => {
+        if (event.target !== event.currentTarget) return;
         if (!selectionMode || (event.key !== 'Enter' && event.key !== ' ')) return;
         event.preventDefault();
         if (!selectionDisabled) onSelect?.(item, selectionIngredientId ?? undefined);
@@ -150,11 +155,9 @@ function PantryImageCard({
           <span>{sourceLabel}</span>
         </p>
       </div>
-      {!selectionMode ? (
-        <div className="absolute right-[-6px] bottom-[5px]">
-          <ItemOptionsLink itemName={item.name} onOptions={onOptions} />
-        </div>
-      ) : null}
+      <div className="absolute right-[-6px] bottom-[5px]">
+        <ItemOptionsLink itemName={item.name} onOptions={onOptions} />
+      </div>
     </article>
   );
 }
@@ -189,6 +192,7 @@ function PantryIconCard({
           : undefined
       }
       onKeyDown={(event) => {
+        if (event.target !== event.currentTarget) return;
         if (!selectionMode || (event.key !== 'Enter' && event.key !== ' ')) return;
         event.preventDefault();
         if (!selectionDisabled) onSelect?.(item, selectionIngredientId ?? undefined);
@@ -216,7 +220,7 @@ function PantryIconCard({
           <h2 className="text-body-4 truncate font-semibold">{item.name}</h2>
           <p className="text-label-4 text-muted-foreground mt-1 truncate">{item.expirationLabel}</p>
         </div>
-        {!selectionMode ? <ItemOptionsLink itemName={item.name} onOptions={onOptions} /> : null}
+        <ItemOptionsLink itemName={item.name} onOptions={onOptions} />
       </div>
 
       <p className="sr-only">{availabilityLabel}</p>
