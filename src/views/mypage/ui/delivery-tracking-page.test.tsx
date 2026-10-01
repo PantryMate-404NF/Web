@@ -7,7 +7,11 @@ vi.mock('@/entities/order/api/use-order-history-query', () => ({
   useOrderHistoryQuery: useOrderHistoryQueryMock,
 }));
 
-import { DeliveryTrackingPage } from './delivery-tracking-page';
+import {
+  DeliveryTrackingPage,
+  getDeliveryTrackingHref,
+  getDeliveryTrackingLabel,
+} from './delivery-tracking-page';
 
 const orders = [
   {
@@ -58,6 +62,20 @@ describe('DeliveryTrackingPage', () => {
     });
   });
 
+  it('주문별 상태에 맞춰 배송 목록 라벨과 조회 경로를 결정하고 추적 불가 상태는 제외한다', () => {
+    expect(getDeliveryTrackingLabel({ status: 'PENDING' })).toBe('배송 준비');
+    expect(getDeliveryTrackingHref({ id: 'ORDER_PREPARING', status: 'PENDING' })).toBe(
+      '/mypage/delivery?preparing=ORDER_PREPARING',
+    );
+    expect(getDeliveryTrackingLabel({ status: 'CONFIRMED' })).toBe('배송 완료');
+    expect(getDeliveryTrackingHref({ id: 'ORDER_DONE', status: 'CONFIRMED' })).toBe(
+      '/mypage/delivery?orderId=ORDER_DONE',
+    );
+    expect(getDeliveryTrackingLabel({ status: 'CANCELLED' })).toBeNull();
+    expect(getDeliveryTrackingHref({ id: 'ORDER_CANCELLED', status: 'CANCELLED' })).toBeNull();
+    expect(getDeliveryTrackingLabel({ status: 'FAILED' })).toBeNull();
+  });
+
   it('배송 준비·완료와 배송 중 아이콘을 각각 지정 크기로 표시한다', () => {
     const markup = renderToStaticMarkup(<DeliveryTrackingPage orderId="ORDER_1" />);
     const progress = markup.match(
@@ -100,6 +118,7 @@ describe('DeliveryTrackingPage', () => {
     const markup = renderToStaticMarkup(<DeliveryTrackingPage />);
 
     expect(markup).toContain('자연 프리미엄 야생화꿀');
+    expect(markup).toMatch(/<button[^>]*aria-expanded="false"[^>]*>다른 주문 보기/);
   });
 
   it('preparing 주문은 기존 조회 결과를 사용하고 배송 준비 단계만 강조한다', () => {

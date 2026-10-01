@@ -171,6 +171,24 @@ function DeliveryOrderInfo({
   );
 }
 
+function getTrackableOrders(orders: OrderHistoryRecord[] | undefined) {
+  return orders?.filter((item) => item.status === 'PENDING' || item.status === 'CONFIRMED') ?? [];
+}
+
+export function getDeliveryTrackingLabel(order: Pick<OrderHistoryRecord, 'status'>) {
+  if (order.status === 'PENDING') return '배송 준비';
+  if (order.status === 'CONFIRMED') return '배송 완료';
+  return null;
+}
+
+export function getDeliveryTrackingHref(order: Pick<OrderHistoryRecord, 'id' | 'status'>) {
+  const label = getDeliveryTrackingLabel(order);
+  if (!label) return null;
+
+  const query = order.status === 'PENDING' ? 'preparing' : 'orderId';
+  return `/mypage/delivery?${query}=${encodeURIComponent(order.id)}`;
+}
+
 export function DeliveryTrackingPage({
   orderId,
   preparingOrderId,
@@ -187,9 +205,10 @@ export function DeliveryTrackingPage({
   } = useOrderHistoryQuery(isPreparing ? undefined : 'CONFIRMED');
   const [showAllOrders, setShowAllOrders] = useState(false);
   const selectedOrderId = preparingOrderId ?? orderId;
+  const trackableOrders = getTrackableOrders(orders);
   const order =
-    orders?.find((item) => item.id === selectedOrderId) ??
-    (selectedOrderId ? undefined : orders?.[0]);
+    trackableOrders.find((item) => item.id === selectedOrderId) ??
+    (selectedOrderId ? undefined : trackableOrders[0]);
 
   return (
     <main className="mobile-page bg-background flex min-h-dvh flex-col pt-[env(safe-area-inset-top)]">
@@ -222,28 +241,33 @@ export function DeliveryTrackingPage({
           <DeliveryProgress isPreparing={isPreparing} />
           <PurchaseProducts order={order} />
           <DeliveryOrderInfo isPreparing={isPreparing} order={order} />
-          {orders && orders.length > 1 ? (
+          {trackableOrders.length > 1 ? (
             <>
               {showAllOrders ? (
                 <ul className="border-border divide-border divide-y border-b">
-                  {orders
+                  {trackableOrders
                     .filter((item) => item.id !== order.id)
                     .map((item) => (
                       <li className="px-3 py-4" key={item.id}>
-                        <Link
-                          className="flex items-center justify-between"
-                          href={`/mypage/delivery?${isPreparing ? 'preparing' : 'orderId'}=${encodeURIComponent(item.id)}`}
-                        >
-                          <span>
-                            {item.orderedAt} · {item.items[0]?.name ?? '주문 상품'}
-                          </span>
-                          <span className="text-text-secondary">배송 완료</span>
-                        </Link>
+                        {getDeliveryTrackingHref(item) ? (
+                          <Link
+                            className="flex items-center justify-between"
+                            href={getDeliveryTrackingHref(item) ?? '/mypage/delivery'}
+                          >
+                            <span>
+                              {item.orderedAt} · {item.items[0]?.name ?? '주문 상품'}
+                            </span>
+                            <span className="text-text-secondary">
+                              {getDeliveryTrackingLabel(item)}
+                            </span>
+                          </Link>
+                        ) : null}
                       </li>
                     ))}
                 </ul>
               ) : null}
               <button
+                aria-expanded={showAllOrders}
                 className="text-label-2 text-text-secondary flex w-full items-center justify-center gap-1 py-2 font-medium"
                 onClick={() => setShowAllOrders((visible) => !visible)}
                 type="button"

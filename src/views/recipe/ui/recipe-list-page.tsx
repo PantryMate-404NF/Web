@@ -205,6 +205,27 @@ export function getRecipeDisplayMode(items: PantryItem[]): RecipeDisplayMode {
   return items.length > 0 ? 'pantry' : 'basic';
 }
 
+export function getPantryRecommendationState(
+  pantryItemCount: number,
+  isPantryError: boolean,
+): 'hidden' | 'error' | 'recommendations' {
+  if (pantryItemCount > 0) return 'recommendations';
+  return isPantryError ? 'error' : 'hidden';
+}
+
+export function PantryLoadError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="rounded-xl bg-[var(--primitive-grey-50)] p-4" role="alert">
+      <p className="text-body-4 text-[var(--primitive-grey-600)]">
+        팬트리 재료를 불러오지 못해 맞춤 레시피를 추천할 수 없어요.
+      </p>
+      <button className="mt-3 font-semibold" onClick={onRetry} type="button">
+        다시 시도
+      </button>
+    </div>
+  );
+}
+
 export function getImminentIngredients(items: PantryItem[]): ImminentIngredient[] {
   return items
     .filter(
@@ -892,7 +913,12 @@ export function RecipeListPage({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchPageIndex, setSearchPageIndex] = useState(0);
   const contentMode = getRecipeContentMode(searchQuery);
-  const { data: pantryItems = [], isPending: isPantryPending } = usePantriesQuery();
+  const {
+    data: pantryItems = [],
+    isPending: isPantryPending,
+    isError: isPantryError,
+    refetch: refetchPantries,
+  } = usePantriesQuery();
   const personalizedRecommendationQuery = useRecipeRecommendationsQuery(
     shouldEnableRecipeRecommendations(authState, contentMode, 'personalized'),
     10,
@@ -948,6 +974,7 @@ export function RecipeListPage({
   const sections = getRecipeSections(recipes);
   const searchedRecipes = searchResultsPage?.content ?? [];
   const displayMode = getRecipeDisplayMode(pantryItems);
+  const pantryRecommendationState = getPantryRecommendationState(pantryItems.length, isPantryError);
   const imminentIngredients = getImminentIngredients(pantryItems);
   const pantryIngredients = getAvailablePantryIngredients(pantryItems);
   const selectedIngredients = getAvailablePantryIngredients(
@@ -1042,7 +1069,8 @@ export function RecipeListPage({
                 variant="personalized"
               />
             ) : null}
-            {pantryItems.length > 0 ? (
+            {isPantryError ? <PantryLoadError onRetry={() => void refetchPantries()} /> : null}
+            {pantryRecommendationState === 'recommendations' ? (
               <RecipeRecommendationsSection
                 authState={authState}
                 data={recommendationQuery.data}

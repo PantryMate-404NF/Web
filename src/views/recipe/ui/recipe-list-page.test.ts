@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it, vi } from 'vitest';
 
 import { pantryItems } from '@/entities/pantry/model/mock';
 import type { Recipe } from '@/entities/recipe/model/types';
@@ -6,6 +8,7 @@ import { getRecipeResultsHref } from '@/views/pantry/ui/pantry-page';
 
 import {
   getAvailablePantryIngredients,
+  getPantryRecommendationState,
   filterRecipesByQuery,
   getRecipeDisplayMode,
   getImminentIngredients,
@@ -24,6 +27,7 @@ import {
   shouldEnableRecipeRecommendations,
   RECIPE_SEARCH_EMPTY_COPY,
   RECIPE_RAIL_TYPOGRAPHY,
+  PantryLoadError,
 } from './recipe-list-page';
 
 const recipes: Recipe[] = [
@@ -42,6 +46,20 @@ const recipes: Recipe[] = [
 ];
 
 describe('recipe list helpers', () => {
+  it('distinguishes a failed pantry lookup from a successful empty pantry', () => {
+    expect(getPantryRecommendationState(0, false)).toBe('hidden');
+    expect(getPantryRecommendationState(0, true)).toBe('error');
+    expect(getPantryRecommendationState(1, true)).toBe('recommendations');
+  });
+
+  it('shows a pantry-specific retry action when pantry loading fails', () => {
+    const markup = renderToStaticMarkup(createElement(PantryLoadError, { onRetry: vi.fn() }));
+
+    expect(markup).toContain('role="alert"');
+    expect(markup).toContain('팬트리 재료를 불러오지 못해 맞춤 레시피를 추천할 수 없어요.');
+    expect(markup).toContain('다시 시도');
+  });
+
   it('shows only the search screen while a non-empty query is entered', () => {
     expect(getRecipeContentMode('달걀')).toBe('search');
     expect(getRecipeContentMode('   ')).toBe('list');
