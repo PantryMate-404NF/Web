@@ -9,6 +9,7 @@ import {
   filterRecipesByQuery,
   getRecipeDisplayMode,
   getImminentIngredients,
+  getImminentPantryItemIds,
   getIngredientSelectionRoute,
   getRecipeContentMode,
   getRecipeMoreRoute,
@@ -16,6 +17,7 @@ import {
   getRecipeViewState,
   getRecipeSearchResultDisplay,
   getRecipeSearchPagination,
+  getRecipeSearchPageNumbers,
   getRecipeSections,
   RECIPE_SEARCH_EMPTY_COPY,
   RECIPE_RAIL_TYPOGRAPHY,
@@ -65,6 +67,13 @@ describe('recipe list helpers', () => {
     });
   });
 
+  it('shows five numbered pages in the current group, including the last partial group', () => {
+    expect(getRecipeSearchPageNumbers(0, 35)).toEqual([1, 2, 3, 4, 5]);
+    expect(getRecipeSearchPageNumbers(5, 35)).toEqual([6, 7, 8, 9, 10]);
+    expect(getRecipeSearchPageNumbers(34, 35)).toEqual([31, 32, 33, 34, 35]);
+    expect(getRecipeSearchPageNumbers(0, 0)).toEqual([]);
+  });
+
   it('prioritizes an API failure over recipe content', () => {
     expect(getRecipeViewState(new Error('레시피 조회 실패'))).toBe('error');
     expect(getRecipeViewState(null)).toBe('content');
@@ -110,6 +119,20 @@ describe('recipe list helpers', () => {
 
   it('shows up to three registered, available imminent pantry ingredients in expiry order', () => {
     expect(getImminentIngredients(pantryItems)).toEqual([{ name: '바나나', daysLeft: 2 }]);
+  });
+
+  it('uses the three soonest available imminent pantry items for recipe lookup', () => {
+    const imminentItems = [
+      { ...pantryItems[6]!, id: 'later', daysUntilExpiration: 4 },
+      { ...pantryItems[6]!, id: 'soonest', daysUntilExpiration: 1 },
+      { ...pantryItems[6]!, id: 'middle', daysUntilExpiration: 2 },
+      { ...pantryItems[6]!, id: 'fourth', daysUntilExpiration: 5 },
+      { ...pantryItems[7]!, id: 'expired' },
+      { ...pantryItems[6]!, id: 'unavailable', availability: 'UNAVAILABLE' as const },
+      { ...pantryItems[6]!, id: 'no-expiry', daysUntilExpiration: null },
+    ];
+
+    expect(getImminentPantryItemIds(imminentItems)).toEqual(['soonest', 'middle', 'later']);
   });
 
   it('shows only the selected pantry ingredients in the recipe header', () => {

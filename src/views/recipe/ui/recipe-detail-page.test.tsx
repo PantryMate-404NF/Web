@@ -44,6 +44,7 @@ import {
   COOKING_GUIDE_VISIBLE_MS,
   RecipeDetailPage,
   areAllIngredientsSelected,
+  getCookingCompletionVariables,
   toggleIngredientSelection,
 } from './recipe-detail-page';
 
@@ -185,6 +186,19 @@ describe('ingredient selection', () => {
     expect(toggleIngredientSelection(['tomato'], 'tomato')).toEqual([]);
     expect(areAllIngredientsSelected(['tomato', 'egg'], ['tomato', 'egg'])).toBe(true);
     expect(areAllIngredientsSelected(['tomato'], ['tomato', 'egg'])).toBe(false);
+  });
+});
+
+describe('cooking completion request', () => {
+  it('does not send pantry IDs when the user chooses to defer cleanup', () => {
+    expect(getCookingCompletionVariables('42', false, [101, 102])).toEqual({ recipeId: '42' });
+  });
+
+  it('sends only the selected pantry IDs when the user chooses cleanup', () => {
+    expect(getCookingCompletionVariables('42', true, [102])).toEqual({
+      recipeId: '42',
+      pantryItemIds: [102],
+    });
   });
 });
 

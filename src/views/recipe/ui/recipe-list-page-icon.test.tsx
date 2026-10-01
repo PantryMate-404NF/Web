@@ -120,16 +120,53 @@ describe('RecipeActionIcon', () => {
     expect(markup).toContain('href="/cart"');
   });
 
-  it('renders search pagination with the current page and correct boundary buttons', () => {
+  it('loads recipes using available imminent pantry ingredients', () => {
+    useAuthSessionMock.mockReturnValue({ state: 'complete' });
+    usePantriesQueryMock.mockReturnValue({
+      data: [
+        {
+          id: 'egg-item',
+          ingredientId: null,
+          name: '계란',
+          daysUntilExpiration: 1,
+          expirationLabel: '소비기한 1일 남음',
+          expirationStatus: 'IMMINENT',
+          availability: 'AVAILABLE',
+          imageAlt: '계란',
+        },
+      ],
+      isPending: false,
+    });
+    useRecipeFilterIngredientsQueryMock.mockReturnValue({
+      data: [
+        {
+          ingredientId: 42,
+          name: '계란',
+          expiryDate: '2026-10-02',
+          expired: false,
+          defaultSelected: false,
+        },
+      ],
+    });
+
+    renderToStaticMarkup(<RecipeListPage />);
+
+    expect(useRecipeFilterIngredientsQueryMock).toHaveBeenCalledWith(true);
+    expect(useRecipesQueryMock).toHaveBeenCalledWith({ ingredientIds: [42] }, true);
+  });
+
+  it('renders Figma pagination with numbered pages and an accessible selected page', () => {
     const markup = renderToStaticMarkup(
       <RecipeSearchPagination page={0} totalPages={35} onPageChange={vi.fn()} />,
     );
 
     expect(markup).toContain('aria-label="레시피 검색 페이지"');
-    expect(markup).toContain('1 / 35');
-    expect(markup).toContain('aria-label="이전 페이지" disabled=""');
+    expect(markup).toContain('aria-label="1페이지"');
+    expect(markup).toContain('aria-current="page"');
+    expect(markup).toContain('>5</button>');
+    expect(markup).toMatch(/aria-label="이전 페이지"[^>]*disabled=""/);
     expect(markup).toContain('aria-label="다음 페이지"');
-    expect(markup).not.toContain('aria-label="다음 페이지" disabled=""');
+    expect(markup).not.toContain('1 / 35');
   });
 
   it('requests the first search result page in batches of twenty', () => {
