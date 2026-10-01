@@ -29,9 +29,11 @@ import { ApiError } from '@/shared/api/api-error';
 import { CART_HREF } from '@/shared/config/cart-write-mode';
 import { SystemErrorState } from '@/shared/ui/system-error-state';
 import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
+import type { AuthSessionState } from '@/features/auth/model/auth-session';
 import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
 
-export type RecipeSectionId = 'all' | 'recommendations';
+export type RecipeSectionId = 'all' | 'personalized' | 'recommendations';
+export type RecipeRecommendationVariant = 'pantry' | 'personalized';
 
 export interface RecipeRailSection {
   id: RecipeSectionId;
@@ -46,6 +48,7 @@ export interface ImminentIngredient {
 }
 
 export type RecipeDisplayMode = 'pantry' | 'basic';
+export type RecipeContentMode = 'search' | 'list';
 export const RECIPE_ACTION_LAYOUT = {
   containerClassName: 'flex h-[60px] shrink-0 items-center pb-5',
   sectionHeaderClassName: '-mr-4 flex h-[60px] items-center justify-between',
@@ -91,8 +94,20 @@ export function filterRecipesByQuery(recipes: Recipe[], query: string): Recipe[]
   return recipes.filter((recipe) => recipe.name.toLocaleLowerCase().includes(normalizedQuery));
 }
 
-export function getRecipeContentMode(query: string): 'search' | 'list' {
+export function getRecipeContentMode(query: string): RecipeContentMode {
   return query.trim() ? 'search' : 'list';
+}
+
+export function shouldEnableRecipeRecommendations(
+  authState: AuthSessionState,
+  contentMode: RecipeContentMode,
+  variant: RecipeRecommendationVariant,
+): boolean {
+  if (contentMode !== 'list') return false;
+
+  return variant === 'personalized'
+    ? authState === 'complete'
+    : authState === 'complete' || authState === 'onboarding';
 }
 
 export function getRecipeViewState(error: unknown): 'content' | 'error' {
@@ -277,6 +292,31 @@ export function getSelectedRecipeIngredientIds(
 
 export function getRecipeRecommendationTitle(source: RecipeRecommendationSource) {
   return source === 'AI' ? '팬트리 기반 추천' : '인기 레시피';
+}
+
+export function getRecipeRecommendationSectionCopy(
+  variant: RecipeRecommendationVariant,
+  source: RecipeRecommendationSource = 'AI',
+) {
+  if (variant === 'personalized') {
+    return {
+      description:
+        source === 'AI'
+          ? '맛 선호도를 반영해 AI가 추천했어요.'
+          : '지금 인기 있는 레시피를 추천해요.',
+      moreSection: 'personalized' as const,
+      title: '나를 위한 레시피',
+    };
+  }
+
+  return {
+    description:
+      source === 'AI'
+        ? '팬트리 재료로 만들 수 있는 레시피를 확인해 보세요.'
+        : '인기 레시피를 확인해 보세요.',
+    moreSection: 'recommendations' as const,
+    title: getRecipeRecommendationTitle(source),
+  };
 }
 
 export function getRecipeSections(sourceRecipes: Recipe[]): RecipeRailSection[] {
@@ -567,6 +607,7 @@ export function RecipeRecommendationsSection({
   isError,
   error,
   onRetry,
+  variant = 'pantry',
 }: {
   authState: 'loading' | 'guest' | 'complete' | 'onboarding';
   data?: RecipeRecommendationsDto;
@@ -574,11 +615,14 @@ export function RecipeRecommendationsSection({
   isError: boolean;
   error?: unknown;
   onRetry: () => void;
+  variant?: RecipeRecommendationVariant;
 }) {
+  const sectionCopy = getRecipeRecommendationSectionCopy(variant, data?.source);
+
   if (authState === 'guest') {
     return (
-      <section aria-label="레시피 추천" className="space-y-3">
-        <h2 className={RECIPE_RAIL_TYPOGRAPHY.titleClassName}>레시피 추천</h2>
+      <section aria-label={sectionCopy.title} className="space-y-3">
+        <h2 className={RECIPE_RAIL_TYPOGRAPHY.titleClassName}>{sectionCopy.title}</h2>
         <div className="rounded-xl bg-[var(--primitive-grey-50)] p-4">
           <p className="text-body-4 text-[var(--primitive-grey-600)]">
             로그인하면 팬트리 재료와 알레르기 정보를 반영한 레시피를 추천해 드려요.
@@ -596,8 +640,8 @@ export function RecipeRecommendationsSection({
 
   if (authState === 'loading' || isPending) {
     return (
-      <section aria-label="레시피 추천" className="space-y-3" role="status">
-        <h2 className={RECIPE_RAIL_TYPOGRAPHY.titleClassName}>레시피 추천</h2>
+      <section aria-label={sectionCopy.title} className="space-y-3" role="status">
+        <h2 className={RECIPE_RAIL_TYPOGRAPHY.titleClassName}>{sectionCopy.title}</h2>
         <span className="sr-only">추천 레시피를 불러오는 중입니다.</span>
         <div className="flex gap-2 overflow-hidden">
           {[0, 1, 2].map((index) => (
@@ -615,8 +659,8 @@ export function RecipeRecommendationsSection({
   if (isError || !data) {
     const isUnavailable = error instanceof ApiError && error.status === 503;
     return (
-      <section aria-label="레시피 추천" className="space-y-3">
-        <h2 className={RECIPE_RAIL_TYPOGRAPHY.titleClassName}>레시피 추천</h2>
+      <section aria-label={sectionCopy.title} className="space-y-3">
+        <h2 className={RECIPE_RAIL_TYPOGRAPHY.titleClassName}>{sectionCopy.title}</h2>
         <div className="rounded-xl bg-[var(--primitive-grey-50)] p-4" role="alert">
           <p className="text-body-4 text-[var(--primitive-grey-600)]">
             {isUnavailable
@@ -633,32 +677,24 @@ export function RecipeRecommendationsSection({
 
   if (data.items.length === 0) {
     return (
-      <section aria-label="레시피 추천" className="space-y-3">
-        <h2 className={RECIPE_RAIL_TYPOGRAPHY.titleClassName}>
-          {getRecipeRecommendationTitle(data.source)}
-        </h2>
+      <section aria-label={sectionCopy.title} className="space-y-3">
+        <h2 className={RECIPE_RAIL_TYPOGRAPHY.titleClassName}>{sectionCopy.title}</h2>
         <p className="text-body-4 text-[var(--primitive-grey-500)]">추천할 레시피가 없어요.</p>
       </section>
     );
   }
 
   return (
-    <section aria-label={getRecipeRecommendationTitle(data.source)} className="flex flex-col gap-3">
+    <section aria-label={sectionCopy.title} className="flex flex-col gap-3">
       <div className={RECIPE_ACTION_LAYOUT.sectionHeaderClassName}>
         <div className={RECIPE_ACTION_LAYOUT.titleBlockClassName}>
-          <h2 className={RECIPE_RAIL_TYPOGRAPHY.titleClassName}>
-            {getRecipeRecommendationTitle(data.source)}
-          </h2>
-          <p className={RECIPE_RAIL_TYPOGRAPHY.descriptionClassName}>
-            {data.source === 'AI'
-              ? '팬트리 재료로 만들 수 있는 레시피를 확인해 보세요.'
-              : '인기 레시피를 확인해 보세요.'}
-          </p>
+          <h2 className={RECIPE_RAIL_TYPOGRAPHY.titleClassName}>{sectionCopy.title}</h2>
+          <p className={RECIPE_RAIL_TYPOGRAPHY.descriptionClassName}>{sectionCopy.description}</p>
         </div>
         <Link
-          aria-label={`${getRecipeRecommendationTitle(data.source)} 더보기`}
+          aria-label={`${sectionCopy.title} 더보기`}
           className={RECIPE_ACTION_LAYOUT.containerClassName}
-          href={getRecipeMoreRoute('recommendations')}
+          href={getRecipeMoreRoute(sectionCopy.moreSection)}
         >
           <span className={RECIPE_ACTION_LAYOUT.textClassName}>더보기</span>
           <RecipeActionIcon />
@@ -841,11 +877,19 @@ export function RecipeListPage({
 }) {
   const ingredientIds = selectedIngredientIds;
   const { state: authState } = useAuthSession();
-  const recommendationQuery = useRecipeRecommendationsQuery(
-    authState === 'complete' || authState === 'onboarding',
-  );
   const [searchQuery, setSearchQuery] = useState('');
   const [searchPageIndex, setSearchPageIndex] = useState(0);
+  const contentMode = getRecipeContentMode(searchQuery);
+  const personalizedRecommendationQuery = useRecipeRecommendationsQuery(
+    shouldEnableRecipeRecommendations(authState, contentMode, 'personalized'),
+    10,
+    false,
+  );
+  const recommendationQuery = useRecipeRecommendationsQuery(
+    shouldEnableRecipeRecommendations(authState, contentMode, 'pantry'),
+    20,
+    true,
+  );
   const { data: pantryItems = [], isPending: isPantryPending } = usePantriesQuery();
   const imminentPantryItemIds = getImminentPantryItemIds(pantryItems);
   const recipePantryItemIds =
@@ -892,7 +936,6 @@ export function RecipeListPage({
   const recipes = recipePage?.content ?? [];
   const sections = getRecipeSections(recipes);
   const searchedRecipes = searchResultsPage?.content ?? [];
-  const contentMode = getRecipeContentMode(searchQuery);
   const displayMode = getRecipeDisplayMode(pantryItems);
   const imminentIngredients = getImminentIngredients(pantryItems);
   const pantryIngredients = getAvailablePantryIngredients(pantryItems);
@@ -977,6 +1020,17 @@ export function RecipeListPage({
             />
           ) : null}
           <div className="flex flex-1 flex-col gap-8 px-4 pt-2 pb-8">
+            {authState === 'complete' ? (
+              <RecipeRecommendationsSection
+                authState={authState}
+                data={personalizedRecommendationQuery.data}
+                error={personalizedRecommendationQuery.error}
+                isError={personalizedRecommendationQuery.isError}
+                isPending={personalizedRecommendationQuery.isPending}
+                onRetry={() => void personalizedRecommendationQuery.refetch()}
+                variant="personalized"
+              />
+            ) : null}
             <RecipeRecommendationsSection
               authState={authState}
               data={recommendationQuery.data}

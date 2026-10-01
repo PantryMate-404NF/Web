@@ -12,7 +12,11 @@ import { BackButton } from '@/shared/ui/back-button';
 import { SystemErrorState } from '@/shared/ui/system-error-state';
 import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
 
-import { getRecipeRecommendationTitle, RecipeCard } from './recipe-list-page';
+import {
+  getRecipeRecommendationSectionCopy,
+  getRecipeRecommendationTitle,
+  RecipeCard,
+} from './recipe-list-page';
 
 const RECOMMENDATIONS_PAGE_SIZE = 10;
 const RECOMMENDATIONS_FETCH_SIZE = 100;
@@ -23,23 +27,34 @@ export function RecipeMorePage({
   title = '전체 레시피',
 }: {
   selectedIngredientIds?: number[];
-  sectionId?: 'all' | 'recommendations';
+  sectionId?: 'all' | 'personalized' | 'recommendations';
   title?: string;
 }) {
   const ingredientIds = selectedIngredientIds;
-  const isRecommendations = sectionId === 'recommendations';
+  const isPersonalized = sectionId === 'personalized';
+  const isRecommendations = sectionId === 'recommendations' || isPersonalized;
   const { state: authState } = useAuthSession();
   const [page, setPage] = useState(0);
   const recipeQuery = useRecipesQuery({ page, size: 20, ingredientIds }, !isRecommendations);
   const recommendationQuery = useRecipeRecommendationsQuery(
-    isRecommendations && (authState === 'complete' || authState === 'onboarding'),
+    isRecommendations &&
+      (authState === 'complete' || (!isPersonalized && authState === 'onboarding')),
     RECOMMENDATIONS_FETCH_SIZE,
+    !isPersonalized,
   );
   const recommendationData = recommendationQuery.data;
+  const recommendationCopy = recommendationData
+    ? getRecipeRecommendationSectionCopy(
+        isPersonalized ? 'personalized' : 'pantry',
+        recommendationData.source,
+      )
+    : null;
   const pageTitle = isRecommendations
-    ? recommendationData
-      ? getRecipeRecommendationTitle(recommendationData.source)
-      : '팬트리 기반 추천'
+    ? isPersonalized
+      ? '나를 위한 레시피'
+      : recommendationData
+        ? getRecipeRecommendationTitle(recommendationData.source)
+        : '팬트리 기반 추천'
     : title;
   const recommendationItems = recommendationData?.items ?? [];
   const recommendationTotalPages = Math.ceil(
@@ -57,6 +72,8 @@ export function RecipeMorePage({
     ? authState === 'loading' || recommendationQuery.isPending
     : recipeQuery.isPending;
   const error = isRecommendations ? recommendationQuery.error : recipeQuery.error;
+  const hasRecommendationData = isRecommendations && Boolean(recommendationData);
+  const loginReturnTo = isRecommendations ? `/recipe/more?section=${sectionId}` : '/recipe';
 
   if (isRecommendations && authState === 'guest') {
     return (
@@ -69,7 +86,10 @@ export function RecipeMorePage({
           <p className="text-body-4 text-[var(--primitive-grey-600)]">
             추천 레시피를 보려면 로그인해 주세요.
           </p>
-          <Link className="mt-3 inline-block font-semibold" href="/login?returnTo=%2Frecipe">
+          <Link
+            className="mt-3 inline-block font-semibold"
+            href={`/login?returnTo=${encodeURIComponent(loginReturnTo)}`}
+          >
             로그인하기
           </Link>
         </section>
@@ -78,7 +98,27 @@ export function RecipeMorePage({
     );
   }
 
-  if (error) {
+  if (isPersonalized && authState === 'onboarding') {
+    return (
+      <main className="mobile-page bg-background text-foreground flex min-h-dvh flex-col">
+        <header className="flex h-16 items-center px-4">
+          <BackButton fallbackHref="/recipe" />
+          <h1 className="text-title-3 ml-0.5 font-semibold">{pageTitle}</h1>
+        </header>
+        <section className="px-4 pt-8">
+          <p className="text-body-4 text-[var(--primitive-grey-600)]">
+            온보딩을 완료하면 맛 선호도를 반영한 레시피를 추천해 드려요.
+          </p>
+          <Link className="mt-3 inline-block font-semibold" href="/onboarding">
+            온보딩 하기
+          </Link>
+        </section>
+        <BottomNavigation />
+      </main>
+    );
+  }
+
+  if (error && !hasRecommendationData) {
     const isRecommendationUnavailable =
       isRecommendations && error instanceof ApiError && error.status === 503;
     return (
@@ -121,6 +161,25 @@ export function RecipeMorePage({
         <BackButton fallbackHref="/recipe" />
         <h1 className="text-title-3 ml-0.5 font-semibold">{pageTitle}</h1>
       </header>
+      {isPersonalized && recommendationCopy ? (
+        <p className="text-body-4 px-4 pb-3 text-[var(--primitive-grey-500)]">
+          {recommendationCopy.description}
+        </p>
+      ) : null}
+      {error && hasRecommendationData ? (
+        <section className="mx-4 mb-3 rounded-xl bg-[var(--primitive-grey-50)] p-4" role="alert">
+          <p className="text-body-4 text-[var(--primitive-grey-600)]">
+            최신 추천을 불러오지 못했어요. 기존 추천을 표시합니다.
+          </p>
+          <button
+            className="mt-3 font-semibold"
+            onClick={() => void recommendationQuery.refetch()}
+            type="button"
+          >
+            다시 시도
+          </button>
+        </section>
+      ) : null}
       {isPending ? (
         <div className="flex flex-1 items-center justify-center" role="status">
           <span className="sr-only">레시피를 불러오는 중입니다.</span>
