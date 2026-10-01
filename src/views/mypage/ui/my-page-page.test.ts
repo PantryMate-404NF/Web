@@ -27,6 +27,10 @@ describe('MyPagePage', () => {
     expect(myPageSource).not.toContain("{ href: '/mypage/delivery', label: '배송지 관리' }");
   });
 
+  it('opens saved preferences in edit mode from My Page', () => {
+    expect(myPageSource).toContain("{ href: '/onboarding?mode=edit', label: '개인화 설정' }");
+  });
+
   it('opens an explicit confirmation dialog before deleting the account', () => {
     expect(myPageSource).toContain('onClick={() => setIsWithdrawalDialogOpen(true)}');
     expect(myPageSource).toContain('<AccountWithdrawalDialog');

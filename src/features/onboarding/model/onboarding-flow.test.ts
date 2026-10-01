@@ -82,6 +82,10 @@ describe('shouldRedirectCompletedOnboarding', () => {
     expect(shouldRedirectCompletedOnboarding(true, true)).toBe(false);
   });
 
+  it('keeps saved preferences open when entered from My Page settings', () => {
+    expect(shouldRedirectCompletedOnboarding(true, false, true)).toBe(false);
+  });
+
   it('redirects a completed user outside preview mode', () => {
     expect(shouldRedirectCompletedOnboarding(true, false)).toBe(true);
   });

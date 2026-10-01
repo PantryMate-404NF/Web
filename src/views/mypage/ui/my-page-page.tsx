@@ -38,7 +38,7 @@ const activityItems = [
 const accountItems = [
   { href: '/mypage/edit', label: '회원 정보 관리' },
   { href: '/mypage/addresses', label: '배송지 관리' },
-  { href: '/onboarding', label: '개인화 설정' },
+  { href: '/onboarding?mode=edit', label: '개인화 설정' },
   { href: '/mypage/orders/cancel', label: '취소/환불 요청' },
 ] as const;
 
