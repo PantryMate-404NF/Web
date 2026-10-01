@@ -43,4 +43,14 @@ describe('Mypage notification action', () => {
     expect(markup).toContain('type="button"');
     expect(markup).toContain('disabled=""');
   });
+
+  it('uses the matching activity SVGs and the referenced eight-pixel icon inset', () => {
+    const markup = renderToStaticMarkup(createElement(MyPagePage));
+
+    expect(markup).toContain('orders.svg');
+    expect(markup).toContain('heart.svg');
+    expect(markup).toContain('scrap.svg');
+    expect(markup).toContain('size-11 place-items-center p-2');
+    expect(markup).toContain('px-4 py-3');
+  });
 });
