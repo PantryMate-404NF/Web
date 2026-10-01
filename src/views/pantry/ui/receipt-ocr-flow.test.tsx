@@ -65,8 +65,6 @@ describe('ReceiptOcrFlow result screen', () => {
         onChange: vi.fn(),
         onComplete: vi.fn(),
         onImageSelected: vi.fn(),
-        onPurchaseDateChange: vi.fn(),
-        purchaseDate: '2026-09-29',
       }),
     );
 
@@ -81,5 +79,20 @@ describe('ReceiptOcrFlow result screen', () => {
     expect(markup).not.toContain('type="date"');
     expect(markup).toContain('식재료 이미지 직접 등록');
     expect(markup).toContain('등록하기');
+  });
+
+  it('does not ask for a purchase date when editing an OCR item', () => {
+    const markup = renderToStaticMarkup(
+      createElement(ReceiptIngredientEditor, {
+        canComplete: true,
+        isSaving: false,
+        item: createReceiptReviewItem('receipt-item-1', '깐마늘'),
+        onChange: vi.fn(),
+        onComplete: vi.fn(),
+        onImageSelected: vi.fn(),
+      }),
+    );
+
+    expect(markup).not.toContain('구매일');
   });
 });

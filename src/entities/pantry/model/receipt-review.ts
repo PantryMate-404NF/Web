@@ -23,11 +23,9 @@ export function createReceiptReviewItem(id: string, name: string): ReceiptReview
 }
 
 export function areReceiptReviewItemsSubmittable(
-  purchaseDate: string,
   items: Array<Pick<ReceiptReviewItem, 'name' | 'storageType'>>,
 ) {
   return (
-    Boolean(purchaseDate) &&
     items.length > 0 &&
     items.every(({ name, storageType }) => name.trim().length > 0 && storageType !== null)
   );
