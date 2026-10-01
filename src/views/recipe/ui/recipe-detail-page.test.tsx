@@ -7,11 +7,13 @@ const {
   useRecipeDetailQueryMock,
   useRecipeProductMatchQueryMock,
   useScrappedRecipesQueryMock,
+  useAuthSessionMock,
 } = vi.hoisted(() => ({
   useCartQueryMock: vi.fn(),
   useRecipeDetailQueryMock: vi.fn(),
   useRecipeProductMatchQueryMock: vi.fn(),
   useScrappedRecipesQueryMock: vi.fn(),
+  useAuthSessionMock: vi.fn(),
 }));
 
 vi.mock('@/entities/recipe/api/use-recipe-detail-query', () => ({
@@ -27,7 +29,11 @@ vi.mock('@/entities/recipe/api/use-recipe-product-match-query', () => ({
   useRecipeProductMatchQuery: useRecipeProductMatchQueryMock,
 }));
 vi.mock('@/features/auth/ui/auth-session-provider', () => ({
-  useAuthSession: () => ({ state: 'complete' }),
+  useAuthSession: useAuthSessionMock,
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn() }),
 }));
 
 vi.mock('@/features/recipe-cart/ui/recipe-cart-actions', () => ({
@@ -44,11 +50,14 @@ import {
   COOKING_GUIDE_VISIBLE_MS,
   RecipeDetailPage,
   areAllIngredientsSelected,
+  getCookingCompletionVariables,
+  getCookingCompletionLoginHref,
   toggleIngredientSelection,
 } from './recipe-detail-page';
 
 describe('RecipeDetailPage', () => {
   beforeEach(() => {
+    useAuthSessionMock.mockReturnValue({ state: 'complete', restore: vi.fn() });
     useScrappedRecipesQueryMock.mockReturnValue({ data: [], isPending: false });
     useRecipeProductMatchQueryMock.mockReturnValue({
       data: { ingredients: [] },
@@ -127,6 +136,11 @@ describe('RecipeDetailPage', () => {
     expect(markup).toContain('href="/cart"');
     expect(markup).toContain('aria-label="장바구니 4개 상품"');
     expect(markup).toContain('shopping-cart-icon.svg');
+    const floatingCartIcon = markup.match(
+      /<img\b(?=[^>]*src="\/images\/recipe\/shopping-cart-icon\.svg")[^>]*>/,
+    )?.[0];
+    expect(floatingCartIcon).toContain('width="16"');
+    expect(floatingCartIcon).toContain('height="16"');
     expect(markup).toContain('https://cdn.example.test/recipe.jpg');
     expect(markup).toContain('https://cdn.example.test/step.jpg');
     expect(markup).not.toContain('토마토 달걀 볶음');
@@ -185,6 +199,25 @@ describe('ingredient selection', () => {
     expect(toggleIngredientSelection(['tomato'], 'tomato')).toEqual([]);
     expect(areAllIngredientsSelected(['tomato', 'egg'], ['tomato', 'egg'])).toBe(true);
     expect(areAllIngredientsSelected(['tomato'], ['tomato', 'egg'])).toBe(false);
+  });
+});
+
+describe('cooking completion request', () => {
+  it('sends guests to login and returns them to the current recipe', () => {
+    expect(getCookingCompletionLoginHref('guest', '42')).toBe('/login?returnTo=%2Frecipe%2F42');
+    expect(getCookingCompletionLoginHref('complete', '42')).toBeNull();
+    expect(getCookingCompletionLoginHref('onboarding', '42')).toBeNull();
+  });
+
+  it('does not send pantry IDs when the user chooses to defer cleanup', () => {
+    expect(getCookingCompletionVariables('42', false, [101, 102])).toEqual({ recipeId: '42' });
+  });
+
+  it('sends only the selected pantry IDs when the user chooses cleanup', () => {
+    expect(getCookingCompletionVariables('42', true, [102])).toEqual({
+      recipeId: '42',
+      pantryItemIds: [102],
+    });
   });
 });
 

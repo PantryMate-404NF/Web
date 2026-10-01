@@ -3,6 +3,7 @@
 import { Bookmark, Check, Share } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { useCartItemCount } from '@/entities/cart/model/use-cart-item-count';
@@ -15,8 +16,13 @@ import { useRecipePantryMatchQuery } from '@/entities/recipe/api/use-recipe-pant
 import { useRecipeProductMatchQuery } from '@/entities/recipe/api/use-recipe-product-match-query';
 import { useScrappedRecipesQuery } from '@/entities/recipe/api/use-scrapped-recipes-query';
 import type { RecipeDetail } from '@/entities/recipe/model/types';
+import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 import { CART_HREF } from '@/shared/config/cart-write-mode';
 import { SystemErrorState } from '@/shared/ui/system-error-state';
+import {
+  getPantryCleanupSuccessMessage,
+  PantryCleanupBottomSheet,
+} from './pantry-cleanup-bottom-sheet';
 
 interface RecipeDetailPageProps {
   recipeId: string;
@@ -40,6 +46,33 @@ export function toggleIngredientSelection(selectedIds: string[], ingredientId: s
 
 export function areAllIngredientsSelected(selectedIds: string[], ingredientIds: string[]) {
   return ingredientIds.length > 0 && ingredientIds.every((id) => selectedIds.includes(id));
+}
+
+export function getCookingCompletionVariables(
+  recipeId: string,
+  shouldCleanup: boolean,
+  pantryItemIds: number[],
+  recommendationContext?: RecipeRecommendationContext,
+) {
+  return {
+    recipeId,
+    ...(shouldCleanup && pantryItemIds.length > 0 ? { pantryItemIds } : {}),
+    ...(recommendationContext?.requestId && recommendationContext.position != null
+      ? {
+          requestId: recommendationContext.requestId,
+          position: recommendationContext.position,
+        }
+      : {}),
+  };
+}
+
+export function getCookingCompletionLoginHref(
+  authState: 'loading' | 'guest' | 'complete' | 'onboarding',
+  recipeId: string,
+) {
+  return authState === 'guest'
+    ? `/login?returnTo=${encodeURIComponent(`/recipe/${recipeId}`)}`
+    : null;
 }
 
 export function RecipeDetailPage({ recipeId, recommendationContext }: RecipeDetailPageProps) {
@@ -76,6 +109,8 @@ function RecipeDetailContent({
   recipe: RecipeDetail;
   recommendationContext?: RecipeRecommendationContext;
 }) {
+  const router = useRouter();
+  const { restore, state: authState } = useAuthSession();
   const { completeCooking, scrap, unscrap } = useRecipeMutations();
   const pantryMatchQuery = useRecipePantryMatchQuery(recipe.id);
   const productMatchQuery = useRecipeProductMatchQuery(recipe.id);
@@ -83,6 +118,7 @@ function RecipeDetailContent({
   const cartItemCount = useCartItemCount();
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
   const [completionMessage, setCompletionMessage] = useState<string | null>(null);
+  const [completionErrorMessage, setCompletionErrorMessage] = useState<string | null>(null);
   const [isPantryCleanupOpen, setIsPantryCleanupOpen] = useState(false);
   const [selectedPantryItemIds, setSelectedPantryItemIds] = useState<number[]>([]);
   const [scrapMessage, setScrapMessage] = useState<string | null>(null);
@@ -99,6 +135,13 @@ function RecipeDetailContent({
     unscrap.isPending;
   const ingredients = recipe.ingredients;
   const steps = recipe.steps;
+
+  useEffect(() => {
+    if (!completionMessage) return;
+
+    const timeoutId = window.setTimeout(() => setCompletionMessage(null), 3000);
+    return () => window.clearTimeout(timeoutId);
+  }, [completionMessage]);
 
   useEffect(() => {
     const stepsSection = stepsSectionRef.current;
@@ -138,8 +181,11 @@ function RecipeDetailContent({
   const matchedPantryItems =
     pantryMatchQuery.data?.ingredients.flatMap((ingredient) =>
       ingredient.matchedPantryItems.map((item) => ({
-        ...item,
-        ingredientName: ingredient.name,
+        pantryItemId: item.pantryItemId,
+        name: ingredient.name,
+        imageUrl: ingredients.find(
+          (recipeIngredient) => recipeIngredient.id === String(ingredient.ingredientId),
+        )?.imageUrl,
       })),
     ) ?? [];
   const uniqueMatchedPantryItems = matchedPantryItems.filter(
@@ -147,31 +193,46 @@ function RecipeDetailContent({
       items.findIndex((candidate) => candidate.pantryItemId === item.pantryItemId) === index,
   );
 
-  const submitCookingComplete = async (pantryItemIds?: number[]) => {
+  const closePantryCleanupSheet = () => {
+    setIsPantryCleanupOpen(false);
+    setSelectedPantryItemIds([]);
+    setCompletionErrorMessage(null);
+  };
+
+  const submitCookingComplete = async (shouldCleanup: boolean) => {
+    const pantryItemIds = shouldCleanup ? selectedPantryItemIds : [];
+    setCompletionErrorMessage(null);
+
     try {
-      await completeCooking.mutateAsync({
-        recipeId: recipe.id,
-        pantryItemIds,
-        ...(recommendationContext?.requestId && recommendationContext.position != null
-          ? {
-              requestId: recommendationContext.requestId,
-              position: recommendationContext.position,
-            }
-          : {}),
-      });
-      setIsPantryCleanupOpen(false);
-      setCompletionMessage('조리 완료를 기록했어요.');
+      await completeCooking.mutateAsync(
+        getCookingCompletionVariables(
+          recipe.id,
+          shouldCleanup,
+          pantryItemIds,
+          recommendationContext,
+        ),
+      );
+      closePantryCleanupSheet();
+      setCompletionMessage(
+        shouldCleanup ? getPantryCleanupSuccessMessage(pantryItemIds.length) : null,
+      );
     } catch {
-      setCompletionMessage('조리 완료를 저장하지 못했어요. 다시 시도해 주세요.');
+      setCompletionErrorMessage('조리 완료를 저장하지 못했어요. 다시 시도해 주세요.');
     }
   };
 
-  const handleCookingComplete = () => {
-    if (uniqueMatchedPantryItems.length > 0) {
-      setIsPantryCleanupOpen(true);
+  const handleCookingComplete = async () => {
+    const resolvedAuthState = authState === 'loading' ? await restore() : authState;
+    const loginHref = getCookingCompletionLoginHref(resolvedAuthState, recipe.id);
+
+    if (loginHref) {
+      router.push(loginHref);
       return;
     }
-    void submitCookingComplete();
+
+    setSelectedPantryItemIds([]);
+    setCompletionErrorMessage(null);
+    setIsPantryCleanupOpen(true);
   };
 
   const togglePantryItem = (id: number) => {
@@ -394,9 +455,9 @@ function RecipeDetailContent({
         <Image
           alt=""
           aria-hidden="true"
-          height={24}
+          height={16}
           src="/images/recipe/shopping-cart-icon.svg"
-          width={24}
+          width={16}
         />
         <CartCountBadge count={cartItemCount} />
       </Link>
@@ -421,60 +482,15 @@ function RecipeDetailContent({
         </p>
       ) : null}
       {isPantryCleanupOpen ? (
-        <div className="fixed inset-0 z-[80] flex items-end bg-black/40" role="presentation">
-          <section
-            aria-labelledby="pantry-cleanup-title"
-            aria-modal="true"
-            className="bg-background mobile-page rounded-t-2xl px-5 pt-6 pb-8"
-            role="dialog"
-          >
-            <h2 className="text-title-3 font-semibold" id="pantry-cleanup-title">
-              사용한 재료를 정리할까요?
-            </h2>
-            <p className="mt-2 text-sm text-[var(--primitive-grey-500)]">
-              조리에 사용한 팬트리 재료를 선택해 주세요.
-            </p>
-            <ul className="mt-4 max-h-[40dvh] space-y-2 overflow-y-auto">
-              {uniqueMatchedPantryItems.map((item) => (
-                <li key={item.pantryItemId}>
-                  <label className="flex items-center gap-3 rounded-lg border border-[var(--primitive-grey-200)] p-3">
-                    <input
-                      checked={selectedPantryItemIds.includes(item.pantryItemId)}
-                      onChange={() => togglePantryItem(item.pantryItemId)}
-                      type="checkbox"
-                    />
-                    <span className="flex-1">{item.ingredientName}</span>
-                    <span className="text-xs text-[var(--primitive-grey-500)]">
-                      {item.expiryStatus === 'IMMINENT'
-                        ? '소비기한 임박'
-                        : item.expiryStatus === 'EXPIRED'
-                          ? '소비기한 경과'
-                          : '소비기한 여유'}
-                    </span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-5 flex gap-3">
-              <button
-                className="h-12 flex-1 rounded-xl border border-[var(--primitive-grey-300)]"
-                disabled={completeCooking.isPending}
-                onClick={() => void submitCookingComplete()}
-                type="button"
-              >
-                나중에
-              </button>
-              <button
-                className="h-12 flex-1 rounded-xl bg-[var(--primitive-primary-500)] font-semibold"
-                disabled={!selectedPantryItemIds.length || completeCooking.isPending}
-                onClick={() => void submitCookingComplete(selectedPantryItemIds)}
-                type="button"
-              >
-                정리하기
-              </button>
-            </div>
-          </section>
-        </div>
+        <PantryCleanupBottomSheet
+          errorMessage={completionErrorMessage}
+          isSubmitting={completeCooking.isPending}
+          items={uniqueMatchedPantryItems}
+          onCleanup={() => void submitCookingComplete(true)}
+          onDefer={() => void submitCookingComplete(false)}
+          onToggle={togglePantryItem}
+          selectedItemIds={selectedPantryItemIds}
+        />
       ) : null}
     </main>
   );

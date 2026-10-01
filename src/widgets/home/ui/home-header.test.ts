@@ -42,5 +42,10 @@ describe('HomeHeader', () => {
     expect(markup).toContain('>9</span>');
     expect(markup).toContain('href="/cart"');
     expect(markup).toContain('shopping-cart-icon.svg');
+    const cartIcon = markup.match(
+      /<img\b(?=[^>]*src="\/images\/recipe\/shopping-cart-icon\.svg")[^>]*>/,
+    )?.[0];
+    expect(cartIcon).toContain('width="24"');
+    expect(cartIcon).toContain('height="24"');
   });
 });

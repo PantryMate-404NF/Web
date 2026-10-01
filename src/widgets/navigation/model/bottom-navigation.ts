@@ -22,8 +22,11 @@ export interface BottomNavigationOptions {
 export const BOTTOM_NAVIGATION_LAYOUT = {
   itemGapClassName: 'gap-1',
   itemPaddingClassName: 'py-2',
-  labelClassName: 'text-xs font-medium',
-  navigationPaddingClassName: 'px-4',
+  labelClassName: 'text-label-4 leading-[normal] font-medium',
+  navigationGapClassName: 'gap-[6px]',
+  navigationPaddingClassName: 'px-[18px]',
+  selectedItemClassName:
+    'h-14 w-20 flex-none rounded-full bg-[var(--primitive-primary-300)] text-[var(--primitive-black)]',
 } as const;
 
 const navigationDefinitions: readonly BottomNavigationDefinition[] = [
