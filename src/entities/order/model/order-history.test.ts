@@ -20,6 +20,7 @@ describe('order history mapping', () => {
           createdAt: '2026-09-30T17:00:00Z',
           items: [
             {
+              productId: 150,
               productName: '국내산 대파 1단',
               price: 3000,
               quantity: 2,
@@ -42,6 +43,7 @@ describe('order history mapping', () => {
       items: [
         {
           id: 'ORDER_1-0',
+          productId: 150,
           name: '국내산 대파 1단',
           price: 3000,
           quantity: 2,

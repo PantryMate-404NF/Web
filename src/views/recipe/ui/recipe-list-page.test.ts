@@ -10,6 +10,7 @@ import {
   getRecipeDisplayMode,
   getImminentIngredients,
   getImminentPantryItemIds,
+  getRecipePantryItemIds,
   getIngredientSelectionRoute,
   getRecipeContentMode,
   getRecipeMoreRoute,
@@ -150,6 +151,33 @@ describe('recipe list helpers', () => {
     ];
 
     expect(getImminentPantryItemIds(imminentItems)).toEqual(['soonest', 'middle', 'later']);
+  });
+
+  it('prioritizes imminent pantry items and falls back to normal available items', () => {
+    const normalItems = [
+      { ...pantryItems[0]!, id: 'normal-1' },
+      { ...pantryItems[1]!, id: 'normal-2' },
+      { ...pantryItems[2]!, id: 'normal-3' },
+      { ...pantryItems[3]!, id: 'normal-4' },
+    ];
+    const withImminentItems = [
+      ...normalItems,
+      { ...pantryItems[5]!, id: 'imminent-1', expirationStatus: 'IMMINENT' as const },
+    ];
+
+    expect(getRecipePantryItemIds(normalItems)).toEqual(['normal-1', 'normal-2', 'normal-3']);
+    expect(getRecipePantryItemIds(withImminentItems)).toEqual(['imminent-1']);
+  });
+
+  it('uses available pantry items without an expiry date for recipe lookup', () => {
+    const itemWithoutExpiry = {
+      ...pantryItems[0]!,
+      id: 'no-expiry',
+      daysUntilExpiration: null,
+      expirationStatus: 'UNREGISTERED' as const,
+    };
+
+    expect(getRecipePantryItemIds([itemWithoutExpiry])).toEqual(['no-expiry']);
   });
 
   it('shows only the selected pantry ingredients in the recipe header', () => {

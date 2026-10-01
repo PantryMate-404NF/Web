@@ -158,6 +158,27 @@ describe('RecipeDetailPage', () => {
     expect(markup).not.toContain('토마토 달걀 볶음');
   });
 
+  it('레시피 사진 왼쪽 위에 흰색 목록 돌아가기 버튼을 표시한다', () => {
+    const queryClient = new QueryClient();
+    const markup = renderToStaticMarkup(
+      <QueryClientProvider client={queryClient}>
+        <RecipeDetailPage recipeId="42" />
+      </QueryClientProvider>,
+    );
+    const hero = markup.match(
+      /<section class="relative h-\[219px\] overflow-hidden">([\s\S]*?)<\/section>/,
+    )?.[1];
+
+    expect(hero).toContain('aria-label="레시피 목록으로 돌아가기"');
+    expect(hero).toContain('href="/recipe"');
+    expect(hero).toContain('left-4');
+    expect(hero).toContain('top-4');
+    expect(hero).toContain('size-10');
+    expect(hero).toContain('brightness-0');
+    expect(hero).toContain('invert');
+    expect(hero).toContain('/icons/navigation/back.svg');
+  });
+
   it('주재료 여부 대신 팬트리 보유 여부와 가장 가까운 소비기한을 표시한다', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-10-01T12:00:00'));

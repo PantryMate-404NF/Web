@@ -18,6 +18,8 @@ pipeline {
     NEXT_PUBLIC_FIREBASE_APP_ID              = '1:309150824223:web:d77bde3adc16bd7783622a'
     NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID      = 'G-WV1QMZNSPV'
     NEXT_PUBLIC_FIREBASE_VAPID_KEY           = 'BOS__IMHVCkIVZw8tjkSFZOaAu9gXcDsrXDGBfZS5EgMA3tYa3-Z9VLHBCV4Q9zyNN5aXDrGpkOUrBkPNtIzXNE'
+    NEXT_PUBLIC_CART_WRITE_API_ENABLED       = 'enabled'
+    NEXT_PUBLIC_TOSS_CLIENT_KEY              = 'test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm'
   }
 
   options {
@@ -66,6 +68,8 @@ pipeline {
                 --build-arg "NEXT_PUBLIC_FIREBASE_APP_ID=$NEXT_PUBLIC_FIREBASE_APP_ID" \
                 --build-arg "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=$NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID" \
                 --build-arg "NEXT_PUBLIC_FIREBASE_VAPID_KEY=$NEXT_PUBLIC_FIREBASE_VAPID_KEY" \
+                --build-arg "NEXT_PUBLIC_TOSS_CLIENT_KEY=$NEXT_PUBLIC_TOSS_CLIENT_KEY" \
+                --build-arg "NEXT_PUBLIC_CART_WRITE_API_ENABLED=$NEXT_PUBLIC_CART_WRITE_API_ENABLED" \
                 -t $IMAGE_NAME:$IMAGE_TAG .
               docker push $IMAGE_NAME:$IMAGE_TAG
             fi

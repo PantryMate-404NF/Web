@@ -18,6 +18,7 @@ export interface OrderHistoryRecord {
   statusLabel: string;
   items: Array<{
     id: string;
+    productId?: number;
     name: string;
     price: number;
     quantity: number;
@@ -43,6 +44,7 @@ export function toOrderHistoryRecord(
     statusLabel: orderStatusLabels[detail.status],
     items: detail.items.map((item, index) => ({
       id: `${detail.orderId}-${index}`,
+      productId: item.productId,
       name: item.productName,
       price: item.price,
       quantity: item.quantity,

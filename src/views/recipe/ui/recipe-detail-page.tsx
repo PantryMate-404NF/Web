@@ -375,6 +375,20 @@ function RecipeDetailContent({
             unoptimized
           />
         ) : null}
+        <Link
+          aria-label="레시피 목록으로 돌아가기"
+          className="absolute top-4 left-4 z-10 grid size-10 place-items-center"
+          href="/recipe"
+        >
+          <Image
+            alt=""
+            aria-hidden="true"
+            className="brightness-0 invert"
+            height={24}
+            src="/icons/navigation/back.svg"
+            width={24}
+          />
+        </Link>
       </section>
 
       <div className="mobile-page--padded">
