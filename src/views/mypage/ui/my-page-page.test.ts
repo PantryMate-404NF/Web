@@ -33,4 +33,8 @@ describe('MyPagePage', () => {
     expect(myPageSource).toContain('await deleteMyAccount()');
     expect(myPageSource).toContain('clearAccountClientState()');
   });
+
+  it('renders the logout sheet above the sticky bottom navigation', () => {
+    expect(myPageSource).toMatch(/aria-label="로그아웃 확인"[\s\S]*?className="[^"]*z-\[80\]/);
+  });
 });

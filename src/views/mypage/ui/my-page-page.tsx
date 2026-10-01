@@ -353,7 +353,7 @@ export function MyPagePage() {
         <div
           aria-label="로그아웃 확인"
           aria-modal="true"
-          className="bg-overlay/70 fixed inset-0 z-30 flex items-end"
+          className="bg-overlay/70 fixed inset-0 z-[80] flex items-end"
           onClick={() => !isLoggingOut && setIsLogoutSheetOpen(false)}
           role="dialog"
         >
