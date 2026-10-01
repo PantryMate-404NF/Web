@@ -1,6 +1,6 @@
 'use client';
 
-import { Bookmark, ChevronRight, Heart, FileText } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -30,9 +30,9 @@ export function getOnboardingSetupHref(state: string) {
 }
 
 const activityItems = [
-  { href: '/mypage/orders', icon: FileText, label: '주문 내역' },
-  { href: '/mypage/favorites', icon: Heart, label: '찜한 상품' },
-  { href: '/mypage/scraps', icon: Bookmark, label: '스크랩 레시피' },
+  { href: '/mypage/orders', iconSrc: '/images/mypage/orders.svg', label: '주문 내역' },
+  { href: '/mypage/favorites', iconSrc: '/images/mypage/heart.svg', label: '찜한 상품' },
+  { href: '/mypage/scraps', iconSrc: '/images/mypage/scrap.svg', label: '스크랩 레시피' },
 ] as const;
 
 const accountItems = [
@@ -273,19 +273,17 @@ export function MyPagePage() {
             나의 활동
           </h2>
           <div className="mt-2 grid grid-cols-3 gap-2">
-            {activityItems.map(({ href, icon: Icon, label }) => {
+            {activityItems.map(({ href, iconSrc, label }) => {
               const content = (
                 <>
-                  <Icon
-                    aria-hidden="true"
-                    className="size-7 text-[var(--primitive-primary-700)]"
-                    strokeWidth={1.5}
-                  />
+                  <span className="grid size-11 place-items-center p-2">
+                    <Image alt="" aria-hidden="true" height={28} src={iconSrc} width={28} />
+                  </span>
                   <span className="text-text-secondary text-sm leading-5 font-medium">{label}</span>
                 </>
               );
               const className =
-                'bg-[var(--primitive-primary-100)] flex min-h-[98px] flex-col items-center justify-center gap-1 rounded-2xl px-2 py-3';
+                'bg-[var(--primitive-primary-100)] flex min-h-[98px] flex-col items-center justify-center gap-1 rounded-2xl px-4 py-3';
 
               return href ? (
                 <Link className={className} href={href} key={label}>
