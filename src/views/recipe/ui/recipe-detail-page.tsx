@@ -3,6 +3,7 @@
 import { Bookmark, Check, Share } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { useCartItemCount } from '@/entities/cart/model/use-cart-item-count';
@@ -15,6 +16,7 @@ import { useRecipePantryMatchQuery } from '@/entities/recipe/api/use-recipe-pant
 import { useRecipeProductMatchQuery } from '@/entities/recipe/api/use-recipe-product-match-query';
 import { useScrappedRecipesQuery } from '@/entities/recipe/api/use-scrapped-recipes-query';
 import type { RecipeDetail } from '@/entities/recipe/model/types';
+import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 import { CART_HREF } from '@/shared/config/cart-write-mode';
 import { SystemErrorState } from '@/shared/ui/system-error-state';
 import {
@@ -64,6 +66,15 @@ export function getCookingCompletionVariables(
   };
 }
 
+export function getCookingCompletionLoginHref(
+  authState: 'loading' | 'guest' | 'complete' | 'onboarding',
+  recipeId: string,
+) {
+  return authState === 'guest'
+    ? `/login?returnTo=${encodeURIComponent(`/recipe/${recipeId}`)}`
+    : null;
+}
+
 export function RecipeDetailPage({ recipeId, recommendationContext }: RecipeDetailPageProps) {
   const {
     data: recipe,
@@ -98,6 +109,8 @@ function RecipeDetailContent({
   recipe: RecipeDetail;
   recommendationContext?: RecipeRecommendationContext;
 }) {
+  const router = useRouter();
+  const { restore, state: authState } = useAuthSession();
   const { completeCooking, scrap, unscrap } = useRecipeMutations();
   const pantryMatchQuery = useRecipePantryMatchQuery(recipe.id);
   const productMatchQuery = useRecipeProductMatchQuery(recipe.id);
@@ -208,7 +221,15 @@ function RecipeDetailContent({
     }
   };
 
-  const handleCookingComplete = () => {
+  const handleCookingComplete = async () => {
+    const resolvedAuthState = authState === 'loading' ? await restore() : authState;
+    const loginHref = getCookingCompletionLoginHref(resolvedAuthState, recipe.id);
+
+    if (loginHref) {
+      router.push(loginHref);
+      return;
+    }
+
     setSelectedPantryItemIds([]);
     setCompletionErrorMessage(null);
     setIsPantryCleanupOpen(true);
@@ -434,9 +455,9 @@ function RecipeDetailContent({
         <Image
           alt=""
           aria-hidden="true"
-          height={24}
+          height={16}
           src="/images/recipe/shopping-cart-icon.svg"
-          width={24}
+          width={16}
         />
         <CartCountBadge count={cartItemCount} />
       </Link>
