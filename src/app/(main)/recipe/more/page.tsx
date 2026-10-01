@@ -19,7 +19,11 @@ export default async function RecipeMoreRoute({
   return (
     <RecipeMorePage
       selectedIngredientIds={rawIngredientIds.map(Number).filter(Number.isFinite)}
-      sectionId={params.section === 'recommendations' ? 'recommendations' : 'all'}
+      sectionId={
+        params.section === 'personalized' || params.section === 'recommendations'
+          ? params.section
+          : 'all'
+      }
       title={params.title}
     />
   );

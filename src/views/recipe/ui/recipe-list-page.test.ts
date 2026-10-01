@@ -20,6 +20,7 @@ import {
   getRecipeSearchPagination,
   getRecipeSearchPageNumbers,
   getRecipeSections,
+  shouldEnableRecipeRecommendations,
   RECIPE_SEARCH_EMPTY_COPY,
   RECIPE_RAIL_TYPOGRAPHY,
 } from './recipe-list-page';
@@ -43,6 +44,14 @@ describe('recipe list helpers', () => {
   it('shows only the search screen while a non-empty query is entered', () => {
     expect(getRecipeContentMode('달걀')).toBe('search');
     expect(getRecipeContentMode('   ')).toBe('list');
+  });
+
+  it('fetches recommendation rails only while their authenticated list view is visible', () => {
+    expect(shouldEnableRecipeRecommendations('complete', 'list', 'personalized')).toBe(true);
+    expect(shouldEnableRecipeRecommendations('complete', 'search', 'personalized')).toBe(false);
+    expect(shouldEnableRecipeRecommendations('onboarding', 'list', 'personalized')).toBe(false);
+    expect(shouldEnableRecipeRecommendations('onboarding', 'list', 'pantry')).toBe(true);
+    expect(shouldEnableRecipeRecommendations('guest', 'list', 'pantry')).toBe(false);
   });
 
   it('uses the empty-search copy when no recipe matches the query', () => {

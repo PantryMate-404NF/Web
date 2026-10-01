@@ -385,6 +385,77 @@ describe('RecipeActionIcon', () => {
     expect(markup).toContain('빈 팬트리 인기 레시피');
   });
 
+  it('레시피 탭 상단에 맛 선호도 기반 나를 위한 레시피를 표시한다', () => {
+    useAuthSessionMock.mockReturnValue({ state: 'complete' });
+    useRecipeRecommendationsQueryMock.mockReset();
+    useRecipeRecommendationsQueryMock
+      .mockReturnValueOnce({
+        data: {
+          source: 'AI',
+          requestId: 'taste-request',
+          items: [
+            {
+              rank: 1,
+              reason: '맛 선호도 기반',
+              coverage: null,
+              missingCount: null,
+              missingIngredients: [],
+              recipe: {
+                recipeId: 71,
+                title: '나를 위한 추천',
+                description: '',
+                cuisineType: 'KOREAN',
+                cookingTime: 20,
+                servings: 2,
+                difficulty: 'EASY',
+              },
+            },
+          ],
+        },
+        error: null,
+        isPending: false,
+        isError: false,
+        refetch: vi.fn(),
+      })
+      .mockReturnValueOnce({
+        data: {
+          source: 'AI',
+          requestId: 'pantry-request',
+          items: [
+            {
+              rank: 1,
+              reason: '팬트리 기반',
+              coverage: 1,
+              missingCount: 0,
+              missingIngredients: [],
+              recipe: {
+                recipeId: 72,
+                title: '팬트리 추천',
+                description: '',
+                cuisineType: 'KOREAN',
+                cookingTime: 20,
+                servings: 2,
+                difficulty: 'EASY',
+              },
+            },
+          ],
+        },
+        error: null,
+        isPending: false,
+        isError: false,
+        refetch: vi.fn(),
+      });
+
+    const markup = renderToStaticMarkup(<RecipeListPage />);
+
+    expect(useRecipeRecommendationsQueryMock).toHaveBeenNthCalledWith(1, true, 10, false);
+    expect(useRecipeRecommendationsQueryMock).toHaveBeenNthCalledWith(2, true, 20, true);
+    expect(markup).toContain('나를 위한 레시피');
+    expect(markup).toContain('맛 선호도를 반영해 AI가 추천했어요.');
+    expect(markup).toContain('href="/recipe/more?section=personalized"');
+    expect(markup.indexOf('나를 위한 추천')).toBeLessThan(markup.indexOf('팬트리 추천'));
+  });
+
   it('shows loading state instead of fallback recipes while the API is pending', () => {
     useRecipesQueryMock.mockReturnValue({ data: undefined, isPending: true });
     const markup = renderToStaticMarkup(<RecipeListPage />);
