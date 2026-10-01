@@ -81,6 +81,7 @@ export function normalizeOnboardingCompletionValue(value: string | null): string
 export function shouldRedirectCompletedOnboarding(
   hasCompletedOnboarding: boolean,
   isPreview: boolean,
+  isPreferenceEdit = false,
 ): boolean {
-  return hasCompletedOnboarding && !isPreview;
+  return hasCompletedOnboarding && !isPreview && !isPreferenceEdit;
 }

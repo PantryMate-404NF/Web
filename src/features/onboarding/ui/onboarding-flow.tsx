@@ -18,6 +18,7 @@ import {
   getTasteSelectionPosition,
   initialOnboardingAnswers,
   NO_ALLERGY_OPTION,
+  shouldRedirectCompletedOnboarding,
   type OnboardingAnswers,
   type OnboardingStep,
   type TastePreference,
@@ -301,6 +302,7 @@ export function OnboardingFlow() {
   const { setAuthenticatedState } = useAuthSession();
   const searchParams = useSearchParams();
   const isPreview = searchParams.get('preview') === '1';
+  const isPreferenceEdit = searchParams.get('mode') === 'edit';
   const [step, setStep] = useState<OnboardingStep>(1);
   const [answers, setAnswers] = useState<OnboardingAnswers>(initialOnboardingAnswers);
   const [isLoading, setIsLoading] = useState(!isPreview);
@@ -316,11 +318,19 @@ export function OnboardingFlow() {
       try {
         const preference = await getMyPreferences();
 
-        if (preference.onboardingCompleted) {
+        if (
+          shouldRedirectCompletedOnboarding(
+            preference.onboardingCompleted,
+            isPreview,
+            isPreferenceEdit,
+          )
+        ) {
           setAuthenticatedState('complete');
           router.replace('/');
           return;
         }
+
+        if (preference.onboardingCompleted) setAuthenticatedState('complete');
 
         const restored = fromUserPreference(preference);
         setAnswers(restored.answers);
@@ -342,7 +352,7 @@ export function OnboardingFlow() {
     }
 
     void restoreOnboarding();
-  }, [isPreview, router, setAuthenticatedState]);
+  }, [isPreview, isPreferenceEdit, router, setAuthenticatedState]);
 
   function toggleAnswer(key: 'allergies' | 'foodTypes' | 'favoriteFoods', value: string) {
     setAnswers((current) => ({
@@ -362,7 +372,7 @@ export function OnboardingFlow() {
       return;
     }
 
-    router.push('/');
+    router.push(isPreferenceEdit ? '/mypage' : '/');
   }
 
   async function saveOnboarding(onboardingStep: OnboardingStep, onboardingCompleted: boolean) {
@@ -390,18 +400,18 @@ export function OnboardingFlow() {
     const nextStep = getNextOnboardingStep(step);
 
     if (nextStep) {
-      if (!(await saveOnboarding(nextStep, false))) return;
+      if (!isPreferenceEdit && !(await saveOnboarding(nextStep, false))) return;
       setStep(nextStep);
       return;
     }
 
     if (!(await saveOnboarding(step, true))) return;
     setAuthenticatedState('complete');
-    router.replace('/');
+    router.replace(isPreferenceEdit ? '/mypage' : '/');
   }
 
   function handleSkip() {
-    router.replace('/');
+    router.replace(isPreferenceEdit ? '/mypage' : '/');
   }
 
   const canAdvance = canAdvanceOnboardingStep(step, answers);
