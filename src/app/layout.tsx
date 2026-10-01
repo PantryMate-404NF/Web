@@ -6,11 +6,29 @@ import { RegisterServiceWorker } from '@/components/pwa/register-service-worker'
 
 import './globals.css';
 
+const SITE_NAME = 'PantryMate';
+const SITE_DESCRIPTION =
+  '우리 집 식재료로 오늘의 메뉴를 추천받고, 부족한 재료까지 간편하게 구매하세요.';
+
 export const metadata: Metadata = {
-  title: 'AI Pantry',
-  description: '구매 이력으로 시작하는 나만의 식재료 팬트리',
-  applicationName: 'AI Pantry',
-  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'AI Pantry' },
+  metadataBase: new URL('https://www.unzipp.cloud'),
+  title: SITE_NAME,
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  openGraph: {
+    type: 'website',
+    locale: 'ko_KR',
+    url: '/',
+    siteName: SITE_NAME,
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
+  appleWebApp: { capable: true, statusBarStyle: 'default', title: SITE_NAME },
   formatDetection: { telephone: false },
 };
 
