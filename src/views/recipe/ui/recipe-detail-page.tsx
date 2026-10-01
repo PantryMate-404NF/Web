@@ -11,7 +11,10 @@ import { CartCountBadge } from '@/shared/ui/cart-count-badge';
 import { RecipeCartActions } from '@/features/recipe-cart/ui/recipe-cart-actions';
 import { useRecipeMutations } from '@/entities/recipe/api/use-recipe-mutations';
 import { useRecipeDetailQuery } from '@/entities/recipe/api/use-recipe-detail-query';
-import type { RecipeRecommendationContext } from '@/entities/recipe/api/recipe.dto';
+import type {
+  RecipePantryMatchDto,
+  RecipeRecommendationContext,
+} from '@/entities/recipe/api/recipe.dto';
 import { useRecipePantryMatchQuery } from '@/entities/recipe/api/use-recipe-pantry-match-query';
 import { useRecipeProductMatchQuery } from '@/entities/recipe/api/use-recipe-product-match-query';
 import { useScrappedRecipesQuery } from '@/entities/recipe/api/use-scrapped-recipes-query';
@@ -37,6 +40,86 @@ const difficultyLabels = {
 
 export const COOKING_GUIDE_DELAY_MS = 60 * 1000;
 export const COOKING_GUIDE_VISIBLE_MS = 10 * 1000;
+const RECIPE_INGREDIENTS_PER_PAGE = 6;
+
+function chunkIngredients<T>(items: T[], chunkSize: number): T[][] {
+  return Array.from({ length: Math.ceil(items.length / chunkSize) }, (_, index) =>
+    items.slice(index * chunkSize, (index + 1) * chunkSize),
+  );
+}
+
+function getLocalDate(date: string): Date | null {
+  const [year, month, day] = date.split('-').map(Number);
+  if (!year || !month || !day) return null;
+
+  const parsed = new Date(year, month - 1, day);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function getPantryIngredientStatus(
+  ingredientId: string,
+  pantryMatch: RecipePantryMatchDto | undefined,
+  isPending: boolean,
+  isError: boolean,
+  today = new Date(),
+) {
+  if (isPending) return { label: '확인 중', className: 'bg-muted text-muted-foreground' };
+  if (isError) return { label: '확인 실패', className: 'bg-muted text-muted-foreground' };
+
+  const matchedIngredient = pantryMatch?.ingredients.find(
+    (ingredient) => String(ingredient.ingredientId) === ingredientId,
+  );
+  if (!matchedIngredient?.hasIngredient) {
+    return { label: '미보유', className: 'bg-destructive/10 text-destructive' };
+  }
+
+  const matchedItems = matchedIngredient.matchedPantryItems;
+  if (matchedItems.length === 0) {
+    return {
+      label: '보유 · 소비기한 미등록',
+      className: 'bg-muted text-muted-foreground',
+    };
+  }
+
+  const datedItems = matchedItems.flatMap((item) => {
+    const expiryDate = getLocalDate(item.expiryDate);
+    return expiryDate ? [{ item, expiryDate }] : [];
+  });
+  const unexpiredItems = datedItems.filter(({ item }) => item.expiryStatus !== 'EXPIRED');
+  const candidates = unexpiredItems.length > 0 ? unexpiredItems : datedItems;
+  const nearestItem = candidates.sort((left, right) =>
+    unexpiredItems.length > 0
+      ? left.expiryDate.getTime() - right.expiryDate.getTime()
+      : right.expiryDate.getTime() - left.expiryDate.getTime(),
+  )[0];
+
+  if (!nearestItem) {
+    return {
+      label: '보유 · 소비기한 미등록',
+      className: 'bg-muted text-muted-foreground',
+    };
+  }
+
+  if (nearestItem.item.expiryStatus === 'EXPIRED') {
+    return { label: '보유 · 소비기한 지남', className: 'bg-destructive/10 text-destructive' };
+  }
+
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const daysLeft = Math.ceil(
+    (nearestItem.expiryDate.getTime() - todayStart.getTime()) / (24 * 60 * 60 * 1000),
+  );
+  if (daysLeft < 0) {
+    return { label: '보유 · 소비기한 지남', className: 'bg-destructive/10 text-destructive' };
+  }
+
+  return {
+    label: `보유 · D-${daysLeft}`,
+    className:
+      nearestItem.item.expiryStatus === 'IMMINENT' || daysLeft <= 3
+        ? 'bg-[var(--primitive-warning-100)] text-[var(--primitive-warning-500)]'
+        : 'bg-muted text-muted-foreground',
+  };
+}
 
 export function toggleIngredientSelection(selectedIds: string[], ingredientId: string) {
   return selectedIds.includes(ingredientId)
@@ -99,7 +182,13 @@ export function RecipeDetailPage({ recipeId, recommendationContext }: RecipeDeta
     );
   }
 
-  return <RecipeDetailContent recipe={recipe} recommendationContext={recommendationContext} />;
+  return (
+    <RecipeDetailContent
+      key={recipe.id}
+      recipe={recipe}
+      recommendationContext={recommendationContext}
+    />
+  );
 }
 
 function RecipeDetailContent({
@@ -124,6 +213,8 @@ function RecipeDetailContent({
   const [scrapMessage, setScrapMessage] = useState<string | null>(null);
   const [isCookingGuideVisible, setIsCookingGuideVisible] = useState(false);
   const stepsSectionRef = useRef<HTMLElement>(null);
+  const ingredientCarouselRef = useRef<HTMLDivElement>(null);
+  const [activeIngredientPage, setActiveIngredientPage] = useState(0);
   const hasStartedCookingGuideTimerRef = useRef(false);
   const hasSelectedIngredient = selectedIngredientIds.length > 0;
   const isScrapped =
@@ -134,7 +225,16 @@ function RecipeDetailContent({
     scrap.isPending ||
     unscrap.isPending;
   const ingredients = recipe.ingredients;
+  const ingredientPages = chunkIngredients(ingredients, RECIPE_INGREDIENTS_PER_PAGE);
   const steps = recipe.steps;
+
+  const goToIngredientPage = (pageIndex: number) => {
+    const carousel = ingredientCarouselRef.current;
+    if (!carousel) return;
+
+    carousel.scrollTo({ left: pageIndex * carousel.clientWidth, behavior: 'smooth' });
+    setActiveIngredientPage(pageIndex);
+  };
 
   useEffect(() => {
     if (!completionMessage) return;
@@ -334,68 +434,119 @@ function RecipeDetailContent({
           <h2 className="text-title-4 font-semibold" id="ingredients-heading">
             필요 재료
           </h2>
-          <ul className="mt-4 grid grid-cols-3 justify-items-center gap-2">
-            {ingredients.map((ingredient) => (
-              <li key={ingredient.id}>
-                <button
-                  aria-label={`${ingredient.name} 선택`}
-                  aria-pressed={selectedIngredientIds.includes(ingredient.id)}
-                  className="relative flex h-44 w-28 flex-col items-center justify-center rounded-xl border-[1px] bg-[var(--surface-default)] px-3 text-left transition-[border-color,box-shadow,transform] duration-200 ease-out active:scale-[0.98]"
-                  onClick={() => handleIngredientClick(ingredient.id)}
-                  style={{
-                    borderColor: selectedIngredientIds.includes(ingredient.id)
-                      ? 'var(--primitive-primary-500)'
-                      : 'var(--primitive-grey-300)',
-                  }}
-                  type="button"
-                >
-                  <div className="relative flex flex-col items-center gap-1 self-stretch">
-                    {hasSelectedIngredient ? (
-                      <span
-                        aria-hidden="true"
-                        className="absolute -top-3 -right-[12.5px] z-10 grid size-10 place-items-center"
+          <div
+            aria-label="필요 재료 목록"
+            className={`mt-4 flex ${
+              ingredientPages.length > 1
+                ? 'snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto [&::-webkit-scrollbar]:hidden'
+                : 'overflow-x-hidden'
+            }`}
+            onScroll={(event) => {
+              const { scrollLeft, clientWidth } = event.currentTarget;
+              if (clientWidth > 0) {
+                setActiveIngredientPage(Math.round(scrollLeft / clientWidth));
+              }
+            }}
+            ref={ingredientCarouselRef}
+            role="region"
+            tabIndex={ingredientPages.length > 1 ? 0 : undefined}
+          >
+            {ingredientPages.map((page, pageIndex) => (
+              <ul
+                aria-label={`필요 재료 ${pageIndex + 1}페이지`}
+                className={`grid w-full shrink-0 grid-cols-3 justify-items-center gap-2 ${ingredientPages.length > 1 ? 'snap-start' : ''}`}
+                key={pageIndex}
+              >
+                {page.map((ingredient) => {
+                  const pantryStatus = getPantryIngredientStatus(
+                    ingredient.id,
+                    pantryMatchQuery.data,
+                    pantryMatchQuery.isPending,
+                    pantryMatchQuery.isError,
+                  );
+
+                  return (
+                    <li key={ingredient.id}>
+                      <button
+                        aria-label={`${ingredient.name} 선택`}
+                        aria-pressed={selectedIngredientIds.includes(ingredient.id)}
+                        className="relative flex h-44 w-28 flex-col items-center justify-center rounded-xl border-[1px] bg-[var(--surface-default)] px-3 text-left transition-[border-color,box-shadow,transform] duration-200 ease-out active:scale-[0.98]"
+                        onClick={() => handleIngredientClick(ingredient.id)}
+                        style={{
+                          borderColor: selectedIngredientIds.includes(ingredient.id)
+                            ? 'var(--primitive-primary-500)'
+                            : 'var(--primitive-grey-300)',
+                        }}
+                        type="button"
                       >
-                        <span
-                          className={`grid size-6 place-items-center rounded-full transition-colors duration-200 ${
-                            selectedIngredientIds.includes(ingredient.id)
-                              ? 'bg-[var(--primitive-primary-400)] text-[var(--primitive-grey-800)]'
-                              : 'bg-[var(--primitive-grey-100)] text-[var(--primitive-grey-400)]'
-                          }`}
-                        >
-                          <Check size={18} strokeWidth={2} />
-                        </span>
-                      </span>
-                    ) : null}
-                    <div className="relative size-20 overflow-hidden rounded-lg bg-[var(--surface-secondary)]">
-                      {ingredient.imageUrl ? (
-                        <Image
-                          alt=""
-                          className="object-cover"
-                          fill
-                          sizes="80px"
-                          src={ingredient.imageUrl}
-                          unoptimized
-                        />
-                      ) : null}
-                    </div>
-                    <p className="text-label-3 w-20 truncate text-center font-medium">
-                      {ingredient.name}
-                    </p>
-                    <div className="flex flex-col items-center gap-0.5">
-                      <p className="text-label-4 truncate font-medium text-[var(--primitive-grey-600)]">
-                        {ingredient.amount}
-                      </p>
-                      {ingredient.isMain ? (
-                        <span className="text-label-4 rounded-full bg-[var(--primitive-secondary-100)] px-2 text-[var(--primitive-secondary-800)]">
-                          주재료
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-                </button>
-              </li>
+                        <div className="relative flex flex-col items-center gap-1 self-stretch">
+                          {hasSelectedIngredient ? (
+                            <span
+                              aria-hidden="true"
+                              className="absolute -top-3 -right-[12.5px] z-10 grid size-10 place-items-center"
+                            >
+                              <span
+                                className={`grid size-6 place-items-center rounded-full transition-colors duration-200 ${
+                                  selectedIngredientIds.includes(ingredient.id)
+                                    ? 'bg-[var(--primitive-primary-400)] text-[var(--primitive-grey-800)]'
+                                    : 'bg-[var(--primitive-grey-100)] text-[var(--primitive-grey-400)]'
+                                }`}
+                              >
+                                <Check size={18} strokeWidth={2} />
+                              </span>
+                            </span>
+                          ) : null}
+                          <div className="relative size-20 overflow-hidden rounded-lg bg-[var(--surface-secondary)]">
+                            {ingredient.imageUrl ? (
+                              <Image
+                                alt=""
+                                className="object-cover"
+                                fill
+                                sizes="80px"
+                                src={ingredient.imageUrl}
+                                unoptimized
+                              />
+                            ) : null}
+                          </div>
+                          <p className="text-label-3 w-20 truncate text-center font-medium">
+                            {ingredient.name}
+                          </p>
+                          <div className="flex flex-col items-center gap-0.5">
+                            <p className="text-label-4 truncate font-medium text-[var(--primitive-grey-600)]">
+                              {ingredient.amount}
+                            </p>
+                            <span
+                              className={`text-label-4 max-w-full truncate rounded-full px-2 ${pantryStatus.className}`}
+                            >
+                              {pantryStatus.label}
+                            </span>
+                          </div>
+                        </div>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
             ))}
-          </ul>
+          </div>
+          {ingredientPages.length > 1 ? (
+            <div aria-label="필요 재료 페이지" className="mt-4 flex justify-center gap-2">
+              {ingredientPages.map((_, pageIndex) => (
+                <button
+                  aria-label={`재료 ${pageIndex + 1}페이지로 이동`}
+                  aria-pressed={activeIngredientPage === pageIndex}
+                  className={`h-3 rounded-full transition-[width,background-color] ${
+                    activeIngredientPage === pageIndex
+                      ? 'w-8 bg-[var(--primitive-primary-400)]'
+                      : 'w-3 bg-[var(--primitive-grey-200)]'
+                  }`}
+                  key={pageIndex}
+                  onClick={() => goToIngredientPage(pageIndex)}
+                  type="button"
+                />
+              ))}
+            </div>
+          ) : null}
           <RecipeCartActions
             productMatches={productMatchQuery.data?.ingredients ?? []}
             isProductMatchPending={productMatchQuery.isPending}
