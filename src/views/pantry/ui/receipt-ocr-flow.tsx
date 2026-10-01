@@ -214,7 +214,6 @@ export function ReceiptOcrFlow({
             onClose={onClose}
             editingItemId={editingItemId}
             onEditingItemChange={setEditingItemId}
-            purchaseDate={state.result.purchasedAt ?? ''}
             result={state.result}
           />
         )}
@@ -230,8 +229,6 @@ interface ReceiptIngredientEditorProps {
   onChange: (patch: Partial<ReceiptReviewItem>) => void;
   onComplete: () => void;
   onImageSelected: (file: File) => void;
-  onPurchaseDateChange: (date: string) => void;
-  purchaseDate: string;
 }
 
 export function ReceiptIngredientEditor({
@@ -241,8 +238,6 @@ export function ReceiptIngredientEditor({
   onChange,
   onComplete,
   onImageSelected,
-  onPurchaseDateChange,
-  purchaseDate,
 }: ReceiptIngredientEditorProps) {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -499,21 +494,6 @@ export function ReceiptIngredientEditor({
               })}
             </div>
           </fieldset>
-
-          {!purchaseDate ? (
-            <label className="flex flex-col gap-1" htmlFor="receipt-purchase-date">
-              <span className="text-title-4 font-medium">구매일</span>
-              <input
-                className="text-title-4 focus-visible:ring-ring border-border bg-surface-secondary h-12 w-full rounded-xl border px-4 font-normal outline-none focus-visible:ring-2"
-                disabled={isSaving}
-                id="receipt-purchase-date"
-                onChange={(event) => onPurchaseDateChange(event.target.value)}
-                required
-                type="date"
-                value={purchaseDate}
-              />
-            </label>
-          ) : null}
         </div>
 
         <Button
@@ -725,17 +705,14 @@ function ReceiptOcrReview({
   onClose,
   editingItemId,
   onEditingItemChange,
-  purchaseDate: initialPurchaseDate,
   result,
 }: {
   onClose: () => void;
   editingItemId: string | null;
   onEditingItemChange: (itemId: string | null) => void;
-  purchaseDate: string;
   result: ReceiptOcrResult;
 }) {
   const { create } = usePantryMutations();
-  const [purchaseDate, setPurchaseDate] = useState(initialPurchaseDate);
   const [items, setItems] = useState(() => toReviewItems(result));
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -766,7 +743,7 @@ function ReceiptOcrReview({
   }
 
   async function saveItems() {
-    if (!areReceiptReviewItemsSubmittable(purchaseDate, items)) return;
+    if (!areReceiptReviewItemsSubmittable(items)) return;
 
     const submittedItems = items;
     setIsSaving(true);
@@ -782,7 +759,6 @@ function ReceiptOcrReview({
               expirationDate: item.expirationDate,
               imageUrl,
               name: item.name,
-              purchaseDate,
               storageType: item.storageType as PantryStorageType,
             }),
           );
@@ -807,7 +783,7 @@ function ReceiptOcrReview({
     setIsSaving(false);
   }
 
-  const canSave = areReceiptReviewItemsSubmittable(purchaseDate, items);
+  const canSave = areReceiptReviewItemsSubmittable(items);
   const editingItem = items.find((item) => item.id === editingItemId);
 
   function closeItemEditor() {
@@ -830,14 +806,12 @@ function ReceiptOcrReview({
     <section className="flex flex-1 flex-col">
       {editingItem ? (
         <ReceiptIngredientEditor
-          canComplete={Boolean(editingItem.name.trim() && editingItem.storageType && purchaseDate)}
+          canComplete={Boolean(editingItem.name.trim() && editingItem.storageType)}
           isSaving={isSaving}
           item={editingItem}
           onChange={(patch) => updateItem(editingItem.id, patch)}
           onComplete={closeItemEditor}
           onImageSelected={selectItemImage}
-          onPurchaseDateChange={setPurchaseDate}
-          purchaseDate={purchaseDate}
         />
       ) : (
         <>
