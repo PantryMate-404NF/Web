@@ -50,6 +50,7 @@ describe('ProductRouteContent', () => {
     );
 
     expect(markup).toContain('상품 상세를 불러오는 중입니다.');
+    expect(markup).toContain('data-slot="skeleton"');
   });
 
   it('상품 상세 조회 실패 시 재시도 가능한 오류 상태를 표시한다', () => {
@@ -85,6 +86,28 @@ describe('ProductRouteContent', () => {
     const page = ProductRouteContent({ productId: 'free-range-eggs' });
 
     expect(page.props.product).toBe(apiProduct);
+  });
+
+  it('재조회 실패 시 기존 상품 상세와 재시도 안내를 유지한다', () => {
+    const apiProduct = {
+      ...getProductById('free-range-eggs')!,
+      commerceProductId: 157,
+      options: undefined,
+      price: 6700,
+    };
+    useProductDetailQueryMock.mockReturnValue({
+      data: apiProduct,
+      error: new Error('상품 재조회 실패'),
+      isPending: false,
+      refetch: refetchMock,
+    });
+
+    const page = ProductRouteContent({ productId: 'free-range-eggs' });
+
+    expect(page.props.product).toBe(apiProduct);
+    expect(page.props.refreshError).toBe(true);
+    page.props.onRefreshRetry();
+    expect(refetchMock).toHaveBeenCalledOnce();
   });
 
   it('실제 상품 ID가 없는 디자인 상품은 API를 호출하지 않고 기존 상세를 유지한다', () => {

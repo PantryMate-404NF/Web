@@ -10,7 +10,9 @@ import { CART_HREF } from '@/shared/config/cart-write-mode';
 import { BackButton } from '@/shared/ui/back-button';
 
 interface ProductDetailPageProps {
+  onRefreshRetry?: () => void;
   product: ProductDetail;
+  refreshError?: boolean;
 }
 
 interface ProductInfoRowProps {
@@ -211,7 +213,11 @@ function ProductSectionNavigation() {
   );
 }
 
-export function ProductDetailPage({ product }: ProductDetailPageProps) {
+export function ProductDetailPage({
+  onRefreshRetry,
+  product,
+  refreshError = false,
+}: ProductDetailPageProps) {
   const detailRows = [
     { label: '판매단위', value: product.saleUnit },
     { label: '중량/용량', value: product.weight },
@@ -239,6 +245,24 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
       </header>
 
       <ProductSectionNavigation />
+
+      {refreshError && onRefreshRetry ? (
+        <section
+          className="border-border bg-background flex min-h-12 items-center justify-between gap-3 border-b px-4 py-2"
+          role="alert"
+        >
+          <p className="text-body-4 text-text-secondary min-w-0">
+            최신 상품 정보를 불러오지 못했어요.
+          </p>
+          <button
+            className="border-border focus-visible:ring-ring shrink-0 rounded-lg border px-3 py-1.5 text-sm font-semibold focus-visible:ring-2"
+            onClick={onRefreshRetry}
+            type="button"
+          >
+            다시 시도
+          </button>
+        </section>
+      ) : null}
 
       <div id="product-guide">
         <ProductImage product={product} />
