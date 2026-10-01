@@ -126,3 +126,27 @@ describe('product detail colors', () => {
     expect(markup).toContain('text-disabled w-20 shrink-0');
   });
 });
+
+describe('product detail refresh error', () => {
+  it('재조회 실패 시 기존 상세 위에 재시도 안내를 표시한다', () => {
+    const product = getProductById('free-range-eggs');
+
+    if (!product) throw new Error('상품 상세 목업이 필요합니다.');
+
+    const queryClient = new QueryClient();
+    const markup = renderToStaticMarkup(
+      createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        createElement(ProductDetailPage, {
+          product,
+          refreshError: true,
+          onRefreshRetry: vi.fn(),
+        }),
+      ),
+    );
+
+    expect(markup).toContain('최신 상품 정보를 불러오지 못했어요.');
+    expect(markup).toContain('다시 시도');
+  });
+});
