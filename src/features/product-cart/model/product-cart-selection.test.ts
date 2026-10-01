@@ -80,6 +80,20 @@ describe('product cart selection', () => {
     ).toBeUndefined();
   });
 
+  it('상품 상세 API가 제공한 단일 상품 ID와 수량으로 요청을 만든다', () => {
+    expect(
+      getSelectedCartRequests(
+        {
+          ...product,
+          commerceProductId: 157,
+          options: undefined,
+        },
+        { default: 2 },
+        'api',
+      ),
+    ).toEqual([{ optionId: 'default', productId: 157, quantity: 2 }]);
+  });
+
   it('일부 옵션에만 식별자가 있어도 옵션 선택을 시작할 수 있다', () => {
     expect(
       hasAnyCartProductIdentifier(

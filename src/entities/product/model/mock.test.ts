@@ -21,6 +21,7 @@ describe('getProductById', () => {
 
   it('유정란 상품은 상세 디자인의 옵션과 판매 정보를 제공한다', () => {
     expect(getProductById('free-range-eggs')).toMatchObject({
+      commerceProductId: 157,
       delivery: '내일 도착 예정',
       deliveryFee: '5,000원 (3만원 이상 무료)',
       name: '완전방사 무항생제 유정란(10구)',

@@ -1,5 +1,6 @@
 import type { ProductId } from '@/entities/product/model/types';
 import { PRODUCT_COMMERCE_MOCK_IDS } from '@/entities/product/model/mock';
+import { PRODUCT_COMMERCE_IDS } from '@/entities/product/model/commerce-product-ids';
 
 export interface HomeProductItem {
   commerceProductId?: number;
@@ -27,6 +28,7 @@ export const HOME_PRODUCT_SECTIONS: HomeProductSection[] = [
     productNameTone: 'primary',
     items: [
       {
+        commerceProductId: PRODUCT_COMMERCE_IDS['domestic-onion'],
         mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS['domestic-onion'],
         id: 'domestic-onion',
         imageSrc: '/images/home/product-onion.png',
@@ -35,6 +37,7 @@ export const HOME_PRODUCT_SECTIONS: HomeProductSection[] = [
         unit: '(1.5kg)',
       },
       {
+        commerceProductId: PRODUCT_COMMERCE_IDS['pesticide-free-potato'],
         mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS['pesticide-free-potato'],
         id: 'pesticide-free-potato',
         imageSrc: '/images/home/product-potato.png',
@@ -43,6 +46,7 @@ export const HOME_PRODUCT_SECTIONS: HomeProductSection[] = [
         unit: '(500g)',
       },
       {
+        commerceProductId: PRODUCT_COMMERCE_IDS['free-range-eggs'],
         mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS['free-range-eggs'],
         id: 'free-range-eggs',
         imageSrc: '/images/home/product-third.png',
@@ -59,6 +63,7 @@ export const HOME_PRODUCT_SECTIONS: HomeProductSection[] = [
     productNameTone: 'secondary',
     items: [
       {
+        commerceProductId: PRODUCT_COMMERCE_IDS['dried-rapeseed-greens'],
         mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS['dried-rapeseed-greens'],
         id: 'dried-rapeseed-greens',
         imageSrc: '/images/home/product-rapeseed.png',
@@ -67,6 +72,7 @@ export const HOME_PRODUCT_SECTIONS: HomeProductSection[] = [
         unit: '(80g)',
       },
       {
+        commerceProductId: PRODUCT_COMMERCE_IDS['blanched-chwinamul'],
         mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS['blanched-chwinamul'],
         id: 'blanched-chwinamul',
         imageSrc: '/images/home/product-chwinamul.png',
@@ -75,6 +81,7 @@ export const HOME_PRODUCT_SECTIONS: HomeProductSection[] = [
         unit: '(250g x 1개)',
       },
       {
+        commerceProductId: PRODUCT_COMMERCE_IDS['bujigaengi-greens'],
         mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS['bujigaengi-greens'],
         id: 'bujigaengi-greens',
         imageSrc: '/images/home/product-sixth.png',
@@ -91,6 +98,7 @@ export const HOME_PRODUCT_SECTIONS: HomeProductSection[] = [
     productNameTone: 'secondary',
     items: [
       {
+        commerceProductId: PRODUCT_COMMERCE_IDS['buckwheat-tofu-noodles'],
         mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS['buckwheat-tofu-noodles'],
         id: 'buckwheat-tofu-noodles',
         imageSrc: '/images/home/product-noodles.png',
@@ -99,6 +107,7 @@ export const HOME_PRODUCT_SECTIONS: HomeProductSection[] = [
         unit: '(180g x 1봉)',
       },
       {
+        commerceProductId: PRODUCT_COMMERCE_IDS['garlic-cream-cheese'],
         mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS['garlic-cream-cheese'],
         id: 'garlic-cream-cheese',
         imageSrc: '/images/home/product-cheese.png',
@@ -107,6 +116,7 @@ export const HOME_PRODUCT_SECTIONS: HomeProductSection[] = [
         unit: '(125g)',
       },
       {
+        commerceProductId: PRODUCT_COMMERCE_IDS['low-sugar-plum-syrup'],
         mockCommerceProductId: PRODUCT_COMMERCE_MOCK_IDS['low-sugar-plum-syrup'],
         id: 'low-sugar-plum-syrup',
         imageSrc: '/images/home/product-ninth.png',
