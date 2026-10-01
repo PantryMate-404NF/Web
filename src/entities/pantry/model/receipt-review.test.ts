@@ -3,21 +3,16 @@ import { describe, expect, it } from 'vitest';
 import { areReceiptReviewItemsSubmittable, createReceiptReviewItem } from './receipt-review';
 
 describe('receipt review validation', () => {
-  it('requires a purchase date, at least one item, a name, and a storage type for each item', () => {
+  it('allows registration without a purchase date but requires items, a name, and storage type', () => {
     const completeItems = [{ name: '계란', storageType: 'REFRIGERATED' as const }];
 
-    expect(areReceiptReviewItemsSubmittable('', completeItems)).toBe(false);
-    expect(areReceiptReviewItemsSubmittable('2026-09-29', [])).toBe(false);
-    expect(
-      areReceiptReviewItemsSubmittable('2026-09-29', [{ name: '계란', storageType: null }]),
-    ).toBe(false);
-    expect(areReceiptReviewItemsSubmittable('2026-09-29', completeItems)).toBe(true);
+    expect(areReceiptReviewItemsSubmittable(completeItems)).toBe(true);
+    expect(areReceiptReviewItemsSubmittable([])).toBe(false);
+    expect(areReceiptReviewItemsSubmittable([{ name: '계란', storageType: null }])).toBe(false);
   });
 
   it('rejects blank names even when a storage method is selected', () => {
-    expect(
-      areReceiptReviewItemsSubmittable('2026-09-29', [{ name: '  ', storageType: 'FROZEN' }]),
-    ).toBe(false);
+    expect(areReceiptReviewItemsSubmittable([{ name: '  ', storageType: 'FROZEN' }])).toBe(false);
   });
 });
 
