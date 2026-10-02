@@ -123,13 +123,13 @@ describe('home recipe recommendations', () => {
     expect(markup).toContain('맛 선호도를 반영해 AI가 추천했어요.');
   });
 
-  it('인기 대체 추천에는 AI 대신 인기 레시피 안내를 표시한다', () => {
+  it('인기 레시피로 대체 추천해도 AI 추천 안내를 표시한다', () => {
     recommendationQueryMock.mockReturnValue(createRecommendationQueryResult('POPULARITY'));
 
     const markup = renderToStaticMarkup(createElement(HomePage, { state: 'complete' }));
 
-    expect(markup).toContain('지금 인기 있는 레시피를 추천해요.');
-    expect(markup).not.toContain('맛 선호도를 반영해 AI가 추천했어요.');
+    expect(markup).toContain('맛 선호도를 반영해 AI가 추천했어요.');
+    expect(markup).not.toContain('지금 인기 있는 레시피를 추천해요.');
   });
 
   it('추천 조회가 성공하기 전에는 추천 출처 안내를 표시하지 않는다', () => {
