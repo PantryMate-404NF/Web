@@ -52,6 +52,11 @@ describe('getRecipeCartRequests', () => {
     ]);
   });
 
+  it('does not add selected ingredients that are already in the pantry', () => {
+    expect(getRecipeCartRequests(productMatches, ['404'], 'selected')).toEqual([]);
+    expect(getLocalRecipeCartProducts(productMatches, ['404'], 'selected')).toEqual([]);
+  });
+
   it('adds matched shortage products once, skipping owned and unsupported ingredients', () => {
     expect(getRecipeCartRequests(productMatches, [], 'all')).toEqual([
       { productId: 1001, quantity: 1 },
