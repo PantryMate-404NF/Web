@@ -2,9 +2,14 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const useOrderHistoryQueryMock = vi.hoisted(() => vi.fn());
+const useAuthSessionMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/entities/order/api/use-order-history-query', () => ({
   useOrderHistoryQuery: useOrderHistoryQueryMock,
+}));
+
+vi.mock('@/features/auth/ui/auth-session-provider', () => ({
+  useAuthSession: useAuthSessionMock,
 }));
 
 vi.mock('next/navigation', () => ({
@@ -33,6 +38,7 @@ const order = {
 
 describe('OrderHistoryPage', () => {
   beforeEach(() => {
+    useAuthSessionMock.mockReturnValue({ state: 'complete' });
     useOrderHistoryQueryMock.mockReturnValue({
       data: [order],
       error: null,
@@ -77,11 +83,11 @@ describe('OrderHistoryPage', () => {
     expect(markup).toContain('상세현황');
     expect(markup).toContain('주문취소/환불');
     expect(orderStatusMarkup?.replaceAll(/<[^>]+>/g, '')).toBe(
-      '1결제완료0배송준비0배송 중1배송완료',
+      '1결제완료1배송준비0배송 중1배송완료',
     );
     expect(markup).toMatch(/<a[^>]*href="\/mypage\/orders\/preparing"[^>]*>배송준비<\/a>/);
     expect(markup).toMatch(
-      /<a[^>]*href="\/mypage\/delivery\?orderId=ORDER_1"[^>]*>[\s\S]*?<strong[^>]*>1<\/strong>[\s\S]*?배송완료[\s\S]*?<\/a>/,
+      /<a[^>]*href="\/mypage\/orders\/completed"[^>]*>[\s\S]*?<strong[^>]*>1<\/strong>[\s\S]*?배송완료[\s\S]*?<\/a>/,
     );
   });
 
@@ -97,6 +103,15 @@ describe('OrderHistoryPage', () => {
 
     expect(markup).toContain('주문 내역을 불러오는 중');
     expect(markup).not.toContain('하인즈 토마토 케찹');
+  });
+
+  it('인증 복원 중에는 주문 API 조회를 시작하지 않는다', () => {
+    useAuthSessionMock.mockReturnValue({ state: 'loading' });
+
+    const markup = renderToStaticMarkup(<OrderHistoryPage />);
+
+    expect(useOrderHistoryQueryMock).toHaveBeenLastCalledWith('CONFIRMED', false);
+    expect(markup).toContain('주문 내역을 불러오는 중');
   });
 
   it('주문 내역이 비어 있으면 빈 상태를 표시한다', () => {
@@ -144,9 +159,21 @@ describe('OrderHistoryPage', () => {
   it('배송준비 페이지의 라벨과 링크를 유지한다', () => {
     const markup = renderToStaticMarkup(<OrderHistoryPage status="preparing" />);
 
+    expect(useOrderHistoryQueryMock).toHaveBeenLastCalledWith('CONFIRMED', true);
     expect(markup).toContain('배송 준비');
     expect(markup).toContain('href="/mypage/orders"');
     expect(markup).toContain('href="/mypage/delivery?preparing=ORDER_1"');
+    expect(markup).toContain('배송조회');
+  });
+
+  it('배송완료 페이지에서 목록을 표시하고 배송조회로 상세에 진입한다', () => {
+    const markup = renderToStaticMarkup(<OrderHistoryPage status="completed" />);
+
+    expect(useOrderHistoryQueryMock).toHaveBeenLastCalledWith('CONFIRMED', true);
+    expect(markup).toContain('배송 완료');
+    expect(markup).toContain('aria-label="배송 완료 주문 목록"');
+    expect(markup).toContain('href="/mypage/orders"');
+    expect(markup).toContain('href="/mypage/delivery?orderId=ORDER_1"');
     expect(markup).toContain('배송조회');
   });
 });

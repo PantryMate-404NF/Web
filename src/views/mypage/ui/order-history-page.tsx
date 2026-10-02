@@ -7,9 +7,10 @@ import Link from 'next/link';
 
 import { useOrderHistoryQuery } from '@/entities/order/api/use-order-history-query';
 import type { OrderHistoryRecord } from '@/entities/order/model/order-history';
+import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 import { BottomNavigation } from '@/widgets/navigation/ui/bottom-navigation';
 
-type OrderListStatus = 'paid' | 'preparing';
+type OrderListStatus = 'paid' | 'preparing' | 'completed';
 
 function OrderStatusSummary({
   status,
@@ -18,11 +19,11 @@ function OrderStatusSummary({
   status: OrderListStatus;
   orders: OrderHistoryRecord[];
 }) {
-  const activeIndex = status === 'paid' ? 0 : 1;
+  const activeIndex = status === 'paid' ? 0 : status === 'preparing' ? 1 : 3;
   const completedOrders = orders.filter((order) => order.status === 'CONFIRMED');
   const statuses = [
     { label: '결제완료', count: completedOrders.length },
-    { label: '배송준비', count: orders.filter((order) => order.status === 'PENDING').length },
+    { label: '배송준비', count: completedOrders.length },
     { label: '배송 중', count: 0 },
     { label: '배송완료', count: completedOrders.length },
   ];
@@ -40,11 +41,11 @@ function OrderStatusSummary({
         <ol className="mt-6 flex items-start justify-center px-1.5">
           {statuses.map((item, index) => (
             <li className="flex items-start" key={item.label}>
-              {item.label === '배송완료' && completedOrders[0] ? (
+              {item.label === '배송완료' ? (
                 <Link
                   aria-label={`${item.count}건 배송완료 보기`}
                   className="inline-flex w-10 flex-col items-center gap-[5px]"
-                  href={`/mypage/delivery?orderId=${encodeURIComponent(completedOrders[0].id)}`}
+                  href="/mypage/orders/completed"
                 >
                   <strong
                     className={`text-2xl leading-9 font-semibold ${
@@ -116,6 +117,8 @@ function OrderHistoryItem({
   status: OrderListStatus;
 }) {
   const isPreparing = status === 'preparing';
+  const isCompleted = status === 'completed';
+  const isDeliveryList = isPreparing || isCompleted;
 
   return (
     <li className="px-4 py-4">
@@ -134,7 +137,7 @@ function OrderHistoryItem({
 
       <div className="flex items-center justify-between">
         <h2 className="text-base leading-6 font-semibold">
-          {isPreparing ? '배송 준비' : order.statusLabel}
+          {isPreparing ? '배송 준비' : isCompleted ? '배송 완료' : order.statusLabel}
         </h2>
         <span className="text-disabled flex items-center gap-0 text-xs leading-4 font-medium">
           {order.orderNumber}
@@ -161,7 +164,7 @@ function OrderHistoryItem({
               width={76}
             />
             <div className="min-w-0">
-              {!isPreparing ? (
+              {!isDeliveryList ? (
                 <p className="text-disabled mb-1 text-xs leading-[1.5] font-medium">
                   {order.orderedAt}
                 </p>
@@ -178,10 +181,10 @@ function OrderHistoryItem({
         ))}
       </ul>
 
-      {isPreparing ? (
+      {isDeliveryList ? (
         <Link
           className="mt-4 flex h-10 w-full items-center justify-center rounded-xl bg-[var(--primitive-primary-200)] text-sm leading-5 font-semibold"
-          href={`/mypage/delivery?preparing=${encodeURIComponent(order.id)}`}
+          href={`/mypage/delivery?${isPreparing ? 'preparing' : 'orderId'}=${encodeURIComponent(order.id)}`}
         >
           배송조회
         </Link>
@@ -192,12 +195,17 @@ function OrderHistoryItem({
 
 export function OrderHistoryPage({ status = 'paid' }: { status?: OrderListStatus }) {
   const isPreparing = status === 'preparing';
+  const isCompleted = status === 'completed';
+  const isDeliveryList = isPreparing || isCompleted;
+  const { state: authState } = useAuthSession();
+  const shouldQuery = authState === 'complete' || authState === 'onboarding';
   const {
     data: orders,
     isError,
     isPending,
     refetch,
-  } = useOrderHistoryQuery(isPreparing ? undefined : 'CONFIRMED');
+  } = useOrderHistoryQuery('CONFIRMED', shouldQuery);
+  const isLoading = authState === 'loading' || (shouldQuery && isPending);
 
   return (
     <main className="mobile-page bg-background flex min-h-dvh flex-col">
@@ -205,7 +213,7 @@ export function OrderHistoryPage({ status = 'paid' }: { status?: OrderListStatus
         <Link
           aria-label="이전 화면으로 돌아가기"
           className="absolute left-4 grid size-8 place-items-center"
-          href={isPreparing ? '/mypage/orders' : '/mypage'}
+          href={isDeliveryList ? '/mypage/orders' : '/mypage'}
         >
           <Image
             alt=""
@@ -222,9 +230,15 @@ export function OrderHistoryPage({ status = 'paid' }: { status?: OrderListStatus
 
       <section
         className="flex-1"
-        aria-label={isPreparing ? '배송 준비 주문 목록' : '결제 완료 주문 목록'}
+        aria-label={
+          isPreparing
+            ? '배송 준비 주문 목록'
+            : isCompleted
+              ? '배송 완료 주문 목록'
+              : '결제 완료 주문 목록'
+        }
       >
-        {isError ? (
+        {shouldQuery && isError ? (
           <div className="px-4 py-8 text-center">
             <p className="text-text-secondary" role="alert">
               주문 내역을 불러오지 못했어요.
@@ -233,10 +247,17 @@ export function OrderHistoryPage({ status = 'paid' }: { status?: OrderListStatus
               다시 시도
             </button>
           </div>
-        ) : isPending ? (
+        ) : isLoading ? (
           <p className="text-text-secondary px-4 py-8 text-center" role="status">
             주문 내역을 불러오는 중이에요.
           </p>
+        ) : !shouldQuery ? (
+          <div className="px-4 py-8 text-center">
+            <p className="text-text-secondary">주문 내역을 보려면 로그인해 주세요.</p>
+            <Link className="text-primary mt-4 inline-block font-semibold" href="/login">
+              로그인하기
+            </Link>
+          </div>
         ) : orders?.length ? (
           <ul>
             {orders.map((order) => (
