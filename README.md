@@ -1,240 +1,176 @@
 # PantryMate Web
 
-PantryMate는 사용자의 식재료 구매 이력을 바탕으로 팬트리를 구성하고, 현재 만들 수 있는 레시피를 추천하며, 부족한 재료를 장바구니와 구매까지 연결하는 **모바일 웹 기반 신선식품 이커머스 서비스**입니다.
+PantryMate는 식재료를 팬트리에 기록하고, 보유 재료와 사용자 취향을 바탕으로 레시피를 탐색한 뒤 부족한 재료를 주문할 수 있는 모바일 우선 웹 서비스입니다.
 
-## 프로젝트가 해결하려는 문제
+## 주요 기능
 
-| 사용자 문제                                       | AI Pantry의 해결 방식                                                 |
-| ------------------------------------------------- | --------------------------------------------------------------------- |
-| 냉장고에 어떤 식재료가 있는지 기억하기 어렵다     | 주문 수령 상품을 팬트리 후보로 만들고, 짧은 상태 확인을 제공합니다.   |
-| 메뉴를 정한 뒤에도 필요한 재료를 다시 찾아야 한다 | 레시피에서 보유·부족 재료를 구분하고 부족 재료만 장바구니에 담습니다. |
-| 남은 식재료를 활용하지 못해 폐기할 수 있다        | 남은 재료와 소비기한을 바탕으로 활용 레시피를 제안합니다.             |
-| 반복 구매 상품을 매번 다시 찾아야 한다            | 구매 이력에 기반한 재구매 후보를 제안합니다.                          |
-| 동거인과 장보기·식재료 정보가 분리된다            | 고도화 단계에서 공유 팬트리와 공유 장바구니를 제공합니다.             |
+| 영역 | 구현 내용 |
+| --- | --- |
+| 홈 | 개인화 레시피 추천과 상품·기획전 영역을 제공합니다. |
+| 레시피 | 레시피 탐색·검색·상세 조회, 팬트리 보유 재료 확인, 부족 재료의 상품 연결, 레시피 저장을 지원합니다. |
+| 장바구니 | 상품 추가·수량 변경·삭제와 선택 상품 주문을 지원합니다. 레시피 상세에서도 선택한 재료 또는 부족한 재료를 장바구니에 추가할 수 있습니다. |
+| 팬트리 | 식재료 목록 조회, 검색·정렬·보관 방법 필터, 직접 등록·수정·삭제를 지원합니다. |
+| 영수증 OCR | 영수증을 전송해 상품명을 인식하고, 사용자가 결과를 확인·수정한 뒤 팬트리에 등록할 수 있습니다. |
+| 주문·결제 | 주문서 작성, 결제 준비·승인, 주문 완료·실패 화면을 제공합니다. 결제 연동에는 토스페이먼츠 SDK를 사용합니다. |
+| 마이페이지 | 프로필·개인화 설정·배송지·주문 내역을 확인하고 주문 상세 및 취소 흐름으로 이동할 수 있습니다. |
+| 배송 조회 | 주문 내역의 실제 주문 상품을 표시하고, 배송 준비 또는 배송 완료 상태 화면을 제공합니다. |
+| 알림 | Firebase 웹 푸시 설정이 있으면 브라우저 알림 권한을 요청하고 디바이스 토큰을 등록합니다. |
+| PWA | 웹 앱 Manifest와 서비스 워커 등록을 지원합니다. |
 
-## 핵심 사용자 흐름
+## 주요 화면 경로
 
-```text
-구매 이력 → 팬트리 후보 → 사용자 상태 확인 → 레시피 추천
-→ 부족 재료 장바구니 → 주문·수령 → 다음 팬트리 후보
-```
+| 경로 | 화면 |
+| --- | --- |
+| `/` | 홈 |
+| `/search` | 상품 검색 |
+| `/product/[productId]` | 상품 상세 |
+| `/recipe` | 레시피 목록·추천 |
+| `/recipe/imminent` | 소비기한 임박 재료 관련 레시피 |
+| `/recipe/ingredients` | 레시피 재료 선택 |
+| `/recipe/more` | 레시피 더 보기 |
+| `/recipe/[recipeId]` | 레시피 상세 |
+| `/pantry` | 팬트리 목록 및 식재료 관리 |
+| `/cart` | 장바구니 |
+| `/order` | 주문서 |
+| `/payment/success` | 결제 완료 |
+| `/payment/fail` | 결제 실패 |
+| `/onboarding` | 개인화 설정 |
+| `/mypage` | 마이페이지 |
+| `/mypage/orders` | 주문 내역 |
+| `/mypage/orders/[orderId]` | 주문 상세 |
+| `/mypage/orders/preparing` | 배송 준비 주문 |
+| `/mypage/orders/completed` | 배송 완료 주문 |
+| `/mypage/delivery` | 배송 상태 및 주문 상품 |
+| `/mypage/addresses` | 배송지 목록 |
+| `/mypage/addresses/new` | 배송지 등록 |
+| `/mypage/addresses/[addressId]/edit` | 배송지 수정 |
+| `/mypage/favorites` | 즐겨찾기 |
+| `/mypage/scraps` | 저장한 레시피 |
+| `/mypage/edit` | 프로필 수정 |
+| `/login` | 로그인 |
+| `/auth/callback` | 인증 콜백 |
+| `/promotion` | 기획전 |
 
-MVP에서는 재료의 정확한 잔여 수량을 추정하지 않습니다. 팬트리는 요리 가능 여부, 소비기한 상태, 등록 방식을 분리해 관리합니다.
+## 현재 동작과 범위
 
-| 구분           | 값                                  | 의미                                      |
-| -------------- | ----------------------------------- | ----------------------------------------- |
-| 요리 가능 여부 | `ON` / `OFF`                        | 레시피 추천에 사용할 수 있는지            |
-| 소비기한 상태  | `정상` / `임박` / `경과` / `미등록` | 소비기한 정보를 기준으로 한 표시 상태     |
-| 등록 방식      | `자동` / `수동`                     | 배송 완료 자동 등록 또는 사용자 직접 등록 |
-
-## 프로토타입 목업 화면
-
-실제 API가 준비되기 전, Figma 프로토타입의 핵심 흐름을 확인하기 위한 목업 화면입니다. 화면 구조는 실제 구현 예정인 FSD 레이어와 App Router 경로에 배치되어 있으며, 확정 전 와이어프레임에는 디자인 토큰을 아직 적용하지 않습니다.
-
-| 경로                  | 확인할 화면                         |
-| --------------------- | ----------------------------------- |
-| `/`                   | 목업 화면 진입 목록                 |
-| `/pantry`             | API·MSW 기반 팬트리 아이콘형 목록   |
-| `/pantry?view=image`  | API·MSW 기반 팬트리 이미지형 목록   |
-| `/recipe`             | 주재료 기반 레시피 추천             |
-| `/recipe/imminent`    | 소비기한 임박 재료 기반 레시피 추천 |
-| `/recipe/ingredients` | 주재료 선택용 식재료 그리드         |
-| `/recipe/kimchi-stew` | 레시피 상세와 부족 재료 확인        |
+- 팬트리의 등록 출처는 `AUTO`, `MANUAL`, `OCR`로 구분합니다. 화면에는 각각 `자사몰에서 구입`, `사용자 등록`, `영수증 등록`으로 표시합니다.
+- 팬트리 등록·수정 화면은 보관 방법과 날짜 정보를 관리합니다. 소비기한 상태와 남은 일수 표시는 팬트리 API 응답을 기준으로 처리합니다.
+- 결제 완료 후 프론트엔드는 구매 상품을 팬트리에 다시 등록하는 API를 별도로 호출하지 않습니다. 결제한 상품의 자동 팬트리 반영 여부는 백엔드의 주문 처리와 응답 데이터에 따릅니다.
+- 레시피에서 선택 담기를 하면 선택한 재료에 연결된 상품만 추가 요청을 보냅니다. 현재는 기존 미결제 장바구니 상품을 비우지 않으므로, 기존 상품과 새 상품이 장바구니에 함께 표시됩니다.
+- 배송 조회 화면은 주문 내역의 상품 정보를 사용합니다. 택배사 실시간 배송 위치를 조회하는 연동은 포함되어 있지 않습니다.
+- 정확한 식재료 잔여 수량 추정과 공유 팬트리·공유 장바구니는 구현 범위에 포함되어 있지 않습니다.
 
 ## 기술 스택
 
-| 영역         | 기술 및 버전                                           | 적용 목적                                                |
-| ------------ | ------------------------------------------------------ | -------------------------------------------------------- |
-| 프레임워크   | Next.js `16.3.1` / React `19.2.8` / TypeScript `6.0.3` | 라우팅, 렌더링 전략, 타입 안정성                         |
-| 스타일       | Tailwind CSS `4.3.3` + shadcn/ui                       | 모바일 우선 UI와 재사용 가능한 공통 컴포넌트             |
-| 서버 상태    | TanStack Query `5.101.4`                               | API 캐싱, 로딩·오류·재시도 상태 관리                     |
-| 전역 UI 상태 | Zustand `5.0.15`                                       | 바텀시트, 토스트, 임시 선택 상태 관리                    |
-| 폼·검증      | React Hook Form `7.85.0` + Zod `4.4.3`                 | 팬트리 확인·알림 설정 등의 입력 검증                     |
-| API 모킹     | MSW `2.15.0`                                           | REST API 명세 기반의 프론트엔드 선개발 및 예외 처리 검증 |
-| 인증         | 카카오·네이버 OAuth                                    | 자체 이메일 로그인 없이 소셜 로그인 2종만 제공           |
-| PWA          | Next.js Manifest + Service Worker                      | 설치 가능한 모바일 웹 경험 제공                          |
-| 아이콘       | Lucide React                                           | 일관된 접근 가능한 UI 아이콘                             |
-| 테스트       | Vitest `4.1.11`                                        | 도메인 로직과 컴포넌트 테스트                            |
-| 코드 포맷    | Prettier + Tailwind 플러그인                           | 일관된 코드 형식과 Tailwind 클래스 정렬                  |
-| Git 훅       | Husky                                                  | 커밋 전 포맷·린트·타입 검사 자동 실행                    |
-
-## PWA 범위
-
-초기 단계에서는 Manifest, 앱 아이콘, 설치 가능 구조, 서비스 워커 등록을 제공합니다. 주문·팬트리·장바구니 API 응답은 캐시하지 않습니다. 오프라인 동작 범위가 합의된 후 정적 자산부터 제한적으로 캐싱합니다.
-
-## 인증 범위
-
-MVP는 **카카오·네이버 소셜 로그인만** 제공합니다. 자체 이메일 회원가입·로그인, 비밀번호 재설정, 이메일 인증은 구현 범위에서 제외합니다. 소셜 로그인 완료 후 서비스의 로그인 상태는 백엔드가 발급한 토큰 정책을 따르며, 제공자별 인가 코드와 비밀 값은 프론트엔드에 보관하지 않습니다.
+| 영역 | 기술 |
+| --- | --- |
+| 프레임워크 | Next.js `16.3.1`, React `19.2.8`, TypeScript `6.0.3` |
+| 스타일 | Tailwind CSS `4.3.3`, Radix UI |
+| 서버 상태 | TanStack Query `5.101.4` |
+| 클라이언트 상태 | Zustand `5.0.15` |
+| 폼·검증 | React Hook Form `7.85.0`, Zod `4.4.3` |
+| API 모킹 | MSW `2.15.0` |
+| 결제 | 토스페이먼츠 SDK `2.8.1` |
+| 푸시 알림 | Firebase `12.19.0` |
+| 테스트 | Vitest `4.1.11` |
+| 코드 품질 | ESLint, Prettier, Husky |
 
 ## 시작하기
 
 ### 요구 환경
 
-- Node.js 20 이상 권장
+- Node.js 20 이상
 - npm
 
 ### 설치 및 실행
 
 ```bash
 npm install
+cp .env.example .env.local
 npm run dev
 ```
 
-브라우저에서 `http://localhost:3000`을 엽니다.
+브라우저에서 `http://localhost:3000`을 엽니다. 백엔드 API와 결제·푸시 기능을 사용하려면 `.env.local`에 해당 서비스 설정을 입력해야 합니다.
 
-### 주요 명령어
+### 주요 환경 변수
 
-| 명령어                        | 설명                                      |
-| ----------------------------- | ----------------------------------------- |
-| `npm run dev`                 | Turbopack 기반 개발 서버 실행             |
-| `npm run lint`                | ESLint 검사                               |
-| `npm run typecheck`           | TypeScript 타입 검사                      |
-| `npm run check:design-tokens` | Pretendard·색상·테마·반응형 토큰 검사     |
-| `npm run check`               | 디자인 토큰·포맷·린트·타입 통합 검사      |
-| `npm run test`                | Vitest 테스트 실행                        |
-| `npm run build`               | 디자인 토큰 검사 후 webpack 프로덕션 빌드 |
-| `npm run check:workflow`      | 브랜치·커밋·작업 트리 점검                |
-| `npm run start`               | 프로덕션 서버 실행                        |
+| 변수 | 용도 |
+| --- | --- |
+| `NEXT_PUBLIC_API_BASE_URL` | 브라우저가 호출하는 API 주소 |
+| `BACKEND_API_BASE_URL` | 서비스별 주소 대신 사용할 통합 백엔드 주소 |
+| `AUTH_API_BASE_URL` | 인증 API 주소 |
+| `PANTRY_RECIPE_API_BASE_URL` | 팬트리·레시피 API 주소 |
+| `PRODUCT_API_BASE_URL` | 상품 API 주소 |
+| `NEXT_PUBLIC_CART_WRITE_API_ENABLED` | `enabled`이면 백엔드 장바구니 API에 변경 사항을 저장 |
+| `NEXT_PUBLIC_API_MOCKING` | `enabled`이면 로컬 MSW 목업을 사용 |
+| `NEXT_PUBLIC_TOSS_CLIENT_KEY` | 토스페이먼츠 테스트 클라이언트 키 |
+| `NEXT_PUBLIC_FIREBASE_*` | Firebase 웹 푸시 설정 |
 
-> 현재 환경에서는 Next.js 16의 Turbopack 프로덕션 빌드가 불안정할 수 있어, 재현 가능한 검증을 위해 `npm run build`는 webpack을 사용합니다.
+API 기본 주소 및 환경별 설정 예시는 [.env.example](.env.example)을 참고하세요. 실제 키와 비밀 값이 포함된 `.env.local`은 저장소에 커밋하지 않습니다.
 
-## 폴더 구조와 코드 배치 기준
+개발 환경에서 장바구니 API 쓰기를 활성화하지 않으면 브라우저 로컬 미리보기 모드가 사용될 수 있습니다. 다른 브라우저나 기기와 장바구니를 공유하려면 백엔드 장바구니 API를 설정해야 합니다.
 
-프로젝트는 FSD(Feature-Sliced Design) 의존 방향을 따릅니다.
+## 주요 명령어
 
-```text
-app → views → widgets → features → entities → shared
-```
+| 명령어 | 설명 |
+| --- | --- |
+| `npm run dev` | 개발 서버 실행 |
+| `npm run lint` | ESLint 검사 |
+| `npm run typecheck` | TypeScript 타입 검사 |
+| `npm run format:check` | Prettier 포맷 검사 |
+| `npm run check:design-tokens` | 디자인 토큰 검사 |
+| `npm run check:token-usage` | 토큰 사용 검사 |
+| `npm run check:mobile-layout` | 모바일 레이아웃 검사 |
+| `npm run check` | 디자인 토큰·포맷·린트·타입 통합 검사 |
+| `npm run test` | Vitest 테스트 실행 |
+| `npm run build` | 프로덕션 빌드 전 검사 후 webpack 빌드 |
+| `npm run start` | 프로덕션 서버 실행 |
+| `npm run check:workflow` | 브랜치·커밋·작업 트리 검사 |
 
-상위 레이어는 하위 레이어를 가져올 수 있지만, 반대 방향 import는 금지합니다. 예를 들어 `entities/pantry`는 `views/pantry`를 import할 수 없습니다. FSD 표준의 `pages`는 Next.js가 Pages Router로 해석하므로, 이 App Router 프로젝트에서는 같은 역할을 `views`라는 이름으로 둡니다.
+## 프로젝트 구조
 
-### 현재 폴더 구조
+FSD(Feature-Sliced Design) 의존 방향에 따라 화면과 기능을 배치합니다.
 
 ```text
 src/
-├── app/                              # Next.js App Router: URL과 전역 설정
-│   ├── (main)/                        # 사용자 화면 라우트 그룹
-│   │   ├── pantry/page.tsx            # /pantry의 query를 FSD 페이지에 전달
-│   │   ├── recipe/                    # 레시피 목록·상세 URL
-│   ├── layout.tsx                     # 루트 레이아웃
-│   ├── providers.tsx                  # Query Client 등 전역 Provider
-│   ├── globals.css                    # 전역 스타일·디자인 토큰
-│   └── manifest.ts                    # PWA Manifest
-├── views/                            # FSD 페이지 단위 화면 조합 (pages 예약 경로 충돌 방지)
-│   ├── pantry/ui/                     # 팬트리 목록·빈 상태·등록/삭제 흐름
-│   └── recipe/ui/                     # 레시피 목록·상세 화면
-├── widgets/                          # 여러 entity/feature를 묶는 큰 UI 블록
-│   ├── pantry-list/ui/                # 팬트리 헤더·필터·2열 그리드
-│   └── app-shell/ui/                  # 모바일 화면 프레임
-├── features/                         # 사용자의 행동 단위 (현재 초기 폴더)
-├── entities/                         # 도메인 데이터와 단위 UI
-│   ├── pantry/                        # PantryItem 타입·목업·카드
-│   └── recipe/                        # Recipe 타입·목업
-├── components/                       # 전환 중인 공용 UI
-│   ├── ui/                            # 현재 shadcn/ui 컴포넌트
-│   └── pwa/                           # 서비스 워커 등록
-├── lib/                              # 전환 중인 공용 유틸리티
-│   └── utils/                         # cn 등 공통 함수
-└── mocks/                            # MSW browser/server/handlers
+├── app/          # Next.js App Router, 라우트와 전역 설정
+├── views/        # URL 단위 화면 조합
+├── widgets/      # 여러 기능·도메인을 묶는 UI
+├── features/     # 사용자 행동과 기능 흐름
+├── entities/     # 팬트리·상품·레시피·주문·사용자 도메인
+├── shared/       # 공통 API, 설정, UI, 유틸리티
+├── components/   # 공용 UI 및 PWA 서비스 워커 등록
+└── mocks/        # MSW 설정, 응답 데이터, API 핸들러
 
-public/                               # 정적 이미지, 아이콘, service worker
-docs/                                 # 제품·아키텍처·API·컨벤션 문서
+public/           # 이미지, 아이콘, 폰트, 서비스 워커
+docs/             # 제품·아키텍처·API·개발 문서
 ```
 
-`components/`, `lib/`는 스캐폴드에서 남아 있는 공용 코드 위치입니다. 새 공용 코드는 아래 목표 구조를 우선 사용하고, 기존 코드는 기능 작업 중 관련 범위에서만 점진적으로 이동합니다. 단순 정리를 위해 unrelated 파일을 한 번에 옮기지 않습니다.
+상위 레이어는 하위 레이어를 참조할 수 있지만, 하위 레이어에서 상위 레이어를 참조하지 않습니다. Next.js App Router의 `app/` 아래에 실제 라우트를 두고, 페이지 단위 화면 구성은 `views/`에서 담당합니다.
 
-```text
-src/shared/
-├── ui/                               # 여러 도메인에서 재사용하는 shadcn/ui 래퍼
-├── lib/                              # API client, query client, 공통 유틸
-├── config/                           # 환경별 API URL, 상수, feature flag
-└── assets/                           # 코드에서 import하는 공용 정적 자산
-```
+## 개발 기준
 
-### 어디에 무엇을 만들지
-
-| 만들 대상                                          | 둘 위치                 | 예시                                                                | 두면 안 되는 곳                      |
-| -------------------------------------------------- | ----------------------- | ------------------------------------------------------------------- | ------------------------------------ |
-| URL, 페이지 메타데이터, `searchParams` 해석        | `src/app`               | `/pantry?view=image`를 `PantryRouteContent`에 전달                  | `entities`, `widgets`                |
-| 한 URL을 완성하는 화면 조합                        | `src/views/<domain>/ui` | `pantry-page.tsx`, `recipe-list-page.tsx`                           | `app/page.tsx`에 모든 마크업 작성    |
-| 여러 화면에서 조합해 쓰는 큰 UI                    | `src/widgets/<name>/ui` | 팬트리 헤더·필터·그리드                                             | `shared`에 페이지 맥락 UI 배치       |
-| 클릭·제출·선택 같은 사용자 행동                    | `src/features/<action>` | `add-pantry-item`, `toggle-recipe-save`, `add-recipe-items-to-cart` | `entities`에 API 호출과 폼 상태 혼합 |
-| 도메인 타입, API DTO, 단위 카드                    | `src/entities/<domain>` | `PantryItem`, `pantry-item-card.tsx`                                | `views`에서 도메인 타입 중복 선언    |
-| 어느 도메인에도 종속되지 않는 버튼·다이얼로그·유틸 | `src/shared`            | `Button`, `cn`, API client                                          | 특정 화면 전용 컴포넌트              |
-| API 명세 기반 응답과 에러 재현                     | `src/mocks/handlers`    | `GET /pantry/items`, cursor 페이지 응답                             | 페이지 컴포넌트 내부 더미 배열       |
-| 실제 이미지·아이콘·폰트                            | `public/` 또는 CDN URL  | 상품 이미지, PWA 아이콘                                             | `src`에 무분별한 바이너리 저장       |
-
-### 현재 팬트리 구현의 연결 관계
-
-```text
-/pantry, /pantry?view=image
-  └─ src/app/(main)/pantry/page.tsx
-      └─ PantryRouteContent: URL 카드 표시 방식과 Query 결과 연결
-          └─ usePantryQuery: GET /api/pantries → DTO → PantryItem 변환
-              └─ PantryPage: Loading·Content·Empty·Error 상태와 카드 표현 방식 선택
-                  ├─ PantryHeader / PantryToolbar / PantryGrid (widgets)
-                  └─ PantryItemCard (entities)
-                      ├─ icon: 아이콘형 카드, 173 × 104px
-                      └─ image: 이미지형 카드, 175 × 203px
-```
-
-현재는 두 목업을 비교하기 위해 `view` query parameter를 사용합니다.
-
-| URL                  | 카드 버전 | 목적                                      |
-| -------------------- | --------- | ----------------------------------------- |
-| `/pantry`            | `icon`    | 식재료를 작은 아이콘으로 빠르게 훑는 목록 |
-| `/pantry?view=image` | `image`   | 식재료 사진을 중심으로 인지하는 목록      |
-
-디자인이 확정되면 선택되지 않은 버전과 분기만 제거하고, 선택된 카드 컴포넌트를 기본값으로 고정합니다.
-
-### 다음 기능의 권장 배치
-
-| 기능                           | 권장 시작 위치                      | 함께 만들 항목                                                      |
-| ------------------------------ | ----------------------------------- | ------------------------------------------------------------------- |
-| 팬트리 무한 스크롤             | `features/load-more-pantry-items`   | cursor 상태, Intersection Observer, 로딩 카드, MSW 다음 페이지 응답 |
-| 식재료 등록·수정               | `features/manage-pantry-item`       | React Hook Form, Zod schema, 등록/수정 mutation                     |
-| 레시피 찜                      | `features/toggle-recipe-save`       | 낙관적 업데이트, 저장 상태 UI                                       |
-| 레시피 부족 재료 장바구니 담기 | `features/add-recipe-items-to-cart` | 레시피 맥락, 장바구니 mutation                                      |
-| 카카오·네이버 로그인           | `features/auth`                     | callback 처리, 세션 초기화, 보호 라우트                             |
-| REST API 호출                  | `src/shared/lib/api`                | fetch client, 공통 응답 파싱, `credentials: 'include'`              |
-| 서버 데이터 캐싱               | `src/shared/lib/query`              | TanStack Query key·query/mutation option                            |
-
-## 개발 원칙
-
-- 디자인 기준은 **390 × 844 CSS px**이며, 실제 구현은 **360~430px** 범위에서 반응형으로 동작해야 합니다.
-- 정상 상태뿐 아니라 로딩, 빈 데이터, 오류, 미인증 상태를 함께 구현합니다.
-- 팬트리 상태는 색상만으로 표현하지 않고 텍스트·아이콘·배지를 함께 사용합니다.
-- 아이콘 전용 버튼에는 접근 가능한 이름을 제공하고, 정보성 이미지에는 의미 있는 대체 텍스트를 제공합니다.
-- 레시피에서 장바구니에 담긴 상품은 레시피 맥락을 유지해야 합니다.
-- REST API 명세를 프론트엔드·백엔드·MSW의 공통 기준으로 사용합니다.
-
-## Husky 커밋 훅
-
-`npm install` 시 Husky가 자동 설정됩니다. 커밋 전 `.husky/pre-commit`이 아래 검사를 수행합니다.
-
-```text
-npm run format:check → npm run lint → npm run typecheck
-```
-
-검사에 실패하면 커밋이 중단됩니다. 긴 테스트와 프로덕션 빌드는 PR 검증 단계에서 실행합니다.
-
-`.husky/commit-msg`는 `[type] 제목 (#이슈번호)` 형식이 아닌 커밋 메시지를 차단합니다. PR에서는 GitHub Actions가 브랜치·이슈 연결·품질 검사를 다시 실행합니다.
+- 모바일 화면을 우선으로 구현하며, 주요 UI는 폭 360~430 CSS px에서 확인합니다.
+- 로딩·빈 결과·오류·미인증 상태를 함께 고려합니다.
+- 아이콘만 있는 버튼에는 접근 가능한 이름을 제공하고, 의미가 있는 이미지에는 대체 텍스트를 작성합니다.
+- API 응답과 프론트엔드 화면 모델은 DTO와 매퍼를 통해 분리합니다.
+- REST API 명세를 프론트엔드와 MSW 응답의 기준으로 사용합니다.
 
 ## 관련 문서
 
-| 문서                                                                    | 설명                                       |
-| ----------------------------------------------------------------------- | ------------------------------------------ |
-| [AGENTS.md](AGENTS.md)                                                  | 사람과 AI 작업자를 위한 프로젝트 작업 규칙 |
-| [SKILLS.md](SKILLS.md)                                                  | 화면 구현, API·MSW, 성능·접근성 작업 흐름  |
-| [MVP 범위](docs/product/mvp-scope.md)                                   | 팬트리 상태, 핵심 흐름, 화면 우선순위      |
-| [프론트엔드 아키텍처](docs/architecture/frontend-architecture.md)       | 상태 소유권, BFF, PWA 기준                 |
-| [REST API·MSW 계약 가이드](docs/api/contract-guidelines.md)             | API 명세와 MSW 운영 원칙                   |
-| [개발 품질 자동화](docs/architecture/development-quality-automation.md) | Husky, CI, Ruleset 운영 기준               |
-| [디자인 시스템](docs/design/design-system.md)                           | 토큰 계층, 테마, 공용 UI 사용 기준         |
+| 문서 | 설명 |
+| --- | --- |
+| [AGENTS.md](AGENTS.md) | 프로젝트 작업 규칙 |
+| [SKILLS.md](SKILLS.md) | 화면·API·MSW·성능·접근성 작업 지침 |
+| [MVP 범위](docs/product/mvp-scope.md) | 제품 범위와 우선순위 |
+| [프론트엔드 아키텍처](docs/architecture/frontend-architecture.md) | 프론트엔드 구조와 상태 관리 기준 |
+| [REST API·MSW 계약 가이드](docs/api/contract-guidelines.md) | API 명세와 MSW 운영 기준 |
+| [개발 품질 자동화](docs/architecture/development-quality-automation.md) | 검사·CI·Git 훅 기준 |
+| [디자인 시스템](docs/design/design-system.md) | 디자인 토큰과 공용 UI 기준 |
 
 ## 브랜치와 풀 리퀘스트
 
 - 브랜치 이름은 `Type/#issue-number/description` 형식을 사용합니다.
 - 하나의 PR은 하나의 사용자 대면 결과에 집중합니다.
-- UI 변경 시 360px, 390px, 430px에서 확인한 결과를 PR에 포함합니다.
-- `.env`, 토큰, 개인 정보, 민감한 운영 URL은 커밋하지 않습니다.
+- UI 변경은 360px, 390px, 430px 너비에서 확인합니다.
+- `.env`, 토큰, 개인정보, 민감한 운영 URL은 커밋하지 않습니다.
