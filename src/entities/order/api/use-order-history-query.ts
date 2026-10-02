@@ -7,8 +7,9 @@ import { getOrderDetail } from './get-order-detail';
 import { getOrders } from './get-orders';
 import type { OrderStatus } from './order.dto';
 
-export function useOrderHistoryQuery(status?: OrderStatus) {
+export function useOrderHistoryQuery(status?: OrderStatus, enabled = true) {
   const orderListQuery = useQuery({
+    enabled,
     queryKey: getOrderListQueryKey(status),
     queryFn: () => getOrders({ status, page: 0, size: 20 }),
   });
