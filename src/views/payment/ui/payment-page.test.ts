@@ -50,7 +50,7 @@ describe('payment redirect pages', () => {
               quantity: 2,
             },
           ],
-          orderNumber: 'ORDER_123',
+          orderNumber: 'ORDER_123456789012345678901234567890',
           orderedAt: '2026-09-30T15:30:00Z',
           orderer: { name: '집밥사랑', phoneNumber: '01098765432' },
           paymentAmount: 14800,
@@ -60,7 +60,8 @@ describe('payment redirect pages', () => {
 
     expect(markup).toContain('주문이 완료되었어요');
     expect(markup).toContain('주문번호');
-    expect(markup).toContain('ORDER_123');
+    expect(markup).toContain('ORDER_123456789012345678901234567890');
+    expect(markup).toContain('class="min-w-0 truncate"');
     expect(markup).toContain('2026.10.01');
     expect(markup).toContain('국산 양파');
     expect(markup).toContain('집밥사랑');

@@ -126,12 +126,12 @@ export function PaymentCompleteView({ order }: { order: PaymentCompletionSnapsho
           <h1 className="text-lg leading-[27px] font-semibold" id="payment-complete-heading">
             주문이 완료되었어요
           </h1>
-          <p className="bg-surface-secondary text-text-tertiary rounded-full px-2.5 py-1 text-sm leading-[21px] font-medium">
-            <span>주문번호</span>
-            <span aria-hidden="true" className="text-disabled px-0.5">
+          <p className="bg-surface-secondary text-text-tertiary flex max-w-full items-center rounded-full px-2.5 py-1 text-sm leading-[21px] font-medium whitespace-nowrap">
+            <span className="shrink-0">주문번호</span>
+            <span aria-hidden="true" className="text-disabled shrink-0 px-0.5">
               ㅣ
             </span>
-            <span>{order.orderNumber}</span>
+            <span className="min-w-0 truncate">{order.orderNumber}</span>
           </p>
         </div>
       </section>
