@@ -28,4 +28,10 @@ describe('receipt review item drafts', () => {
       storageType: null,
     });
   });
+
+  it('keeps the OCR purchase date for server-side consumption-date calculation', () => {
+    expect(createReceiptReviewItem('receipt-1', '계란', '2026-09-29')).toMatchObject({
+      purchaseDate: '2026-09-29',
+    });
+  });
 });

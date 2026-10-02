@@ -30,6 +30,6 @@ export function toPantryItem(dto: PantryItemDto): PantryItem {
     imageAlt: `${dto.ingredientName} 이미지`,
     imageUrl: dto.imageUrl ?? undefined,
     storageType: dto.storageType,
-    registrationSource: dto.registerType as PantryItem['registrationSource'],
+    registrationSource: dto.registerType,
   };
 }

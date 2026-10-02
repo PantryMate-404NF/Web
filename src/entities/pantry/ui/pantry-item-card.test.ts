@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { pantryItems } from '@/entities/pantry/model/mock';
+import { toPantryItem } from '@/entities/pantry/api/pantry.mapper';
 
 import {
   getExpirationBadgeLabel,
@@ -26,6 +27,49 @@ describe('getExpirationBadgeLabel', () => {
 });
 
 describe('PantryItemCard image-card icons', () => {
+  it('displays automatically registered purchases as 자사몰에서 구입', () => {
+    const item = toPantryItem({
+      pantryItemId: 1,
+      ingredientName: '결제 상품',
+      sellByDate: null,
+      expiryDate: null,
+      dDay: null,
+      expiryStatus: 'NORMAL',
+      storageType: 'ROOM_TEMP',
+      isExpiryAutoCalculated: false,
+      isCookable: true,
+      registerType: 'AUTO',
+      imageUrl: null,
+    });
+    const markup = renderToStaticMarkup(createElement(PantryItemCard, { item, variant: 'image' }));
+
+    expect(markup).toContain('실온');
+    expect(markup).toContain('자사몰에서 구입');
+  });
+
+  it.each([
+    ['AUTO', '자사몰에서 구입'],
+    ['MANUAL', '사용자 등록'],
+    ['OCR', '영수증 등록'],
+  ] as const)('displays %s pantry entries as %s', (registerType, expectedLabel) => {
+    const item = toPantryItem({
+      pantryItemId: 1,
+      ingredientName: '결제 상품',
+      sellByDate: null,
+      expiryDate: null,
+      dDay: null,
+      expiryStatus: 'NORMAL',
+      storageType: 'REFRIGERATED',
+      isExpiryAutoCalculated: false,
+      isCookable: true,
+      registerType,
+      imageUrl: null,
+    });
+    const markup = renderToStaticMarkup(createElement(PantryItemCard, { item, variant: 'image' }));
+
+    expect(markup).toContain(expectedLabel);
+  });
+
   it('highlights a D-3 badge even when the API status is NORMAL', () => {
     const markup = renderToStaticMarkup(
       createElement(PantryItemCard, {

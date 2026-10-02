@@ -14,8 +14,8 @@ export function getLocalRecipeCartProducts(
   const selectedIds = new Set(selectedIngredientIds);
 
   return ingredients.flatMap<CartProduct>((ingredient) => {
+    if (ingredient.hasIngredient) return [];
     if (mode === 'selected' && !selectedIds.has(String(ingredient.ingredientId))) return [];
-    if (mode === 'all' && ingredient.hasIngredient) return [];
 
     const mappedProduct = ingredient.matchStatus === 'MATCHED' ? ingredient.product : null;
     if (
@@ -58,7 +58,7 @@ export function getRecipeCartRequests(
 
   for (const ingredient of ingredients) {
     if (mode === 'selected' && !selectedIds.has(String(ingredient.ingredientId))) continue;
-    if (mode === 'all' && ingredient.hasIngredient) continue;
+    if (ingredient.hasIngredient) continue;
 
     if (ingredient.matchStatus !== 'MATCHED') continue;
     const mappedProduct = ingredient.product;

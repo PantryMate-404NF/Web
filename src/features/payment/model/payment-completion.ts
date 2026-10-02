@@ -10,7 +10,9 @@ export interface PaymentCompletionSnapshot {
     'addressLine1' | 'addressLine2' | 'phoneNumber' | 'postalCode' | 'recipientName'
   >;
   deliveryRequest: { location: string; detail: string };
-  items: Array<Pick<CartItem, 'id' | 'name' | 'price' | 'quantity'> & { imageUrl?: string }>;
+  items: Array<
+    Pick<CartItem, 'id' | 'name' | 'price' | 'productId' | 'quantity'> & { imageUrl?: string }
+  >;
   orderNumber: string;
   orderedAt: string;
   orderer: { name: string; phoneNumber: string | null };
@@ -50,6 +52,7 @@ export function buildPaymentCompletionSnapshot({
       imageUrl: item.thumbnailUrl,
       name: item.name,
       price: item.price,
+      ...(item.productId ? { productId: item.productId } : {}),
       quantity: item.quantity,
     })),
     orderNumber: order.orderId,
@@ -111,6 +114,8 @@ export function isPaymentCompletionSnapshot(value: unknown): value is PaymentCom
         typeof item.name === 'string' &&
         Number.isSafeInteger(item.price) &&
         Number.isSafeInteger(item.quantity) &&
+        (item.productId === undefined ||
+          (Number.isSafeInteger(item.productId) && item.productId > 0)) &&
         (item.imageUrl === undefined || typeof item.imageUrl === 'string'),
     )
   );

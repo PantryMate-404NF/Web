@@ -174,10 +174,7 @@ export function PaymentSuccessPage({ amount, orderId, paymentKey }: PaymentSucce
         }
 
         window.sessionStorage.removeItem('order-payment-attempt');
-        setState({
-          order,
-          status: 'done',
-        });
+        setState({ order, status: 'done' });
       } catch (error) {
         setState({
           message: getPaymentErrorMessage(error instanceof ApiError ? error : {}),

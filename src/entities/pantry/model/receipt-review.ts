@@ -7,10 +7,15 @@ export interface ReceiptReviewItem {
   imagePreviewUrl?: string;
   id: string;
   name: string;
+  purchaseDate?: string;
   storageType: PantryStorageType | null;
 }
 
-export function createReceiptReviewItem(id: string, name: string): ReceiptReviewItem {
+export function createReceiptReviewItem(
+  id: string,
+  name: string,
+  purchaseDate?: string,
+): ReceiptReviewItem {
   return {
     consumptionDate: '',
     expirationDate: '',
@@ -18,6 +23,7 @@ export function createReceiptReviewItem(id: string, name: string): ReceiptReview
     imageFile: undefined,
     imagePreviewUrl: undefined,
     name,
+    ...(purchaseDate ? { purchaseDate } : {}),
     storageType: null,
   };
 }

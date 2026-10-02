@@ -4,7 +4,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { ReceiptOcrResult } from '@/entities/pantry/api/recognize-receipt';
 
-import { ReceiptIngredientEditor, ReceiptOcrFlow } from './receipt-ocr-flow';
+import {
+  createReceiptReviewItemsFromOcr,
+  ReceiptIngredientEditor,
+  ReceiptOcrFlow,
+} from './receipt-ocr-flow';
 import { createReceiptReviewItem } from '@/entities/pantry/model/receipt-review';
 
 vi.mock('@/entities/pantry/api/use-pantry-mutations', () => ({
@@ -18,6 +22,12 @@ const result: ReceiptOcrResult = {
 };
 
 describe('ReceiptOcrFlow result screen', () => {
+  it('carries the scanned purchase date into each item for expiry auto-calculation', () => {
+    expect(createReceiptReviewItemsFromOcr(result)).toMatchObject([
+      { name: '깐마늘', purchaseDate: '2026-09-29' },
+    ]);
+  });
+
   it('renders the pantry registration review layout with inline storage choices', () => {
     const markup = renderToStaticMarkup(
       createElement(ReceiptOcrFlow, {
@@ -61,7 +71,7 @@ describe('ReceiptOcrFlow result screen', () => {
       createElement(ReceiptIngredientEditor, {
         canComplete: true,
         isSaving: false,
-        item: createReceiptReviewItem('receipt-item-1', '깐마늘'),
+        item: createReceiptReviewItem('receipt-item-1', '깐마늘', '2026-09-29'),
         onChange: vi.fn(),
         onComplete: vi.fn(),
         onImageSelected: vi.fn(),
@@ -94,5 +104,6 @@ describe('ReceiptOcrFlow result screen', () => {
     );
 
     expect(markup).not.toContain('구매일');
+    expect(markup).not.toContain('2026-09-29');
   });
 });
