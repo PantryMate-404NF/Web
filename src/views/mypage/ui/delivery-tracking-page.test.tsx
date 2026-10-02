@@ -96,6 +96,23 @@ describe('DeliveryTrackingPage', () => {
     expect(markup).not.toContain('하인즈 토마토 케찹');
   });
 
+  it('배송 완료 정보의 긴 주문번호를 가용 너비 안에서 말줄임 처리한다', () => {
+    const orderNumber = 'ORDER_01a0f0b0100d7dee9b1dbbe83ee33279';
+    useOrderHistoryQueryMock.mockReturnValue({
+      data: [{ ...orders[0], orderNumber }],
+      isError: false,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+
+    const markup = renderToStaticMarkup(<DeliveryTrackingPage orderId="ORDER_1" />);
+
+    expect(markup).toContain(orderNumber);
+    expect(markup).toMatch(
+      /<dd class="[^"]*min-w-0 truncate[^"]*">ORDER_01a0f0b0100d7dee9b1dbbe83ee33279<\/dd>/,
+    );
+  });
+
   it('orderId가 없으면 기존 결제 완료 목록의 첫 주문을 표시한다', () => {
     const markup = renderToStaticMarkup(<DeliveryTrackingPage />);
 

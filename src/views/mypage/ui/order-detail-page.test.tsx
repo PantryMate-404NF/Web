@@ -60,6 +60,23 @@ describe('OrderDetailPage', () => {
     expect(markup).toContain('href="/mypage/orders/ORDER_1/cancel"');
   });
 
+  it('긴 주문번호는 주문 상세 정보 영역 안에서 말줄임 처리한다', () => {
+    const orderId = 'ORDER_01a0f0b0100d7dee9b1dbbe83ee33279';
+    useOrderDetailQueryMock.mockReturnValue({
+      data: { ...orderDetail, orderId },
+      error: null,
+      isError: false,
+      isPending: false,
+      refetch: vi.fn(),
+    });
+
+    const markup = renderToStaticMarkup(<OrderDetailPage orderId={orderId} />);
+
+    expect(markup).toMatch(
+      /<dd class="[^\"]*\btruncate\b[^\"]*">ORDER_01a0f0b0100d7dee9b1dbbe83ee33279<\/dd>/,
+    );
+  });
+
   it('상세 조회 중에는 주문정보 대신 로딩 상태를 표시한다', () => {
     useOrderDetailQueryMock.mockReturnValue({
       data: undefined,

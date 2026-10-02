@@ -7,13 +7,27 @@ import Link from 'next/link';
 import { useOrderDetailQuery } from '@/entities/order/api/use-order-detail-query';
 import { getOrderStatusLabel, formatOrderDate } from '@/entities/order/model/order-history';
 
-function DetailRow({ label, value }: { label: string; value: string }) {
+function DetailRow({
+  label,
+  value,
+  truncate = false,
+}: {
+  label: string;
+  value: string;
+  truncate?: boolean;
+}) {
   return (
     <div className="flex items-start gap-[35px] py-2.5">
       <dt className="shrink-0 text-sm leading-5 font-medium text-[var(--primitive-grey-600)]">
         {label}
       </dt>
-      <dd className="min-w-0 flex-1 text-sm leading-5 font-medium text-[var(--primitive-black)]">
+      <dd
+        className={
+          truncate
+            ? 'min-w-0 flex-1 truncate text-sm leading-5 font-medium text-[var(--primitive-black)]'
+            : 'min-w-0 flex-1 text-sm leading-5 font-medium text-[var(--primitive-black)]'
+        }
+      >
         {value}
       </dd>
     </div>
@@ -110,7 +124,7 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
               주문 정보
             </h2>
             <dl className="mt-3 text-sm">
-              <DetailRow label="주문 번호" value={order.orderId} />
+              <DetailRow label="주문 번호" value={order.orderId} truncate />
               <DetailRow label="결제 금액" value={`${order.totalAmount.toLocaleString()}원`} />
               <DetailRow label="결제 수단" value={order.payment?.method ?? '확인 중'} />
             </dl>
