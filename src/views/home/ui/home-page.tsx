@@ -177,9 +177,7 @@ export function HomePage({
   const recipes = recommendationQuery.data ? toHomeRecipeCards(recommendationQuery.data) : [];
   const recommendationMessage =
     recommendationQuery.isSuccess && recommendationQuery.data
-      ? recommendationQuery.data.source === 'AI'
-        ? '맛 선호도를 반영해 AI가 추천했어요.'
-        : '지금 인기 있는 레시피를 추천해요.'
+      ? '맛 선호도를 반영해 AI가 추천했어요.'
       : null;
 
   return (
