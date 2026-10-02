@@ -1,3 +1,5 @@
+import type { ProductStorageType } from '../model/types';
+
 export interface ProductDetailDto {
   productId: number;
   sku: string;
@@ -15,4 +17,5 @@ export interface ProductDetailDto {
   stockQuantity: number;
   status: string;
   ingredientId: number | null;
+  storageType?: ProductStorageType | null;
 }

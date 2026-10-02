@@ -93,4 +93,32 @@ describe('product mapper', () => {
 
     expect(product.weight).toBe('520g x 2개');
   });
+
+  it('상품 API의 storageType을 보존하고 사용자용 보관 방법으로 변환한다', () => {
+    const product = toProductDetail(
+      {
+        productId: 157,
+        sku: '102467',
+        name: '완전방사 무항생제 유정란(10구)',
+        categoryId: 201,
+        categoryName: '계란·알류',
+        price: 6700,
+        unit: 'EACH',
+        capacity: null,
+        packageCount: null,
+        origin: '국내산',
+        description: null,
+        thumbnailUrl: null,
+        images: [],
+        stockQuantity: 50,
+        status: 'ON_SALE',
+        ingredientId: 11,
+        storageType: 'REFRIGERATED',
+      },
+      fallbackProduct,
+    );
+
+    expect(product.storageType).toBe('REFRIGERATED');
+    expect(product.storageMethod).toBe('냉장');
+  });
 });

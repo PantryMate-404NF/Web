@@ -7,6 +7,7 @@ import type {
   ExpirationStatus,
   PantryCardVariant,
   PantryItem,
+  PantryRegistrationSource,
 } from '@/entities/pantry/model/types';
 
 const expirationStatusLabels: Record<ExpirationStatus, string> = {
@@ -86,8 +87,9 @@ function PantryImageCard({
   onSelect?: (item: PantryItem, ingredientId?: number) => void;
 }) {
   const storageLabels = { REFRIGERATED: '냉장', FROZEN: '냉동', ROOM_TEMP: '실온' } as const;
-  const sourceLabels = {
-    PURCHASED: '자사몰 구매',
+  const sourceLabels: Record<PantryRegistrationSource, string> = {
+    AUTO: '자사몰에서 구입',
+    PURCHASED: '자사몰에서 구입',
     MANUAL: '사용자 등록',
     OCR: '영수증 등록',
   } as const;

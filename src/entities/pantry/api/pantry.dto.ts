@@ -2,6 +2,8 @@
  * Swagger 팬트리 API 요청과 응답 타입 정의함
  */
 
+import type { PantryRegistrationSource } from '../model/types';
+
 export type PantryStorageType = 'REFRIGERATED' | 'FROZEN' | 'ROOM_TEMP';
 export type PantryExpiryStatus = 'NORMAL' | 'IMMINENT' | 'EXPIRED';
 
@@ -21,7 +23,8 @@ export interface PantryItemDto {
   storageType: PantryStorageType;
   isExpiryAutoCalculated: boolean;
   isCookable: boolean;
-  registerType: string;
+  /** 팬트리에 식재료가 등록된 경로입니다. */
+  registerType: PantryRegistrationSource;
   /** 식재료 이미지 주소입니다. 이미지가 없으면 null입니다. */
   imageUrl: string | null;
 }
@@ -37,6 +40,7 @@ export interface CreatePantryItemRequest {
   expiryDate?: string;
   storageType: PantryStorageType;
   imageUrl?: string;
+  registerType?: PantryRegistrationSource;
 }
 
 export interface UpdatePantryItemRequest extends Partial<CreatePantryItemRequest> {

@@ -2,6 +2,15 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import type { PaymentCompletionSnapshot } from '@/features/payment/model/payment-completion';
+import type { PantryRegistrationFailure } from '@/features/payment/lib/register-purchased-items-in-pantry';
+
+const pantryFailureLabels: Record<PantryRegistrationFailure['reason'], string> = {
+  'missing-product-id': '상품 ID를 찾지 못했어요',
+  'product-detail-request': '상품 정보를 불러오지 못했어요',
+  'missing-product-name': '상품명이 비어 있어요',
+  'missing-storage-type': '상품 보관 방법이 없거나 올바르지 않아요',
+  'pantry-create-request': '팬트리 등록 요청이 거절됐어요',
+};
 
 function formatOrderDate(value: string) {
   const timestamp = new Date(value);
@@ -94,7 +103,19 @@ function InformationSection({ children, heading }: { children: React.ReactNode; 
   );
 }
 
-export function PaymentCompleteView({ order }: { order: PaymentCompletionSnapshot }) {
+export function PaymentCompleteView({
+  isRetryingPantryRegistration = false,
+  onRetryPantryRegistration,
+  order,
+  pantryRegistrationFailures = [],
+  pantryRegistrationRetryMessage,
+}: {
+  isRetryingPantryRegistration?: boolean;
+  onRetryPantryRegistration?: () => void;
+  order: PaymentCompletionSnapshot;
+  pantryRegistrationFailures?: PantryRegistrationFailure[];
+  pantryRegistrationRetryMessage?: string;
+}) {
   const recipientPhone = formatPhoneNumber(order.deliveryAddress.phoneNumber);
   const deliveryAddress = [
     order.deliveryAddress.addressLine1,
@@ -135,6 +156,46 @@ export function PaymentCompleteView({ order }: { order: PaymentCompletionSnapsho
           </p>
         </div>
       </section>
+
+      {pantryRegistrationFailures.length > 0 ? (
+        <section
+          aria-label="팬트리 자동 등록 안내"
+          className="bg-surface-complete mx-4 mb-4 flex flex-col gap-3 rounded-xl p-4"
+          role="alert"
+        >
+          <p className="text-text-secondary text-sm leading-5">
+            일부 식재료를 팬트리에 등록하지 못했어요. 팬트리에서 확인해 주세요.
+          </p>
+          <ul className="text-text-secondary mt-2 list-inside list-disc text-xs leading-5">
+            {pantryRegistrationFailures.map((failure) => (
+              <li key={failure.itemId}>
+                {failure.itemName}: {pantryFailureLabels[failure.reason]}
+              </li>
+            ))}
+          </ul>
+          {pantryRegistrationRetryMessage ? (
+            <p className="text-destructive mt-2 text-xs leading-5" role="alert">
+              {pantryRegistrationRetryMessage}
+            </p>
+          ) : null}
+          {onRetryPantryRegistration ? (
+            <button
+              className="bg-primary text-primary-foreground focus-visible:ring-ring mt-1 flex h-12 w-full items-center justify-center rounded-xl text-base font-semibold focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={isRetryingPantryRegistration}
+              onClick={onRetryPantryRegistration}
+              type="button"
+            >
+              {isRetryingPantryRegistration ? '팬트리에 다시 등록 중' : '팬트리 등록 다시 시도'}
+            </button>
+          ) : null}
+          <Link
+            className="border-border text-text-primary focus-visible:ring-ring bg-surface-default flex h-12 w-full items-center justify-center rounded-xl border text-base font-semibold focus-visible:ring-2"
+            href="/pantry"
+          >
+            팬트리에서 확인하기
+          </Link>
+        </section>
+      ) : null}
 
       <section
         aria-labelledby="payment-order-items-heading"

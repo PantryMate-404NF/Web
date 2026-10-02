@@ -1,4 +1,4 @@
-import type { ProductDetail } from '../model/types';
+import { isProductStorageType, type ProductDetail } from '../model/types';
 import type { ProductDetailDto } from './product.dto';
 
 function formatWeight(dto: ProductDetailDto, fallback: string) {
@@ -15,7 +15,15 @@ function formatWeight(dto: ProductDetailDto, fallback: string) {
   return `${dto.capacity}${unitLabels[dto.unit] ?? dto.unit}${packageCount}`;
 }
 
+const storageMethodLabels = {
+  FROZEN: '냉동',
+  REFRIGERATED: '냉장',
+  ROOM_TEMP: '실온',
+} as const;
+
 export function toProductDetail(dto: ProductDetailDto, fallback: ProductDetail): ProductDetail {
+  const storageType = isProductStorageType(dto.storageType) ? dto.storageType : undefined;
+
   return {
     ...fallback,
     commerceProductId: dto.productId,
@@ -29,6 +37,8 @@ export function toProductDetail(dto: ProductDetailDto, fallback: ProductDetail):
     origin: dto.origin ?? fallback.origin,
     price: dto.price,
     summary: dto.description ?? fallback.summary,
+    storageMethod: storageType ? storageMethodLabels[storageType] : fallback.storageMethod,
+    storageType,
     weight: formatWeight(dto, fallback.weight),
   };
 }

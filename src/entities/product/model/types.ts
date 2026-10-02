@@ -13,6 +13,12 @@ export type ProductId =
   | 'garlic-cream-cheese'
   | 'low-sugar-plum-syrup';
 
+export type ProductStorageType = 'REFRIGERATED' | 'FROZEN' | 'ROOM_TEMP';
+
+export function isProductStorageType(value: unknown): value is ProductStorageType {
+  return value === 'REFRIGERATED' || value === 'FROZEN' || value === 'ROOM_TEMP';
+}
+
 export interface ProductOption {
   id: string;
   label: string;
@@ -24,6 +30,7 @@ export interface ProductOption {
 export interface ProductDetail {
   id: ProductId;
   commerceProductId?: number;
+  storageType?: ProductStorageType;
   mockCommerceProductId?: number;
   detailImageUrls?: string[];
   imageUrl?: string;

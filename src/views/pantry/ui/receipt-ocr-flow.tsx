@@ -45,9 +45,13 @@ const receiptStorageIcons: Record<
   ROOM_TEMP: { height: 16, src: '/icons/pantry/receipt-room-temperature.svg', width: 16 },
 };
 
-function toReviewItems(result: ReceiptOcrResult): ReceiptReviewItem[] {
+export function createReceiptReviewItemsFromOcr(result: ReceiptOcrResult): ReceiptReviewItem[] {
   return result.items.map((item, index) => ({
-    ...createReceiptReviewItem(`${result.receiptId}-${index}`, item.name),
+    ...createReceiptReviewItem(
+      `${result.receiptId}-${index}`,
+      item.name,
+      result.purchasedAt ?? undefined,
+    ),
   }));
 }
 
@@ -713,7 +717,7 @@ function ReceiptOcrReview({
   result: ReceiptOcrResult;
 }) {
   const { create } = usePantryMutations();
-  const [items, setItems] = useState(() => toReviewItems(result));
+  const [items, setItems] = useState(() => createReceiptReviewItemsFromOcr(result));
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const previewUrlsRef = useRef(new Set<string>());
@@ -759,6 +763,7 @@ function ReceiptOcrReview({
               expirationDate: item.expirationDate,
               imageUrl,
               name: item.name,
+              purchaseDate: item.purchaseDate,
               storageType: item.storageType as PantryStorageType,
             }),
           );
