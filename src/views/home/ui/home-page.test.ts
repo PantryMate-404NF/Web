@@ -132,6 +132,18 @@ describe('home recipe recommendations', () => {
     expect(markup).not.toContain('지금 인기 있는 레시피를 추천해요.');
   });
 
+  it('추천 결과가 비어 있으면 AI 추천 안내를 표시하지 않는다', () => {
+    const recommendationResult = createRecommendationQueryResult();
+    recommendationQueryMock.mockReturnValue({
+      ...recommendationResult,
+      data: { ...recommendationResult.data, items: [] },
+    });
+
+    const markup = renderToStaticMarkup(createElement(HomePage, { state: 'complete' }));
+
+    expect(markup).not.toContain('맛 선호도를 반영해 AI가 추천했어요.');
+  });
+
   it('추천 조회가 성공하기 전에는 추천 출처 안내를 표시하지 않는다', () => {
     const markup = renderToStaticMarkup(createElement(HomePage, { state: 'complete' }));
 
