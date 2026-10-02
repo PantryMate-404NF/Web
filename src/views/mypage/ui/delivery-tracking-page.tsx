@@ -148,7 +148,7 @@ function DeliveryOrderInfo({
           {order.orderedAt}
         </dd>
         <dt className="text-text-tertiary font-['Pretendard'] text-base leading-6">주문번호</dt>
-        <dd className="text-text-secondary font-['Pretendard'] text-base leading-6">
+        <dd className="text-text-secondary min-w-0 truncate font-['Pretendard'] text-base leading-6">
           {order.orderNumber}
         </dd>
         <dt className="text-text-tertiary font-['Pretendard'] text-base leading-6">결제 금액</dt>
