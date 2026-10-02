@@ -6,7 +6,7 @@ export type ExpirationStatus = 'NORMAL' | 'IMMINENT' | 'EXPIRED' | 'UNREGISTERED
 
 export type PantryCardVariant = 'icon' | 'image';
 export type PantryStorageType = 'REFRIGERATED' | 'FROZEN' | 'ROOM_TEMP';
-export type PantryRegistrationSource = 'AUTO' | 'PURCHASED' | 'MANUAL' | 'OCR';
+export type PantryRegistrationSource = 'AUTO' | 'MANUAL' | 'OCR';
 export type PantrySortOption = 'RECENT' | 'IMMINENT' | 'OLDEST';
 
 export function getPantryCardVariant(view?: string): PantryCardVariant {

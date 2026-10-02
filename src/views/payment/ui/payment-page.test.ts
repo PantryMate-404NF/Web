@@ -75,39 +75,6 @@ describe('payment redirect pages', () => {
     expect(markup).toContain('/icons/payment/success-check.svg');
   });
 
-  it('팬트리 자동 등록에 실패한 상품을 확인할 수 있게 안내한다', () => {
-    const markup = renderToStaticMarkup(
-      createElement(PaymentCompleteView, {
-        order: {
-          deliveryAddress: {
-            addressLine1: '서울시 강남구 테헤란로 1',
-            addressLine2: '101호',
-            phoneNumber: '01012345678',
-            postalCode: '06123',
-            recipientName: '김지웅',
-          },
-          deliveryRequest: { detail: '없음', location: '문 앞에 놓아주세요' },
-          items: [],
-          orderNumber: 'ORDER_1',
-          orderedAt: '2026-09-30T15:30:00Z',
-          orderer: { name: '집밥사랑', phoneNumber: '01098765432' },
-          paymentAmount: 14800,
-        },
-        pantryRegistrationFailures: [
-          { itemId: 'cart-item-8', itemName: '파프리카', reason: 'missing-product-id' },
-        ],
-        onRetryPantryRegistration: vi.fn(),
-      }),
-    );
-
-    expect(markup).toContain('일부 식재료를 팬트리에 등록하지 못했어요');
-    expect(markup).toContain('파프리카: 상품 ID를 찾지 못했어요');
-    expect(markup).toContain('팬트리 등록 다시 시도');
-    expect(markup).toContain('href="/pantry"');
-    expect(markup).toContain('bg-primary text-primary-foreground');
-    expect(markup).toContain('border-border text-text-primary');
-  });
-
   it('사용자가 결제를 취소하면 안전한 고정 안내를 표시한다', () => {
     const markup = renderToStaticMarkup(
       createElement(PaymentFailPage, {

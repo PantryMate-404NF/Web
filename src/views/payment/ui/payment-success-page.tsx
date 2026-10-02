@@ -7,16 +7,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { deleteCartItem } from '@/entities/cart/api/delete-cart-item';
 import { getCart } from '@/entities/cart/api/get-cart';
 import { CART_QUERY_KEY } from '@/entities/cart/model/query-key';
-import { createPantryItem } from '@/entities/pantry/api/create-pantry-item';
-import { PANTRY_QUERY_KEY } from '@/entities/pantry/api/use-pantries-query';
-import { getProductDetail } from '@/entities/product/api/get-product-detail';
 import { ORDER_LIST_QUERY_KEY } from '@/entities/order/model/query-key';
 import { confirmPayment } from '@/features/payment/api/confirm-payment';
 import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
-import {
-  registerPurchasedItemsInPantry,
-  type PantryRegistrationFailure,
-} from '@/features/payment/lib/register-purchased-items-in-pantry';
 import { cleanupPurchasedCartItems } from '@/features/payment/model/cleanup-purchased-cart';
 import {
   getPaymentCompletionCartItemIds,
@@ -42,15 +35,9 @@ interface PaymentSuccessPageProps {
 
 type ConfirmState =
   | { status: 'confirming' }
+  | { order: PaymentCompletionSnapshot; status: 'done' }
   | {
       order: PaymentCompletionSnapshot;
-      pantryRegistrationFailures?: PantryRegistrationFailure[];
-      pantryRegistrationRetryMessage?: string;
-      status: 'done';
-    }
-  | {
-      order: PaymentCompletionSnapshot;
-      pantryRegistrationFailures?: PantryRegistrationFailure[];
       remainingCartItemIds: number[];
       status: 'cart-cleanup-error';
       retryMessage?: string;
@@ -63,7 +50,6 @@ export function PaymentSuccessPage({ amount, orderId, paymentKey }: PaymentSucce
   const { restore } = useAuthSession();
   const queryClient = useQueryClient();
   const [isRetryingCartCleanup, setIsRetryingCartCleanup] = useState(false);
-  const [isRetryingPantryRegistration, setIsRetryingPantryRegistration] = useState(false);
 
   const cleanupCartItems = useCallback(
     (cartItemIds: number[]) =>
@@ -99,11 +85,7 @@ export function PaymentSuccessPage({ amount, orderId, paymentKey }: PaymentSucce
 
       if (result.completed) {
         window.sessionStorage.removeItem('order-payment-attempt');
-        setState({
-          order: state.order,
-          pantryRegistrationFailures: state.pantryRegistrationFailures,
-          status: 'done',
-        });
+        setState({ order: state.order, status: 'done' });
       } else {
         setState({
           ...state,
@@ -118,50 +100,6 @@ export function PaymentSuccessPage({ amount, orderId, paymentKey }: PaymentSucce
       });
     } finally {
       setIsRetryingCartCleanup(false);
-    }
-  }
-
-  async function retryPantryRegistration() {
-    if (state.status !== 'done') return;
-
-    setIsRetryingPantryRegistration(true);
-    setState({ ...state, pantryRegistrationRetryMessage: undefined });
-    try {
-      const sessionState = await restore();
-      if (sessionState === 'guest') {
-        setState({
-          ...state,
-          pantryRegistrationRetryMessage:
-            '로그인 정보를 확인하지 못했어요. 로그인 후 다시 시도해 주세요.',
-        });
-        return;
-      }
-
-      const result = await registerPurchasedItemsInPantry(
-        state.order.orderNumber,
-        state.order.items,
-        {
-          createPantryItem,
-          getProductDetail,
-          storage: window.sessionStorage,
-        },
-      );
-
-      await queryClient.invalidateQueries({ queryKey: PANTRY_QUERY_KEY });
-      setState({
-        order: state.order,
-        pantryRegistrationFailures: result.failedItems,
-        status: 'done',
-      });
-    } catch {
-      // Keep the failed items visible so the user can retry without paying again.
-      setState({
-        ...state,
-        pantryRegistrationRetryMessage:
-          '팬트리 등록을 다시 시도하지 못했어요. 잠시 후 다시 눌러 주세요.',
-      });
-    } finally {
-      setIsRetryingPantryRegistration(false);
     }
   }
 
@@ -225,33 +163,10 @@ export function PaymentSuccessPage({ amount, orderId, paymentKey }: PaymentSucce
           orderNumber: confirmInput.orderId,
           paymentAmount: confirmation.value.confirmation.totalAmount,
         };
-        let pantryRegistrationFailures: PantryRegistrationFailure[] = [];
-
-        try {
-          const registrationResult = await registerPurchasedItemsInPantry(
-            order.orderNumber,
-            order.items,
-            {
-              createPantryItem,
-              getProductDetail,
-              storage: window.sessionStorage,
-            },
-          );
-          pantryRegistrationFailures = registrationResult.failedItems;
-        } catch {
-          pantryRegistrationFailures = order.items.map((item) => ({
-            itemId: item.id,
-            itemName: item.name,
-            reason: 'pantry-create-request',
-          }));
-        }
-
-        await queryClient.invalidateQueries({ queryKey: PANTRY_QUERY_KEY });
 
         if (confirmation.value.cleanupResult && !confirmation.value.cleanupResult.completed) {
           setState({
             order,
-            pantryRegistrationFailures,
             remainingCartItemIds: confirmation.value.cleanupResult.remainingCartItemIds,
             status: 'cart-cleanup-error',
           });
@@ -259,11 +174,7 @@ export function PaymentSuccessPage({ amount, orderId, paymentKey }: PaymentSucce
         }
 
         window.sessionStorage.removeItem('order-payment-attempt');
-        setState({
-          order,
-          pantryRegistrationFailures,
-          status: 'done',
-        });
+        setState({ order, status: 'done' });
       } catch (error) {
         setState({
           message: getPaymentErrorMessage(error instanceof ApiError ? error : {}),
@@ -275,17 +186,7 @@ export function PaymentSuccessPage({ amount, orderId, paymentKey }: PaymentSucce
     void runConfirmation();
   }, [amount, cleanupCartItems, orderId, paymentKey, queryClient, restore]);
 
-  if (state.status === 'done') {
-    return (
-      <PaymentCompleteView
-        isRetryingPantryRegistration={isRetryingPantryRegistration}
-        onRetryPantryRegistration={() => void retryPantryRegistration()}
-        order={state.order}
-        pantryRegistrationFailures={state.pantryRegistrationFailures}
-        pantryRegistrationRetryMessage={state.pantryRegistrationRetryMessage}
-      />
-    );
-  }
+  if (state.status === 'done') return <PaymentCompleteView order={state.order} />;
 
   return (
     <main className="mobile-page bg-background flex min-h-dvh flex-col items-center justify-center px-6 text-center">

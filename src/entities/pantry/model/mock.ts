@@ -14,7 +14,7 @@ export const pantryItems: PantryItem[] = [
     imageAlt: '설탕',
     imageUrl: '/images/pantry/sugar.png',
     storageType: 'ROOM_TEMP',
-    registrationSource: 'PURCHASED',
+    registrationSource: 'AUTO',
     createdAt: '2026-09-10T10:00:00Z',
   },
   {
@@ -28,7 +28,7 @@ export const pantryItems: PantryItem[] = [
     imageAlt: '대파',
     imageUrl: '/images/pantry/green-onion.png',
     storageType: 'REFRIGERATED',
-    registrationSource: 'PURCHASED',
+    registrationSource: 'AUTO',
     createdAt: '2026-09-10T09:00:00Z',
   },
   {
@@ -42,7 +42,7 @@ export const pantryItems: PantryItem[] = [
     imageAlt: '토마토',
     imageUrl: '/images/pantry/tomato.png',
     storageType: 'REFRIGERATED',
-    registrationSource: 'PURCHASED',
+    registrationSource: 'AUTO',
     createdAt: '2026-09-10T08:00:00Z',
   },
   {
