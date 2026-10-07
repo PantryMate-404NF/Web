@@ -2,6 +2,10 @@
 
 PantryMate는 식재료를 팬트리에 기록하고, 보유 재료와 사용자 취향을 바탕으로 레시피를 탐색한 뒤 부족한 재료를 주문할 수 있는 모바일 우선 웹 서비스입니다.
 
+## 최종 결과 (6팀 중 2위)
+
+<img width="747" height="407" alt="404" src="https://github.com/user-attachments/assets/7a5bf3ad-69ca-49be-b8fc-1cda115415aa" />
+
 
 ## 👥 Team
 
